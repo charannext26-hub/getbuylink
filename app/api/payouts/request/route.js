@@ -5,9 +5,8 @@ import PayoutRequest from "@/lib/models/PayoutRequest";
 import LinkPerformance from "@/lib/models/LinkPerformance";
 
 export async function POST(req) {
-  console.log("🚨 PAYOUT API HIT HUI HAI! REQUEST AAYI HAI!"); // YAHAN ADD KIJIYE
-  try {
-     // ... baaki ka code waisa hi rahega
+  console.log("🚨 PAYOUT API HIT HUI HAI! REQUEST AAYI HAI!");
+  
   try {
     // 1. Session Check
     const session = await getServerSession();
@@ -35,7 +34,7 @@ export async function POST(req) {
     // 🚨 BUG FIX 1: Frontend sends "BANK", Database expects "BANK_TRANSFER"
     const finalPaymentMethod = paymentMethod === "BANK" ? "BANK_TRANSFER" : "UPI";
 
-    // 🚨 BUG FIX 2: Username ko clean karke Case-Insensitive Match lagaya (Jo purane code me miss ho gaya tha)
+    // 🚨 BUG FIX 2: Username ko clean karke Case-Insensitive Match lagaya
     const safeUsername = username ? username.replace(/[^a-zA-Z0-9]/g, '') : "";
     if (!safeUsername) {
         return NextResponse.json({ success: false, message: "Username tracking error." }, { status: 400 });
@@ -82,7 +81,7 @@ export async function POST(req) {
     const newRequest = await PayoutRequest.create({
       creatorId: safeUsername, 
       amount: requestAmount,
-      paymentMethod: finalPaymentMethod, // 🚨 Use the corrected method
+      paymentMethod: finalPaymentMethod, 
       paymentDetails: paymentDetails,
       status: "pending"
     });
