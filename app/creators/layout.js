@@ -19,12 +19,11 @@ function LayoutContent({ children }) {
 
        {/* 🚨 RESPONSIVE & SMART NAVIGATION 🚨 */}
       {hasUsername && (
-        // Mobile me no gap (bottom-0), Desktop me thoda gap (sm:pb-6)
-        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none sm:pb-6">
+        // 🚨 FIX 1: Changed z-50 to z-40 so Drawers/Modals always open ON TOP of this bar
+        <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none sm:pb-6">
           
           <div className="w-full sm:max-w-[600px] bg-white/95 backdrop-blur-md sm:rounded-3xl border-t sm:border border-slate-200 shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.1)] transition-all pointer-events-auto">
             
-            {/* 🚨 FIX: Perfect Height and items aligned to bottom (items-end) */}
             <div className="flex justify-around items-end h-[65px] px-2 pb-1.5 sm:pb-2">
 
               {/* Home */}
@@ -33,7 +32,7 @@ function LayoutContent({ children }) {
                 <span className={`text-[10px] font-bold ${isActive('/creators') ? 'text-blue-600' : 'text-slate-400'}`}>Home</span>
               </Link>
 
-              {/* All Posts (🚨 FIX: New 4-Box Grid Icon) */}
+              {/* All Posts */}
               <Link href="/creators/auto-post" className="flex flex-col items-center justify-end flex-1 h-full gap-1 pb-1">
                 <svg className={`w-6 h-6 transition-colors ${isActive('/creators/auto-post') ? 'text-blue-600 drop-shadow-sm' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                   <rect x="4" y="4" width="6" height="6" rx="1.5" />
@@ -44,12 +43,12 @@ function LayoutContent({ children }) {
                 <span className={`text-[10px] font-bold ${isActive('/creators/auto-post') ? 'text-blue-600' : 'text-slate-400'}`}>All Post</span>
               </Link>
 
-              {/* Add Link (+) 🚨 FIX: Compact, perfectly aligned text */}
-              <div className="flex flex-col items-center justify-end flex-1 h-full relative pb-1">
-                <Link href="/creators/addlink" className={`absolute -top-5 flex items-center justify-center w-[52px] h-[52px] rounded-[18px] border-[4px] border-white shadow-md active:scale-95 transition-all ${isActive('/creators/addlink') ? 'bg-slate-900' : 'bg-blue-600'}`}>
+              {/* 🚨 FIX 2: Desktop/Mobile Safe Floating Button (Removed 'absolute', added 'shrink-0' & '-mt-6') */}
+              <div className="flex flex-col items-center justify-end flex-1 h-full pb-1">
+                <Link href="/creators/addlink" className={`flex items-center justify-center w-[54px] h-[54px] shrink-0 rounded-[18px] border-[4px] border-white shadow-md active:scale-95 transition-all -mt-6 mb-1 ${isActive('/creators/addlink') ? 'bg-slate-900' : 'bg-blue-600'}`}>
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path></svg>
                 </Link>
-                <span className={`text-[10px] font-extrabold tracking-wide ${isActive('/creators/addlink') ? 'text-slate-900' : 'text-blue-600'}`}>Add Link</span>
+                <span className={`text-[10px] font-extrabold tracking-wide leading-none ${isActive('/creators/addlink') ? 'text-slate-900' : 'text-blue-600'}`}>Add Link</span>
               </div>
 
               {/* Analytics */}
