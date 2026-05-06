@@ -252,29 +252,47 @@ function AccountContent() {
           
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Creator Profile</h1>
 
-          {/* 1. THE BIO LINK BAR (Compact with QR Button) */}
-          <div className="bg-slate-900 text-white rounded-xl p-2 flex items-center justify-between shadow-md">
-            <div className="flex items-center gap-2 pl-2 overflow-hidden flex-1">
-              <span className="text-lg">🔗</span>
-              <span className="font-bold text-sm truncate text-slate-300">linkfav.com/<span className="text-white">{username}</span></span>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              
-              {/* 🚨 NAYA QR BUTTON */}
-              <button onClick={() => setShowQRModal(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white transition-colors px-3 py-2.5 rounded-lg font-bold text-xs flex items-center gap-1.5" title="Get QR Code">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-              </button>
+          {/* 1. THE BIO LINK BAR (Same as Creator Page - White Theme) */}
+<div className="bg-white border-[0.5px] border-slate-200/70 rounded-xl py-2 px-3 shadow-sm flex items-center justify-between gap-2 overflow-hidden hover:border-slate-300 transition-colors">
+  
+  <div className="flex flex-col min-w-0 flex-1 pl-1">
+    <div className="flex items-center gap-1.5 mb-0.5">
+      <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider leading-none">Your Page Link</p>
+      <button onClick={copyBioLink} className="text-slate-400 hover:text-emerald-500 active:scale-95 transition-all" title="Copy Link">
+        {typeof isCopied !== "undefined" && isCopied ? (
+          <svg className="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+        ) : (
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+        )}
+      </button>
+    </div>
+    <span className="font-black text-[12px] md:text-sm truncate block text-slate-800 leading-tight">linkfav.com/{username}</span>
+  </div>
 
-              <button onClick={copyBioLink} className="bg-slate-800 hover:bg-slate-700 transition-colors px-4 py-2.5 rounded-lg font-bold text-xs flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                Copy
-              </button>
-              <a href={bioLink} target="_blank" rel="noreferrer" className="bg-blue-600 hover:bg-blue-500 text-white transition-colors px-4 py-2.5 rounded-lg font-bold text-xs flex items-center gap-1.5">
-                Visit
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-              </a>
-            </div>
-          </div>
+  <div className="flex shrink-0 gap-1.5 items-center">
+    
+    <button 
+      onClick={() => setShowQRModal(true)} 
+      className="flex items-center justify-center p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors rounded-lg border border-indigo-100 active:scale-95" 
+      title="Show QR Code"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 md:w-5 md:h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
+      </svg>
+    </button>
+
+    <a 
+      href={bioLink} 
+      target="_blank" 
+      rel="noreferrer" 
+      className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white transition-colors px-3 py-2 rounded-lg font-extrabold text-[10px] md:text-xs shadow-md shadow-blue-500/30 active:scale-95"
+    >
+      View <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+    </a>
+
+  </div>
+</div>
 
           {/* 2. ACCOUNT SECURITY & EARNINGS (READ-ONLY) */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">

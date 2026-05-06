@@ -348,7 +348,7 @@ function AutoPostContent() {
               <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">Collection</span>
               <h3 className="font-bold text-slate-900 mt-1 line-clamp-1">{group.collectionName}</h3>
               <div className="flex items-center gap-2 mt-0.5">
-                <p className="text-xs text-slate-500 font-medium">{group.deals.length} Products | {type === "platform" ? "Platform Links" : "Own Links"}</p>
+                <p className="text-xs text-slate-500 font-medium">{group.deals.length} Products</p>
                 {/* 🚨 Click Count UI for Collections (Only Platform) */}
                 {type === "platform" && (
                   <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md flex items-center gap-1">
@@ -373,7 +373,7 @@ function AutoPostContent() {
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-slate-900 line-clamp-1">{group.deal.title}</h3>
               <div className="flex items-center gap-2 mt-0.5">
-                <p className="text-xs text-slate-500 font-medium">{group.deal.store} | {type === "platform" ? "Platform Link" : "Own Link"}</p>
+                <p className="text-xs text-slate-500 font-medium">{group.deal.store}</p>
                 {/* 🚨 Click Count UI for Single Links (Only Platform) */}
                 {type === "platform" && (
                   <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md flex items-center gap-1">
