@@ -188,7 +188,7 @@ function DashboardContent() {
       else if (hour < 18) timeGreeting = "Good Afternoon";
 
       const firstName = session.user.name.split(" ")[0];
-      setGreetingText(`👋 Hello ${firstName}, ${timeGreeting}!`);
+      setGreetingText(`Hi ${firstName}, ${timeGreeting}!`);
     }
   }, [session?.user?.name]);
 
@@ -331,51 +331,45 @@ function DashboardContent() {
               
               {/* BIO LINK BAR */}
             <div className="bg-white border-[0.5px] border-slate-200/70 rounded-xl py-2 px-3 shadow-sm flex items-center justify-between gap-2 overflow-hidden hover:border-slate-300 transition-colors">
-                 <div className="flex items-center gap-2.5 overflow-hidden flex-1">
-                    <div className="w-8 h-8 md:w-9 md:h-9 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shrink-0 border border-blue-100">
-                       <svg className="w-4 h-4 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                    </div>
-                    <div className="min-w-0">
-                       <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider leading-none mb-0.5">Your Bio Page</p>
-                       <span className="font-black text-[12px] md:text-sm truncate block text-slate-800 leading-tight">linkfav.com/{dbUser.username}</span>
-                    </div>
-                 </div>
-                 
-                 <div className="flex shrink-0 gap-1.5">
-                    
-                    {/* 🚨 THE PERFECTED PREMIUM QR BUTTON (100% Reliable SVG + Center Arrow) */}
-                    <button 
-                      onClick={() => setShowQRModal(true)} 
-                      className="relative flex items-center justify-center p-2.5 bg-indigo-600 hover:bg-indigo-700 text-white transition-colors rounded-lg shadow-md shadow-indigo-500/30 group" 
-                      title="Download QR"
-                    >
-                       {/* 1. Base QR Icon (Bada aur Clean) */}
-                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 md:w-5 md:h-5 opacity-90 group-hover:opacity-100 transition-opacity">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
-                       </svg>
-                       
-                       {/* 2. Center Download Arrow (White Circle) */}
-                       <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="bg-white rounded-full flex items-center justify-center w-[14px] h-[14px] shadow-sm transform group-hover:scale-110 transition-transform duration-200">
-                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3.5} stroke="currentColor" className="w-[9px] h-[9px] text-indigo-700 mt-[1px]">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                             </svg>
-                          </div>
-                       </div>
-                    </button>
+  
+  <div className="flex flex-col min-w-0 flex-1 pl-1">
+    <div className="flex items-center gap-1.5 mb-0.5">
+      <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider leading-none">Your Page Link</p>
+      <button onClick={copyPublicLink} className="text-slate-400 hover:text-emerald-500 active:scale-95 transition-all" title="Copy Link">
+        {isCopied ? (
+          <svg className="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+        ) : (
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+        )}
+      </button>
+    </div>
+    <span className="font-black text-[12px] md:text-sm truncate block text-slate-800 leading-tight">linkfav.com/{dbUser.username}</span>
+  </div>
 
-                    {/* ORIGINAL COPY BUTTON */}
-                    <button onClick={copyPublicLink} className="flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors px-3 py-2 rounded-lg font-extrabold text-[10px] md:text-xs border border-slate-100">
-                       {isCopied ? "Copied!" : "Copy🔗"}
-                    </button>
-                    
-                    {/* ORIGINAL VIEW PAGE BUTTON */}
-                    <a href={`/${dbUser.username}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white transition-colors px-3 py-2 rounded-lg font-extrabold text-[10px] md:text-xs shadow-md shadow-blue-500/30">
-                       View Page <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                    </a>
-                 </div>
-              </div>
+  <div className="flex shrink-0 gap-1.5 items-center">
+    
+    <button 
+      onClick={() => setShowQRModal(true)} 
+      className="flex items-center justify-center p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors rounded-lg border border-indigo-100 active:scale-95" 
+      title="Show QR Code"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 md:w-5 md:h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
+      </svg>
+    </button>
+
+    <a 
+      href={`/${dbUser.username}`} 
+      target="_blank" 
+      rel="noreferrer" 
+      className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white transition-colors px-3 py-2 rounded-lg font-extrabold text-[10px] md:text-xs shadow-md shadow-blue-500/30 active:scale-95"
+    >
+      View <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+    </a>
+
+  </div>
+</div>
 
               {/* ACTIVITY ANALYTICS */}
               <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm">
