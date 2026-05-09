@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import GlobalDeal from "@/lib/models/GlobalDeal"; // Dhyan dein, aapke project mein ye path sahi ho
+import GlobalDeal from "@/lib/models/GlobalDeal";
 import { getOgTags } from "@/lib/scraper";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export const maxDuration = 60;
+// 🚨 VERCEL TIMEOUT FIX
+export const maxDuration = 60; 
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -20,7 +21,7 @@ const BROAD_CATEGORIES = [
   "Other"
 ];
 
-// 🧠 THE SMART CATEGORY ENGINE (Agar AI fail ho toh ye app ko bacha lega!)
+// 🧠 THE SMART CATEGORY ENGINE
 function guessCategory(text) {
   if (!text) return "Other";
   const lowerText = text.toLowerCase();
@@ -41,7 +42,6 @@ export async function POST(req) {
   try {
     const body = await req.json();
     
-    // 1. TELEGRAM TEXT EXTRACTOR
     let text = "";
     const msg = body.message || body.channel_post || body.edited_message || body.edited_channel_post;
     
@@ -62,7 +62,7 @@ export async function POST(req) {
 
     const targetUrl = urls[0];
 
-    // 2. THE MASTER SCRAPER LAYER
+    // THE MASTER SCRAPER LAYER
     const scrapedData = await getOgTags(targetUrl);
     const ogTitle = (scrapedData.success && scrapedData.title) ? scrapedData.title : "Exclusive Deal";
     
@@ -75,18 +75,22 @@ export async function POST(req) {
     const scraperPrice = (scrapedData.success && scrapedData.price) ? scrapedData.price : "";
     const scraperDiscount = (scrapedData.success && scrapedData.discountPercent) ? scrapedData.discountPercent : "";
 
-    // 3. SAFE DEFAULT DATA (Category pakka set hogi)
     let aiData = {
       catchyTitle: ogTitle,
-      category: guessCategory(text + " " + ogTitle), // 🔥 Smart Matcher Active
+      category: guessCategory(text + " " + ogTitle), 
       price: scraperPrice, 
       discountPercent: scraperDiscount,
       couponCode: ""
     };
 
-    // 4. THE SMART AI BRAIN
+    // 🤖 THE PRO AI BRAIN (Force JSON Mode)
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" }); 
+      // Use gemini-1.5-flash as it natively supports strict JSON output
+      const model = genAI.getGenerativeModel({ 
+          model: "gemini-1.5-flash",
+          generationConfig: { responseMimeType: "application/json" } // 🔥 FORCE 100% JSON
+      }); 
+
       const prompt = `
         Analyze this e-commerce deal.
         TELEGRAM POST: "${text}"
@@ -98,41 +102,38 @@ export async function POST(req) {
         4. discountPercent: Extract discount (e.g. "50% OFF") from text. If none, return "".
         5. couponCode: Extract promo code from text. If none, return "".
         
-        Return ONLY valid JSON. Example: {"catchyTitle": "...", "category": "...", "price": "...", "discountPercent": "...", "couponCode": "..."}
+        Respond ONLY with a valid JSON object.
       `;
 
       const result = await model.generateContent(prompt);
-      let responseText = result.response.text();
+      const responseText = result.response.text();
       
-      // 🔥 BUG FIX: Safe JSON Parsing (Agar AI kachra de, toh sirf JSON nikalo)
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsedAiData = JSON.parse(jsonMatch[0]);
-        
-        aiData.catchyTitle = parsedAiData.catchyTitle || ogTitle;
-        
-        // Agar AI ne category galat di, toh hamara Matcher theek kar dega
-        if (BROAD_CATEGORIES.includes(parsedAiData.category) && parsedAiData.category !== "Other") {
-            aiData.category = parsedAiData.category;
-        } else {
-            aiData.category = guessCategory(text + " " + ogTitle); 
-        }
-        
-        aiData.price = parsedAiData.price || scraperPrice || "";
-        aiData.discountPercent = parsedAiData.discountPercent || scraperDiscount || "";
-        aiData.couponCode = parsedAiData.couponCode || "";
+      const parsedAiData = JSON.parse(responseText);
+      
+      aiData.catchyTitle = parsedAiData.catchyTitle || ogTitle;
+      
+      if (BROAD_CATEGORIES.includes(parsedAiData.category) && parsedAiData.category !== "Other") {
+          aiData.category = parsedAiData.category;
+      } else {
+          aiData.category = guessCategory(text + " " + ogTitle); 
       }
+      
+      aiData.price = parsedAiData.price || scraperPrice || "";
+      aiData.discountPercent = parsedAiData.discountPercent || scraperDiscount || "";
+      aiData.couponCode = parsedAiData.couponCode || "";
+      
+      console.log("✅ AI Parsed Successfully!");
 
     } catch (aiError) {
-      console.error("⚠️ AI Failed or JSON parsing error. Using Safe Fallback Data.", aiError.message);
+      console.error("⚠️ AI / Rate Limit Failed. Using Safe Fallback Data. Reason:", aiError.message);
     }
 
-    // 5. DATABASE CONNECTION FIX (Vercel Timeout/Crash Fix)
+    // DATABASE CONNECTION FIX
     if (mongoose.connection.readyState !== 1) {
       await mongoose.connect(process.env.MONGODB_URI);
     }
 
-    // 6. SAVE TO DB
+    // SAVE TO DB
     const newDeal = await GlobalDeal.create({
       creatorId: "telegram_bot",
       originalUrl: targetUrl,
@@ -140,7 +141,7 @@ export async function POST(req) {
       store: finalStoreName, 
       title: aiData.catchyTitle,
       image: finalImage,
-      category: aiData.category, // 🔥 Har deal mein pakka aayegi!
+      category: aiData.category, 
       price: aiData.price, 
       discountPercent: aiData.discountPercent,
       couponCode: aiData.couponCode,
@@ -152,8 +153,8 @@ export async function POST(req) {
     return NextResponse.json({ success: true }, { status: 200 });
 
   } catch (error) {
-    console.error("Webhook Internal Error:", error);
-    // Vercel ko 500 status dene se Telegram baar-baar retry karta hai, isliye 200 dekar silent fail karenge
+    // 🔥 ASLI DATABASE ERROR YAHAN DIKHEGA
+    console.error("❌ Webhook/DB Critical Error:", error.message);
     return NextResponse.json({ error: "Caught internally", message: error.message }, { status: 200 }); 
   }
 }
