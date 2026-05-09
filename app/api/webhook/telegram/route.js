@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import GlobalDeal from "@/lib/models/GlobalDeal";
+import GlobalDeal from "@/lib/models/GlobalDeal"; // Dhyan dein, aapke project mein ye path sahi ho
 import { getOgTags } from "@/lib/scraper";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+export const maxDuration = 60;
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// category select
 const BROAD_CATEGORIES = [
   "Men's Fashion",
   "Women's Fashion", 
@@ -15,14 +16,32 @@ const BROAD_CATEGORIES = [
   "Home & Kitchen", 
   "Footwear", 
   "Accessories", 
-  "Grocery"
+  "Grocery",
+  "Other"
 ];
+
+// 🧠 THE SMART CATEGORY ENGINE (Agar AI fail ho toh ye app ko bacha lega!)
+function guessCategory(text) {
+  if (!text) return "Other";
+  const lowerText = text.toLowerCase();
+  
+  if (lowerText.includes("shirt") || lowerText.includes("jeans") || lowerText.includes("t-shirt") || lowerText.includes("mens") || lowerText.includes("men's")) return "Men's Fashion";
+  if (lowerText.includes("saree") || lowerText.includes("kurti") || lowerText.includes("dress") || lowerText.includes("womens") || lowerText.includes("women's")) return "Women's Fashion";
+  if (lowerText.includes("phone") || lowerText.includes("mobile") || lowerText.includes("earbud") || lowerText.includes("laptop") || lowerText.includes("watch") || lowerText.includes("smartwatch")) return "Electronics & Mobiles";
+  if (lowerText.includes("shoe") || lowerText.includes("sneaker") || lowerText.includes("sandal") || lowerText.includes("slipper") || lowerText.includes("footwear") || lowerText.includes("crocs")) return "Footwear";
+  if (lowerText.includes("cream") || lowerText.includes("wash") || lowerText.includes("trimmer") || lowerText.includes("perfume") || lowerText.includes("makeup") || lowerText.includes("serum")) return "Beauty & Grooming";
+  if (lowerText.includes("kitchen") || lowerText.includes("cooker") || lowerText.includes("bottle") || lowerText.includes("home") || lowerText.includes("gas")) return "Home & Kitchen";
+  if (lowerText.includes("bag") || lowerText.includes("sunglass") || lowerText.includes("belt") || lowerText.includes("wallet") || lowerText.includes("luggage")) return "Accessories";
+  if (lowerText.includes("grocery") || lowerText.includes("food") || lowerText.includes("snack") || lowerText.includes("tea") || lowerText.includes("coffee")) return "Grocery";
+  
+  return "Other";
+}
 
 export async function POST(req) {
   try {
     const body = await req.json();
     
-    // 1. ULTIMATE TEXT EXTRACTOR
+    // 1. TELEGRAM TEXT EXTRACTOR
     let text = "";
     const msg = body.message || body.channel_post || body.edited_message || body.edited_channel_post;
     
@@ -31,7 +50,7 @@ export async function POST(req) {
     }
 
     if (!text) {
-      return NextResponse.json({ status: "ignored" }, { status: 200 });
+      return NextResponse.json({ status: "ignored", reason: "No text found" }, { status: 200 });
     }
 
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -41,80 +60,100 @@ export async function POST(req) {
       return NextResponse.json({ status: "no_url" }, { status: 200 });
     }
 
-    // SIRF PEHLA LINK LEGA
     const targetUrl = urls[0];
 
-    // 2. SCRAPER (Yahan se lamba link aayega)
+    // 2. THE MASTER SCRAPER LAYER
     const scrapedData = await getOgTags(targetUrl);
     const ogTitle = (scrapedData.success && scrapedData.title) ? scrapedData.title : "Exclusive Deal";
     
     const fallbackImage = "https://placehold.co/600x400/indigo/white?text=Mega+Deal";
     const finalImage = (scrapedData.success && scrapedData.image) ? scrapedData.image : fallbackImage;
 
-    // 🚨 MASTERSTROKE: Lamba link aur Store Name nikalna
     const finalExpandedUrl = (scrapedData.success && scrapedData.expandedUrl) ? scrapedData.expandedUrl : targetUrl;
     const finalStoreName = (scrapedData.success && scrapedData.store) ? scrapedData.store : "Unknown";
 
-    // 3. THE FALLBACK SHIELD (Agar AI fail ho jaye toh API/Scraper ka data use karo)
+    const scraperPrice = (scrapedData.success && scrapedData.price) ? scrapedData.price : "";
+    const scraperDiscount = (scrapedData.success && scrapedData.discountPercent) ? scrapedData.discountPercent : "";
+
+    // 3. SAFE DEFAULT DATA (Category pakka set hogi)
     let aiData = {
       catchyTitle: ogTitle,
-      category: (scrapedData.success && scrapedData.category) ? scrapedData.category : "Other",
-      price: (scrapedData.success && scrapedData.price) ? scrapedData.price : "Best Price",
-      discountPercent: (scrapedData.success && scrapedData.discountPercent) ? scrapedData.discountPercent : "",
+      category: guessCategory(text + " " + ogTitle), // 🔥 Smart Matcher Active
+      price: scraperPrice, 
+      discountPercent: scraperDiscount,
       couponCode: ""
     };
 
-    // 4. THE AI BRAIN
+    // 4. THE SMART AI BRAIN
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" }); 
       const prompt = `
-        You are an expert Indian e-commerce affiliate copywriter.
-        DATA SOURCE 1: "${text}"
-        DATA SOURCE 2: "${ogTitle}"
+        Analyze this e-commerce deal.
+        TELEGRAM POST: "${text}"
+        SCRAPED TITLE: "${ogTitle}"
         
-        Tasks:
-        1. Catchy Title: Short, attractive title.
-        2. Category: Choose ONLY from: ${JSON.stringify(BROAD_CATEGORIES)}. If it doesn't fit perfectly, use "Other".
-        3. Price: Exact final price from DATA SOURCE 1 or 'Best Price'.
-        4. Discount: Discount from DATA SOURCE 1 or ''.
-        5. Coupon: Coupon code from DATA SOURCE 1 or ''.
+        1. catchyTitle: Clean, short title. No emojis.
+        2. category: Strictly pick ONE from this list: ${JSON.stringify(BROAD_CATEGORIES)}.
+        3. price: Extract price from text. If none, return "". DO NOT invent.
+        4. discountPercent: Extract discount (e.g. "50% OFF") from text. If none, return "".
+        5. couponCode: Extract promo code from text. If none, return "".
         
-        Respond ONLY in exact JSON format:
-        {"catchyTitle": "...", "category": "...", "price": "...", "discountPercent": "...", "couponCode": "..."}
+        Return ONLY valid JSON. Example: {"catchyTitle": "...", "category": "...", "price": "...", "discountPercent": "...", "couponCode": "..."}
       `;
 
       const result = await model.generateContent(prompt);
-      const responseText = result.response.text().replace(/```json/g, "").replace(/```/g, "").trim();
-      aiData = JSON.parse(responseText);
-      console.log("🔥 AI Ne Successfully Data Nikala!");
+      let responseText = result.response.text();
+      
+      // 🔥 BUG FIX: Safe JSON Parsing (Agar AI kachra de, toh sirf JSON nikalo)
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsedAiData = JSON.parse(jsonMatch[0]);
+        
+        aiData.catchyTitle = parsedAiData.catchyTitle || ogTitle;
+        
+        // Agar AI ne category galat di, toh hamara Matcher theek kar dega
+        if (BROAD_CATEGORIES.includes(parsedAiData.category) && parsedAiData.category !== "Other") {
+            aiData.category = parsedAiData.category;
+        } else {
+            aiData.category = guessCategory(text + " " + ogTitle); 
+        }
+        
+        aiData.price = parsedAiData.price || scraperPrice || "";
+        aiData.discountPercent = parsedAiData.discountPercent || scraperDiscount || "";
+        aiData.couponCode = parsedAiData.couponCode || "";
+      }
 
     } catch (aiError) {
-      console.error("⚠️ Gemini Limit Exceeded ya Error, Fallback data use kar rahe hain...");
+      console.error("⚠️ AI Failed or JSON parsing error. Using Safe Fallback Data.", aiError.message);
     }
 
-    // 5. DATABASE SAVE
-    await mongoose.connect(process.env.MONGODB_URI);
+    // 5. DATABASE CONNECTION FIX (Vercel Timeout/Crash Fix)
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI);
+    }
 
+    // 6. SAVE TO DB
     const newDeal = await GlobalDeal.create({
       creatorId: "telegram_bot",
       originalUrl: targetUrl,
-      expandedUrl: finalExpandedUrl, // 🚨 Cuelinks Tab 3 conversion ke liye ekdum ready
-      store: finalStoreName,         // 🚨 Tracking report ke liye zaroori
+      expandedUrl: finalExpandedUrl, 
+      store: finalStoreName, 
       title: aiData.catchyTitle,
       image: finalImage,
-      category: aiData.category,
-      price: aiData.price,
+      category: aiData.category, // 🔥 Har deal mein pakka aayegi!
+      price: aiData.price, 
       discountPercent: aiData.discountPercent,
       couponCode: aiData.couponCode,
       source: "telegram",
     });
 
-    console.log("✅ Deal Database mein save ho gayi:", newDeal.title);
+    console.log("✅ Auto Deal saved cleanly with category:", newDeal.category);
 
     return NextResponse.json({ success: true }, { status: 200 });
 
   } catch (error) {
     console.error("Webhook Internal Error:", error);
-    return NextResponse.json({ error: "Caught internally" }, { status: 200 });
+    // Vercel ko 500 status dene se Telegram baar-baar retry karta hai, isliye 200 dekar silent fail karenge
+    return NextResponse.json({ error: "Caught internally", message: error.message }, { status: 200 }); 
   }
 }
