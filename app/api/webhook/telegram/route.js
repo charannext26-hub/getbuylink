@@ -37,6 +37,22 @@ function formatPrice(rawPrice) {
   return ""; 
 }
 
+// 🧹 THE DISCOUNT CLEANER (Kachra saaf karke '% OFF' lagayega)
+function formatDiscount(rawDiscount) {
+  if (!rawDiscount) return "";
+  
+  // String ko uppercase kardo aur purana "OFF" hata do taaki double na ho
+  let cleanStr = String(rawDiscount).toUpperCase().replace(/\s*OFF\s*/g, "").trim();
+  
+  // Sirf number dhoondho (jaise 56, 10, 80)
+  const numberMatch = cleanStr.match(/(\d+)/);
+  
+  if (numberMatch) {
+      return `${numberMatch[1]}% OFF`; // Ekdum premium format: 56% OFF
+  }
+  return ""; 
+}
+
 // 🧠 THE SMART CATEGORY ENGINE
 function guessCategory(text) {
   if (!text) return "Other";
@@ -94,8 +110,8 @@ export async function POST(req) {
     let aiData = {
       catchyTitle: ogTitle,
       category: guessCategory(text + " " + ogTitle), 
-      price: formatPrice(scraperPrice), // Pehle scraper ka price clean karo
-      discountPercent: scraperDiscount,
+      price: formatPrice(scraperPrice), 
+      discountPercent: formatDiscount(scraperDiscount), // 🔥 Scraper ka discount clean kiya
       couponCode: ""
     };
 
@@ -138,9 +154,9 @@ export async function POST(req) {
               aiData.category = guessCategory(text + " " + ogTitle); 
           }
           
-          // 🔥 AI ne jo price diya, usko bhi clean karke format karo, agar nahi hai toh Scraper wala use karo
+          // 🔥 AI ne jo price aur discount diya, usko clean karke format karo
           aiData.price = formatPrice(parsedAiData.price) || formatPrice(scraperPrice) || "";
-          aiData.discountPercent = parsedAiData.discountPercent || scraperDiscount || "";
+          aiData.discountPercent = formatDiscount(parsedAiData.discountPercent) || formatDiscount(scraperDiscount) || "";
           aiData.couponCode = parsedAiData.couponCode || "";
           
           console.log(`✅ AI Parsed Successfully using ${modelName}!`);
@@ -176,7 +192,7 @@ export async function POST(req) {
       source: "telegram",
     });
 
-    console.log("✅ Auto Deal saved cleanly. Price:", newDeal.price, "Category:", newDeal.category);
+    console.log("✅ Auto Deal saved cleanly. Price:", newDeal.price, "Discount:", newDeal.discountPercent, "Category:", newDeal.category);
 
     return NextResponse.json({ success: true }, { status: 200 });
 
