@@ -21,6 +21,22 @@ const BROAD_CATEGORIES = [
   "Special Deals"
 ];
 
+// 🧹 THE PRICE CLEANER (Kachra saaf karke ₹ lagayega)
+function formatPrice(rawPrice) {
+  if (!rawPrice) return "";
+  
+  // "Rs", "Rs.", "Price", "rupees", aur purane "₹" ko delete karo
+  let cleanStr = String(rawPrice).replace(/rs\.?|rupees|price|₹/gi, "").trim();
+  
+  // Sirf numbers aur comma (jaise 1,299) ko dhoondho
+  const numberMatch = cleanStr.match(/[\d,]+(\.\d+)?/);
+  
+  if (numberMatch) {
+      return `₹${numberMatch[0]}`; // Ekdum saaf format: ₹1,299
+  }
+  return ""; 
+}
+
 // 🧠 THE SMART CATEGORY ENGINE
 function guessCategory(text) {
   if (!text) return "Other";
@@ -78,54 +94,66 @@ export async function POST(req) {
     let aiData = {
       catchyTitle: ogTitle,
       category: guessCategory(text + " " + ogTitle), 
-      price: scraperPrice, 
+      price: formatPrice(scraperPrice), // Pehle scraper ka price clean karo
       discountPercent: scraperDiscount,
       couponCode: ""
     };
 
-    // 🤖 THE PRO AI BRAIN (Force JSON Mode)
-    try {
-      // Use gemini-1.5-flash as it natively supports strict JSON output
-      const model = genAI.getGenerativeModel({ 
-          model: "gemini-2.5-flash",
-          generationConfig: { responseMimeType: "application/json" } // 🔥 FORCE 100% JSON
-      }); 
+    // 🤖 THE MULTI-MODEL AI BRAIN (Failover System)
+    const AI_MODELS = ["gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"];
+    let aiSuccess = false;
 
-      const prompt = `
-        Analyze this e-commerce deal.
-        TELEGRAM POST: "${text}"
-        SCRAPED TITLE: "${ogTitle}"
-        
-        1. catchyTitle: Clean, short title. No emojis.
-        2. category: Strictly pick ONE from this list: ${JSON.stringify(BROAD_CATEGORIES)}.
-        3. price: Extract price from text. If none, return "". DO NOT invent.
-        4. discountPercent: Extract discount (e.g. "50% OFF") from text. If none, return "".
-        5. couponCode: Extract promo code from text. If none, return "".
-        
-        Respond ONLY with a valid JSON object.
-      `;
+    for (const modelName of AI_MODELS) {
+        try {
+          console.log(`➡️ Trying AI Model: ${modelName}`);
+          const model = genAI.getGenerativeModel({ 
+              model: modelName,
+              generationConfig: { responseMimeType: "application/json" } // FORCE 100% JSON
+          }); 
 
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
-      
-      const parsedAiData = JSON.parse(responseText);
-      
-      aiData.catchyTitle = parsedAiData.catchyTitle || ogTitle;
-      
-      if (BROAD_CATEGORIES.includes(parsedAiData.category) && parsedAiData.category !== "Other") {
-          aiData.category = parsedAiData.category;
-      } else {
-          aiData.category = guessCategory(text + " " + ogTitle); 
-      }
-      
-      aiData.price = parsedAiData.price || scraperPrice || "";
-      aiData.discountPercent = parsedAiData.discountPercent || scraperDiscount || "";
-      aiData.couponCode = parsedAiData.couponCode || "";
-      
-      console.log("✅ AI Parsed Successfully!");
+          const prompt = `
+            Analyze this e-commerce deal.
+            TELEGRAM POST: "${text}"
+            SCRAPED TITLE: "${ogTitle}"
+            
+            1. catchyTitle: Clean, short title. No emojis.
+            2. category: Strictly pick ONE from this list: ${JSON.stringify(BROAD_CATEGORIES)}.
+            3. price: Extract ONLY the final price number from text. If none, return "".
+            4. discountPercent: Extract discount (e.g. "50% OFF") from text. If none, return "".
+            5. couponCode: Extract promo code from text. If none, return "".
+            
+            Respond ONLY with a valid JSON object.
+          `;
 
-    } catch (aiError) {
-      console.error("⚠️ AI / Rate Limit Failed. Using Safe Fallback Data. Reason:", aiError.message);
+          const result = await model.generateContent(prompt);
+          const responseText = result.response.text();
+          
+          const parsedAiData = JSON.parse(responseText);
+          
+          aiData.catchyTitle = parsedAiData.catchyTitle || ogTitle;
+          
+          if (BROAD_CATEGORIES.includes(parsedAiData.category) && parsedAiData.category !== "Other") {
+              aiData.category = parsedAiData.category;
+          } else {
+              aiData.category = guessCategory(text + " " + ogTitle); 
+          }
+          
+          // 🔥 AI ne jo price diya, usko bhi clean karke format karo, agar nahi hai toh Scraper wala use karo
+          aiData.price = formatPrice(parsedAiData.price) || formatPrice(scraperPrice) || "";
+          aiData.discountPercent = parsedAiData.discountPercent || scraperDiscount || "";
+          aiData.couponCode = parsedAiData.couponCode || "";
+          
+          console.log(`✅ AI Parsed Successfully using ${modelName}!`);
+          aiSuccess = true;
+          break; // Data mil gaya, aage ke models ko check mat karo (Loop Stop)
+
+        } catch (aiError) {
+          console.log(`⚠️ Model ${modelName} failed/Limit Reached. Switching to next...`);
+        }
+    }
+
+    if (!aiSuccess) {
+        console.error("❌ All AI Models Failed. Using Scraper Fallback Data.");
     }
 
     // DATABASE CONNECTION FIX
@@ -148,12 +176,11 @@ export async function POST(req) {
       source: "telegram",
     });
 
-    console.log("✅ Auto Deal saved cleanly with category:", newDeal.category);
+    console.log("✅ Auto Deal saved cleanly. Price:", newDeal.price, "Category:", newDeal.category);
 
     return NextResponse.json({ success: true }, { status: 200 });
 
   } catch (error) {
-    // 🔥 ASLI DATABASE ERROR YAHAN DIKHEGA
     console.error("❌ Webhook/DB Critical Error:", error.message);
     return NextResponse.json({ error: "Caught internally", message: error.message }, { status: 200 }); 
   }
