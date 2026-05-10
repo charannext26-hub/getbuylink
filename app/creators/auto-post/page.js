@@ -261,7 +261,7 @@ function AutoPostContent() {
             dealId: selectedGroup.deal._id,
             title: currentCollectionName,
             videoUrl: editVideoUrl || "",
-            category: editCategory || "Other"
+            category: editCategory || "Special Deals"
           })
         });
       }
