@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 const ALL_CATEGORIES = [
   "Men's Fashion", "Women's Fashion", "Electronics & Mobiles", 
-  "Beauty & Grooming", "Home & Kitchen", "Footwear", "Accessories", "Grocery", "Others"
+  "Beauty & Grooming", "Home & Kitchen", "Footwear", "Accessories", "Grocery", "Special Deals"
 ];
 
 function AutoPostContent() {
@@ -283,7 +283,7 @@ function AutoPostContent() {
         store: scrapedStore,
         price: scrapedPrice,
         usePlatformLink: isPlatform, 
-        category: editCategory || "Other",
+        category: editCategory || "Special Deals",
         videoUrl: editVideoUrl || "",
         batchId: currentBatchId,
         collectionName: currentCollectionName,

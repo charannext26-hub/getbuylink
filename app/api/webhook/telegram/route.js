@@ -18,7 +18,7 @@ const BROAD_CATEGORIES = [
   "Footwear", 
   "Accessories", 
   "Grocery",
-  "Other"
+  "Special Deals"
 ];
 
 // 🧠 THE SMART CATEGORY ENGINE
@@ -35,7 +35,7 @@ function guessCategory(text) {
   if (lowerText.includes("bag") || lowerText.includes("sunglass") || lowerText.includes("belt") || lowerText.includes("wallet") || lowerText.includes("luggage")) return "Accessories";
   if (lowerText.includes("grocery") || lowerText.includes("food") || lowerText.includes("snack") || lowerText.includes("tea") || lowerText.includes("coffee")) return "Grocery";
   
-  return "Other";
+  return "Special Deals";
 }
 
 export async function POST(req) {
