@@ -32,7 +32,7 @@ function getAppIntent(url) {
         return `intent://${cleanUrl}#Intent;scheme=https;package=com.ril.ajio;S.browser_fallback_url=${fallbackUrl};end`;
     }
     
-    // Default Fallback: Force open in Chrome (if app not specified)
+    // Default Fallback: Force open in Chrome
     return `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${fallbackUrl};end`;
 }
 
@@ -72,16 +72,62 @@ export async function GET(req, { params }) {
 
     // SCENARIO 1: Android User in Instagram/Facebook
     if (isInAppBrowser && isAndroid) {
-        // 🔥 Server-side redirect direct to Intent URL.
-        // Ye line execute hote hi Instagram us "You are leaving our app" wale native popup ko fire karega.
-        // Continue dabate hi Chrome/Native App khul jayega, bina uss error page ke!
         const intentUrl = getAppIntent(targetUrl);
-        return NextResponse.redirect(intentUrl, 302);
+        
+        const androidHtml = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Opening App...</title>
+                <style>
+                    body { background-color: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; text-align: center; }
+                    .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                    .btn { background: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; margin-top: 20px; display: inline-block; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); font-size: 16px; }
+                </style>
+            </head>
+            <body>
+                <div id="loading" style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="loader"></div>
+                    <h2>Loading Deal...</h2>
+                    <p style="color: #94a3b8; font-size: 14px; margin-top: 5px;">We are redirecting you securely.</p>
+                </div>
+
+                <div id="manual" style="display: none; flex-direction: column; align-items: center;">
+                    <h2>Tap to Continue</h2>
+                    <p style="color: #94a3b8; font-size: 14px; margin-top: 5px; max-width: 80%;">Instagram blocks auto-redirects. Click below to open the shopping app.</p>
+                    <a href="${intentUrl}" class="btn">Open App Now</a>
+                </div>
+                
+                <script>
+                    window.onload = function() {
+                        // 1. INVISIBLE IFRAME HACK
+                        // Ye main page ko crash hone se bachayega aur piche se intent fire karega
+                        var iframe = document.createElement('iframe');
+                        iframe.style.display = 'none';
+                        iframe.src = "${intentUrl}";
+                        document.body.appendChild(iframe);
+
+                        // 2. FALLBACK BUTTON
+                        // Agar Instagram iframe ko block kar deta hai, toh 1.5 sec baad hum button dikha denge.
+                        // User physical tap karega, jisse guaranteed app khulega!
+                        setTimeout(function() {
+                            document.getElementById('loading').style.display = 'none';
+                            document.getElementById('manual').style.display = 'flex';
+                        }, 1500);
+                    };
+                </script>
+            </body>
+            </html>
+        `;
+        return new NextResponse(androidHtml, { status: 200, headers: { "Content-Type": "text/html" } });
     }
 
     // SCENARIO 2: iPhone (iOS) User in Instagram/Facebook
     if (isInAppBrowser && isIOS) {
-        // 🍎 iOS Safari Trick (Custom HTML to guide user)
+        // 🍎 iOS Safari Trick
         const iosHtml = `
             <!DOCTYPE html>
             <html>
