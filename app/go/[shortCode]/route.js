@@ -2,71 +2,65 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import LinkPerformance from "@/lib/models/LinkPerformance";
 
+// 🎯 THE MASTER APP DETECTOR (Directly target specific apps)
+function getAppIntent(url) {
+    const fallbackUrl = encodeURIComponent(url);
+    const cleanUrl = url.replace(/^https?:\/\//, ""); // Remove http:// or https://
+
+    // Amazon
+    if (url.includes('amazon.') || url.includes('amzn.')) {
+        return `intent://${cleanUrl}#Intent;scheme=https;package=in.amazon.mShop.android.shopping;S.browser_fallback_url=${fallbackUrl};end`;
+    } 
+    // Flipkart
+    else if (url.includes('flipkart.') || url.includes('fkrt.it') || url.includes('fktr.in')) {
+        return `intent://${cleanUrl}#Intent;scheme=https;package=com.flipkart.android;S.browser_fallback_url=${fallbackUrl};end`;
+    } 
+    // Myntra
+    else if (url.includes('myntra.com')) {
+        return `intent://${cleanUrl}#Intent;scheme=https;package=com.myntra.android;S.browser_fallback_url=${fallbackUrl};end`;
+    } 
+    // Shopsy
+    else if (url.includes('shopsy.in')) {
+        return `intent://${cleanUrl}#Intent;scheme=https;package=com.flipkart.shopsy;S.browser_fallback_url=${fallbackUrl};end`;
+    } 
+    // Meesho
+    else if (url.includes('meesho.com') || url.includes('meesho.in')) {
+        return `intent://${cleanUrl}#Intent;scheme=https;package=com.meesho.supply;S.browser_fallback_url=${fallbackUrl};end`;
+    } 
+    // Ajio
+    else if (url.includes('ajio.com')) {
+        return `intent://${cleanUrl}#Intent;scheme=https;package=com.ril.ajio;S.browser_fallback_url=${fallbackUrl};end`;
+    }
+    
+    // Default Fallback: Agar upar wala koi app nahi hai, toh Google Chrome mein kholo
+    return `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${fallbackUrl};end`;
+}
+
 export async function GET(req, { params }) {
   try {
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(process.env.MONGODB_URI);
     }
 
-    // 1. URL se short code nikalo
     const resolvedParams = await params;
     const shortCode = resolvedParams.shortCode; 
-    
-    // 🚨 NAYA: Check karo ki kya hum Chrome ke andar wale step par hain
-    const action = req.nextUrl.searchParams.get("action");
 
-    // 2. Database mein dhoondho ki yeh code kiska hai
+    // Database check
     const linkData = await LinkPerformance.findOne({ shortCode: shortCode });
 
     if (!linkData) {
       return new NextResponse("Invalid or Expired Link!", { status: 404 });
     }
 
-    // 3. Click count +1 kar do (Sirf tab jab original click ho, Chrome bounce par nahi)
-    if (action !== "chrome") {
-        linkData.clicks += 1;
-        linkData.lastClickedAt = new Date();
-        await linkData.save();
-    }
+    // Click track
+    linkData.clicks += 1;
+    linkData.lastClickedAt = new Date();
+    await linkData.save();
 
     const targetUrl = linkData.affiliateUrl;
 
     // ========================================================
-    // 🚀 PHASE 2: CHROME KE ANDAR (Deep Link Auto-Clicker)
-    // ========================================================
-    if (action === "chrome") {
-         const chromeHtml = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <title>Opening App...</title>
-                <style>
-                    body { background-color: #0f172a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-                    .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
-                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-                    .btn { background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 15px rgba(16,185,129,0.4); display: inline-block; }
-                </style>
-            </head>
-            <body>
-                <div class="loader"></div>
-                <h2>Taking you to the App...</h2>
-                <a id="autoClickLink" href="${targetUrl}" class="btn">Open App Now</a>
-                <p style="color: #94a3b8; font-size: 13px; margin-top: 15px;">If the app doesn't open automatically, tap the button above.</p>
-                <script>
-                    // 🚨 MASTER HACK: Virtual Click to trigger Android App Intent
-                    setTimeout(() => {
-                        document.getElementById("autoClickLink").click();
-                    }, 500);
-                </script>
-            </body>
-            </html>
-         `;
-         return new NextResponse(chromeHtml, { status: 200, headers: { "Content-Type": "text/html" } });
-    }
-
-    // ========================================================
-    // 🚀 PHASE 1: INSTAGRAM SE CHROME MEIN BHEJNA
+    // 🚀 INSTAGRAM / FACEBOOK BYPASS LOGIC
     // ========================================================
     const userAgent = req.headers.get("user-agent") || "";
     const isInstagram = userAgent.includes("Instagram");
@@ -78,22 +72,18 @@ export async function GET(req, { params }) {
 
     if (isInAppBrowser) {
         if (isAndroid) {
-            // Apna hi link bhejenge but "?action=chrome" lagake taaki Chrome mein Phase 2 chale
-            const host = req.headers.get("host");
-            const proto = req.headers.get("x-forwarded-proto") || "https";
-            const chromeBounceUrl = `${proto}://${host}/go/${shortCode}?action=chrome`;
-            
-            const urlWithoutProtocol = chromeBounceUrl.replace(/^https?:\/\//, "");
-            const intentUrl = `intent://${urlWithoutProtocol}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(chromeBounceUrl)};end`;
+            // 🔥 Direct App Intent (No Chrome Bounce Delay)
+            const intentUrl = getAppIntent(targetUrl);
 
             const androidHtml = `
                 <!DOCTYPE html>
                 <html>
                 <head>
                     <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <title>Opening Browser...</title>
+                    <title>Opening App...</title>
                     <script>
-                        window.location.href = "${intentUrl}";
+                        // Jab user Instagram ka "Continue" dabayega, yeh script seedha specific app khol degi!
+                        window.location.replace("${intentUrl}");
                     </script>
                     <style>
                         body { background-color: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
@@ -103,14 +93,15 @@ export async function GET(req, { params }) {
                 </head>
                 <body>
                     <div class="loader"></div>
-                    <h2 style="margin-top: 20px;">Leaving Instagram...</h2>
+                    <h2 style="margin-top: 20px;">Opening App...</h2>
+                    <p style="color: #94a3b8; font-size: 13px; margin-top: 15px;">If app doesn't open, <a href="${targetUrl}" style="color: #10b981;">Click Here</a></p>
                 </body>
                 </html>
             `;
             return new NextResponse(androidHtml, { status: 200, headers: { "Content-Type": "text/html" } });
 
         } else if (isIOS) {
-            // 🍎 iOS SAFARI TRICK
+            // 🍎 iOS Safari Trick (Unchanged)
             const iosHtml = `
                 <!DOCTYPE html>
                 <html>
@@ -128,9 +119,7 @@ export async function GET(req, { params }) {
                     </style>
                 </head>
                 <body>
-                    <div class="overlay-top">
-                        <div class="arrow">↗</div>
-                    </div>
+                    <div class="overlay-top"><div class="arrow">↗</div></div>
                     <div class="box">
                         <div class="icon">🛒</div>
                         <h2 style="margin: 0 0 10px 0; font-size: 22px;">Almost there!</h2>
@@ -144,7 +133,7 @@ export async function GET(req, { params }) {
         }
     }
 
-    // 4. NORMAL USERS (Jo log pehle se Chrome/Safari mein hain)
+    // NORMAL BROWSER USERS (Direct redirect without delay)
     return NextResponse.redirect(targetUrl, 302);
 
   } catch (error) {
