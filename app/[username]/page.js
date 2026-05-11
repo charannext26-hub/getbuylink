@@ -132,7 +132,7 @@ export default function CreatorBioPage({ params }) {
     if (typeof window !== "undefined") {
         const urlParams = new URLSearchParams(window.location.search);
         const tab = urlParams.get("tab");
-        if (tab && ["home", "trending", "telegram", "categories"].includes(tab)) {
+        if (tab && ["home", "trending", "liveoffer", "categories"].includes(tab)) {
             setActiveTab(tab);
         }
     }
@@ -405,7 +405,7 @@ export default function CreatorBioPage({ params }) {
                     {[
                         { id: 'home', icon: '🛍️', label: 'Shop All Feed' },
                         { id: 'trending', icon: '🔥', label: 'Trending Deals' },
-                        { id: 'telegram', icon: '⚡', label: 'Live Offers (Telegram)' },
+                        { id: 'liveoffer', icon: '⚡', label: 'Live Offers & Deals' },
                         { id: 'categories', icon: '📁', label: 'All Categories' },
                     ].map(t => (
                         <div key={t.id} onClick={() => handleTabShare(t)} className={`flex justify-between items-center p-4 rounded-xl cursor-pointer shadow-sm border border-slate-500/10 hover:scale-[1.01] transition-all ${currentTheme.card}`}>
@@ -492,33 +492,32 @@ export default function CreatorBioPage({ params }) {
           </div>
 
           {/* CLASSIC PROFILE LAYOUT: Photo (L) | Name/Bio (C) | Buttons (R) */}
-          <div className="flex gap-3 relative z-10 px-1 items-start">
+          <div className="flex gap-4 relative z-10 px-1 items-start mt-2">
               
-              {/* Avatar Box */}
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/10 rounded-full flex-shrink-0 border-2 border-emerald-500 p-[2px] shadow-xl backdrop-blur-sm mt-[-20px] bg-black">
+              {/* Avatar Box (Bada kiya aur top se perfectly align kiya) */}
+              <div className="w-20 h-20 md:w-24 md:h-24 bg-white/10 rounded-full flex-shrink-0 border-2 border-emerald-500 p-[2px] shadow-xl backdrop-blur-sm bg-black">
                   <div className="w-full h-full rounded-full overflow-hidden bg-slate-200 flex items-center justify-center">
-                      {creator.image ? <img src={creator.image} className="w-full h-full object-cover" alt="Avatar" /> : <span className="text-xl font-black text-emerald-600">{creator.name?.charAt(0)}</span>}
+                      {creator.image ? <img src={creator.image} className="w-full h-full object-cover" alt="Avatar" /> : <span className="text-2xl font-black text-emerald-600">{creator.name?.charAt(0)}</span>}
                   </div>
               </div>
               
               {/* Name & Bio Box */}
-              <div className="flex-1 mt-[-5px] min-w-0 flex flex-col justify-start">
+              <div className="flex-1 min-w-0 flex flex-col justify-start mt-1">
                   <div className="flex items-center gap-1.5 mb-1">
-                      <h1 className="text-[19px] font-black truncate drop-shadow-sm leading-none tracking-tight">{creator.name}</h1>
+                      <h1 className="text-[19px] md:text-[21px] font-black truncate drop-shadow-sm leading-none tracking-tight">{creator.name}</h1>
                       <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z"/></svg>
                   </div>
-                  {/* 🚨 NAYA: whitespace-pre-wrap for true line breaks */}
-                  <p className="text-[11px] font-semibold opacity-90 leading-snug drop-shadow-sm pr-1 whitespace-pre-wrap break-words">
+                  <p className="text-[11.5px] font-semibold opacity-90 leading-snug drop-shadow-sm pr-1 whitespace-pre-wrap break-words">
                       {creator.bio || "Welcome to my official storefront!"}
                   </p>
               </div>
 
-              {/* Classic Side Buttons (Small & Gap Adjusted) */}
-              <div className="flex flex-col gap-3 flex-shrink-0 mt-[-5px]">
-                  <button onClick={() => setIsShareDrawerOpen(true)} className="w-7 h-7 rounded-full flex items-center justify-center shadow-sm border border-slate-500/20 bg-white/10 hover:bg-white/20 transition-colors">
+              {/* Classic Side Buttons */}
+              <div className="flex flex-col gap-3 flex-shrink-0 mt-1">
+                  <button onClick={() => setIsShareDrawerOpen(true)} className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center shadow-sm border border-slate-500/20 bg-white/10 hover:bg-white/20 transition-colors">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
                   </button>
-                  <button onClick={() => alert("Notifications coming soon!")} className="w-7 h-7 rounded-full flex items-center justify-center shadow-sm border border-emerald-500/30 bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">
+                  <button onClick={() => alert("Notifications coming soon!")} className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center shadow-sm border border-emerald-500/30 bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                   </button>
               </div>
@@ -558,7 +557,7 @@ export default function CreatorBioPage({ params }) {
               <button onClick={() => setActiveTab("home")} className={`pb-2 text-[10px] md:text-[11px] font-black uppercase tracking-wider border-b-2 transition-all ${activeTab === 'home' ? 'border-emerald-500 text-emerald-500' : 'border-transparent opacity-60 hover:opacity-100'}`}>Shop All</button>
               <button onClick={() => setActiveTab("trending")} className={`pb-2 text-[10px] md:text-[11px] font-black uppercase tracking-wider border-b-2 transition-all ${activeTab === 'trending' ? 'border-emerald-500 text-emerald-500' : 'border-transparent opacity-60 hover:opacity-100'}`}>Trending</button>
               
-              <button onClick={() => setActiveTab("telegram")} className={`pb-2 flex items-center gap-1.5 text-[10px] md:text-[11px] font-black uppercase tracking-wider border-b-2 transition-all ${activeTab === 'telegram' ? 'border-emerald-500 text-emerald-500' : 'border-transparent opacity-60 hover:opacity-100'}`}>
+              <button onClick={() => setActiveTab("liveoffer")} className={`pb-2 flex items-center gap-1.5 text-[10px] md:text-[11px] font-black uppercase tracking-wider border-b-2 transition-all ${activeTab === 'liveoffer' ? 'border-emerald-500 text-emerald-500' : 'border-transparent opacity-60 hover:opacity-100'}`}>
                   <span className="bg-rose-100/90 text-rose-600 px-1 py-0.5 rounded flex items-center gap-1 shadow-sm border border-rose-200/50">
                       <span className="relative flex h-1.5 w-1.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
@@ -566,7 +565,7 @@ export default function CreatorBioPage({ params }) {
                       </span>
                       <span className="text-[7.5px] leading-none mt-[1px]">LIVE</span>
                   </span>
-                  Offer & Deal
+                  Offer/Deal
               </button>
               
               <button onClick={() => setActiveTab("categories")} className={`pb-2 text-[10px] md:text-[11px] font-black uppercase tracking-wider border-b-2 transition-all ${activeTab === 'categories' ? 'border-emerald-500 text-emerald-500' : 'border-transparent opacity-60 hover:opacity-100'}`}>Category</button>
@@ -601,7 +600,7 @@ export default function CreatorBioPage({ params }) {
                     </div>
                 )}
 
-                {activeTab === "telegram" && (
+                {activeTab === "liveoffer" && (
                     <div className="columns-2 gap-3 space-y-3">
                         {telegramDeals.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No live deals right now.</p> : 
                             orderedTelegramDeals.map((deal, idx) => (
