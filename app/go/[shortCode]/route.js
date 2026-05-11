@@ -11,6 +11,9 @@ export async function GET(req, { params }) {
     // 1. URL se short code nikalo
     const resolvedParams = await params;
     const shortCode = resolvedParams.shortCode; 
+    
+    // 🚨 NAYA: Check karo ki kya hum Chrome ke andar wale step par hain
+    const action = req.nextUrl.searchParams.get("action");
 
     // 2. Database mein dhoondho ki yeh code kiska hai
     const linkData = await LinkPerformance.findOne({ shortCode: shortCode });
@@ -19,14 +22,52 @@ export async function GET(req, { params }) {
       return new NextResponse("Invalid or Expired Link!", { status: 404 });
     }
 
-    // 3. Click count +1 kar do
-    linkData.clicks += 1;
-    linkData.lastClickedAt = new Date();
-    await linkData.save();
+    // 3. Click count +1 kar do (Sirf tab jab original click ho, Chrome bounce par nahi)
+    if (action !== "chrome") {
+        linkData.clicks += 1;
+        linkData.lastClickedAt = new Date();
+        await linkData.save();
+    }
 
     const targetUrl = linkData.affiliateUrl;
 
-    // 🚀 THE SMART APP OPENER LOGIC (In-App Browser Bypass)
+    // ========================================================
+    // 🚀 PHASE 2: CHROME KE ANDAR (Deep Link Auto-Clicker)
+    // ========================================================
+    if (action === "chrome") {
+         const chromeHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Opening App...</title>
+                <style>
+                    body { background-color: #0f172a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+                    .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                    .btn { background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 15px rgba(16,185,129,0.4); display: inline-block; }
+                </style>
+            </head>
+            <body>
+                <div class="loader"></div>
+                <h2>Taking you to the App...</h2>
+                <a id="autoClickLink" href="${targetUrl}" class="btn">Open App Now</a>
+                <p style="color: #94a3b8; font-size: 13px; margin-top: 15px;">If the app doesn't open automatically, tap the button above.</p>
+                <script>
+                    // 🚨 MASTER HACK: Virtual Click to trigger Android App Intent
+                    setTimeout(() => {
+                        document.getElementById("autoClickLink").click();
+                    }, 500);
+                </script>
+            </body>
+            </html>
+         `;
+         return new NextResponse(chromeHtml, { status: 200, headers: { "Content-Type": "text/html" } });
+    }
+
+    // ========================================================
+    // 🚀 PHASE 1: INSTAGRAM SE CHROME MEIN BHEJNA
+    // ========================================================
     const userAgent = req.headers.get("user-agent") || "";
     const isInstagram = userAgent.includes("Instagram");
     const isFacebook = userAgent.includes("FBAN") || userAgent.includes("FBAV");
@@ -37,37 +78,39 @@ export async function GET(req, { params }) {
 
     if (isInAppBrowser) {
         if (isAndroid) {
-            // 🤖 ANDROID INTENT HACK (Forces Google Chrome to open)
-            const urlWithoutProtocol = targetUrl.replace(/^https?:\/\//, "");
-            const intentUrl = `intent://${urlWithoutProtocol}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(targetUrl)};end`;
+            // Apna hi link bhejenge but "?action=chrome" lagake taaki Chrome mein Phase 2 chale
+            const host = req.headers.get("host");
+            const proto = req.headers.get("x-forwarded-proto") || "https";
+            const chromeBounceUrl = `${proto}://${host}/go/${shortCode}?action=chrome`;
+            
+            const urlWithoutProtocol = chromeBounceUrl.replace(/^https?:\/\//, "");
+            const intentUrl = `intent://${urlWithoutProtocol}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(chromeBounceUrl)};end`;
 
             const androidHtml = `
                 <!DOCTYPE html>
                 <html>
                 <head>
                     <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <title>Opening App...</title>
+                    <title>Opening Browser...</title>
                     <script>
-                        // Seedha chrome intent fire karo
                         window.location.href = "${intentUrl}";
                     </script>
                     <style>
-                        body { background-color: #0f172a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-                        .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+                        body { background-color: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
+                        .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
                         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
                     </style>
                 </head>
                 <body>
                     <div class="loader"></div>
-                    <h2>Redirecting safely...</h2>
-                    <p style="color: #94a3b8; font-size: 14px;">If nothing happens, <a href="${targetUrl}" style="color: #10b981;">Click Here</a></p>
+                    <h2 style="margin-top: 20px;">Leaving Instagram...</h2>
                 </body>
                 </html>
             `;
             return new NextResponse(androidHtml, { status: 200, headers: { "Content-Type": "text/html" } });
 
         } else if (isIOS) {
-            // 🍎 iOS SAFARI TRICK (Shows a beautiful guide to open browser)
+            // 🍎 iOS SAFARI TRICK
             const iosHtml = `
                 <!DOCTYPE html>
                 <html>
@@ -101,7 +144,7 @@ export async function GET(req, { params }) {
         }
     }
 
-    // 4. Normal Users (Chrome/Safari) seedha redirect ho jayenge bina kisi delay ke! 🚀
+    // 4. NORMAL USERS (Jo log pehle se Chrome/Safari mein hain)
     return NextResponse.redirect(targetUrl, 302);
 
   } catch (error) {
