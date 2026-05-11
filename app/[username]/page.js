@@ -338,7 +338,7 @@ export default function CreatorBioPage({ params }) {
     <div className="min-h-screen bg-black/90 flex justify-center font-sans selection:bg-emerald-500 selection:text-white">
       
       {/* ⚠️ OFFER TAB DISCLAIMER POPUP */}
-      {activeTab === 'telegram' && isDisclaimerVisible && (
+      {activeTab === 'liveoffer' && isDisclaimerVisible && (
           <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md z-[150] pointer-events-none px-4 flex justify-end">
               <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 p-1.5 pl-3 rounded-full shadow-2xl flex items-center gap-2 pointer-events-auto animate-in slide-in-from-right fade-in duration-300">
                   <div onClick={() => setIsDisclaimerDrawerOpen(true)} className="flex items-center gap-1.5 cursor-pointer">
