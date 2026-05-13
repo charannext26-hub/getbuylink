@@ -295,7 +295,7 @@ export default function CreatorBioPage({ params }) {
           <div className="min-h-screen bg-[#09090b] flex flex-col justify-center items-center text-white font-sans">
               <div className="w-14 h-14 border-4 border-white/10 border-t-emerald-500 rounded-full animate-spin mb-6"></div>
               <h2 className="text-2xl font-black mb-2">Securing Connection...</h2>
-              <p className="text-slate-400 text-sm font-medium">Opening in Chrome for best shopping experience</p>
+              <p className="text-slate-400 text-sm font-medium">Opening in Browser for best experience</p>
           </div>
       );
   }
