@@ -142,15 +142,15 @@ export default function CreatorBioPage({ params }) {
       const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
 
       if (isInstagram || isFacebook) {
-          if (isAndroid) {
-              setIsEscapingApp(true);
-              const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-              const intentUrl = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-              setTimeout(() => { window.location.replace(intentUrl); }, 60);
-          } else if (isIOS) {
-              setShowIosGuide(true);
-          }
-      }
+        if (isAndroid) {
+            // Sirf Android par Chrome Bypass
+            setIsEscapingApp(true);
+            const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+            const intentUrl = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+            setTimeout(() => { window.location.replace(intentUrl); }, 55);
+        }
+        // iOS ke liye yahan koi rok-tok nahi
+    }
   }, []);
 
   useEffect(() => {
