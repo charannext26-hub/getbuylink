@@ -120,12 +120,37 @@ export default function CreatorBioPage({ params }) {
 
   const bannerScrollRef = useRef(null);
 
+  const [isEscapingApp, setIsEscapingApp] = useState(false);
+  const [showIosGuide, setShowIosGuide] = useState(false);
+
   useEffect(() => {
       const handleScroll = () => {
           setIsScrolled(window.scrollY > 200);
       };
       window.addEventListener("scroll", handleScroll);
       return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // 👇 YAHAN NAYA CODE ADD HUA HAI (STEP 2: App Escaper Logic)
+  useEffect(() => {
+      if (typeof window === 'undefined') return;
+
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      const isInstagram = ua.includes('Instagram');
+      const isFacebook = ua.includes('FBAN') || ua.includes('FBAV');
+      const isAndroid = /android/i.test(ua);
+      const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+
+      if (isInstagram || isFacebook) {
+          if (isAndroid) {
+              setIsEscapingApp(true);
+              const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+              const intentUrl = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+              setTimeout(() => { window.location.replace(intentUrl); }, 300);
+          } else if (isIOS) {
+              setShowIosGuide(true);
+          }
+      }
   }, []);
 
   useEffect(() => {
@@ -264,6 +289,32 @@ export default function CreatorBioPage({ params }) {
   // -------------------------------------------------------------
   // ✨ PAGE SKELETON (Before Creator Loads) & THEME DEFINITION
   // -------------------------------------------------------------
+  // 👇 YAHAN NAYA CODE ADD HUA HAI (STEP 3: Bouncer UI)
+  if (isEscapingApp) {
+      return (
+          <div className="min-h-screen bg-[#09090b] flex flex-col justify-center items-center text-white font-sans">
+              <div className="w-14 h-14 border-4 border-white/10 border-t-emerald-500 rounded-full animate-spin mb-6"></div>
+              <h2 className="text-2xl font-black mb-2">Securing Connection...</h2>
+              <p className="text-slate-400 text-sm font-medium">Opening in Chrome for best shopping experience</p>
+          </div>
+      );
+  }
+
+  if (showIosGuide) {
+      return (
+          <div className="min-h-screen bg-[#09090b] flex flex-col justify-center items-center text-white font-sans relative px-4">
+              <div className="fixed top-4 right-5 animate-bounce text-emerald-500 text-5xl drop-shadow-lg">↗</div>
+              <div className="bg-white/10 backdrop-blur-xl p-8 rounded-[2rem] max-w-sm text-center border border-white/20 shadow-2xl">
+                  <div className="text-5xl mb-4">🛒</div>
+                  <h2 className="text-2xl font-black mb-3">Almost there!</h2>
+                  <p className="text-slate-300 text-sm leading-relaxed font-medium">
+                      Instagram blocks shopping apps. To continue seamlessly, tap the <b className="text-white">3 dots (...)</b> at the top right and select <b className="text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded">"Open in Browser"</b>.
+                  </p>
+              </div>
+          </div>
+      );
+  }
+
   if (isCreatorLoading) {
       return (
           <div className="min-h-screen bg-slate-100 flex justify-center font-sans">
