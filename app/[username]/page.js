@@ -146,7 +146,7 @@ export default function CreatorBioPage({ params }) {
               setIsEscapingApp(true);
               const currentUrl = window.location.href.replace(/^https?:\/\//, '');
               const intentUrl = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-              setTimeout(() => { window.location.replace(intentUrl); }, 300);
+              setTimeout(() => { window.location.replace(intentUrl); }, 60);
           } else if (isIOS) {
               setShowIosGuide(true);
           }
