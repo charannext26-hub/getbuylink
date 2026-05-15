@@ -38,6 +38,33 @@ function AddlinkContent() {
   const [dmTab, setDmTab] = useState("guide"); // 'guide' or 'templates'
   const [playVideo, setPlayVideo] = useState(false);
 
+  // 👇Dynamic Random Template Logic
+  const [randomDmText, setRandomDmText] = useState("");
+
+  useEffect(() => {
+    if (autoDmModal.show && autoDmModal.linkObj) {
+      const title = autoDmModal.linkObj.title;
+      const templates = [
+        `Hey there! 🙌 Thanks for commenting.\nAs promised, here is the direct link to the product you asked for:\n\n📌 ${title}\n\nClick "Shop Now" below to get it! 🚀`,
+        `Hello! Saw your comment. I've been loving this product myself! 😍\n\nHere is the exact link for you:\n\n👉 ${title} 👈\n\nClick the Shop Now button below to grab the product! ⚡`,
+        `Hey! 🫶 Thanks for the love on my post.\nHere is the link as you asked:\n\n🛍️ ${title}\n\nMake sure to click "Shop Now" before it goes out of stock! 🏃‍♂️💨`,
+        `Hi! Here is the hidden link for ${title} 👇\n\nMake sure to click "Shop Now" before the deal expires! ⚡`
+      ];
+      // Randomly pick one template
+      setRandomDmText(templates[Math.floor(Math.random() * templates.length)]);
+    }
+  }, [autoDmModal]);
+
+  // 👇 NAYA: Toast Notification State & Function
+  const [toastMessage, setToastMessage] = useState("");
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage("");
+    }, 2500); // 2.5 seconds ke baad auto-hide ho jayega
+  };
+
   // 🚨 THE BULLETPROOF GATEKEEPER 🚨
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -246,14 +273,16 @@ function AddlinkContent() {
                       <p className="font-bold text-slate-900 text-sm line-clamp-1 mb-1">{linkObj.title}</p>
                       <p className="text-blue-600 text-xs font-medium truncate">{linkObj.url}</p>
                     </div>
-                    {/* 👇 NAYA: Split Buttons (70% Share, 30% Auto-DM) */}
+                    {/* 👇 NAYA: Split Buttons (85% Share, 15% Auto-DM) */}
                     <div className="flex w-full md:w-auto gap-2 flex-shrink-0 mt-3 md:mt-0">
-                      <button onClick={() => handleShare(linkObj.title, linkObj.url)} className="flex-[2] px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-md transition-colors flex items-center justify-center gap-2">
+                      {/* 85% Width for Share */}
+                      <button onClick={() => handleShare(linkObj.title, linkObj.url)} className="w-[82%] px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-md transition-colors flex items-center justify-center gap-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
                         Share
                       </button>
-                      <button onClick={() => { setAutoDmModal({ show: true, linkObj }); setDmTab('guide'); setPlayVideo(false); }} className="flex-[1] px-3 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow-md transition-transform active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap">
-                        <span className="text-lg leading-none">🤖</span> Auto-DM
+                      {/* 15% Width for Auto-DM with Instagram Icon */}
+                      <button onClick={() => { setAutoDmModal({ show: true, linkObj }); setDmTab('guide'); setPlayVideo(false); }} className="w-[18%] px-2 py-2.5 bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] hover:opacity-90 text-white rounded-lg shadow-md transition-transform active:scale-95 flex items-center justify-center">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
                       </button>
                     </div>
                     </div>
@@ -482,15 +511,15 @@ function AddlinkContent() {
           </div>
         )}
 
-        {/* 👇 NAYA: SCRAPER DATA NOTE */}
-        <div className="mt-8 pt-6">
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
-             <span className="text-blue-500 text-xl mt-0.5">ℹ️</span>
+        {/* 👇 NAYA: SCRAPER DATA NOTE (SUBTLE VERSION) */}
+        <div className="mt-6 pt-4 border-t border-slate-100"> {/* 📏 Outer size adjusted: chota margin/padding */}
+          <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 flex items-start gap-2.5"> {/* 📏 Inner size: p-3 (chota padding), gray color for subtlety */}
+             <span className="text-slate-500 text-base mt-0.5 flex-shrink-0">ℹ️</span> {/* 📏 Icon: text-base (chota size), gray color */}
              <div>
-                <h3 className="text-sm font-extrabold text-blue-900 mb-1">Note: Data Accuracy & Fetching</h3>
-                <ul className="text-xs text-blue-700 font-medium space-y-1.5 list-disc pl-4">
-                   <li>Our scraper fetches live data, but prices/discounts may occasionally mismatch due to store updates. Please cross-verify with the store before publishing.</li>
-                   <li>If a link fails to fetch data, simply enter the Product Title, Image URL, and Price manually to publish it.</li>
+                <h3 className="text-xs font-black text-slate-800 mb-1">Note on Scraper Data</h3> {/* 📏 Text size: text-xs (chota text) */}
+                <ul className="text-[10px] sm:text-[11px] text-slate-600 font-semibold space-y-1 list-disc pl-4 leading-relaxed"> {/* 📏 Text size: text-[10px]/[11px] (sabse chota description) */}
+                   <li>Live data fetched (prices, discounts) may mismatch during store updates. Please cross-verify before publishing.</li>
+                   <li>If fetching fails, manually enter Product Title, Image URL, and Price to publish.</li>
                 </ul>
              </div>
           </div>
@@ -528,27 +557,25 @@ function AddlinkContent() {
 
       </div>
 
-     {/* 👇 NAYA: SUPER PROFILE AUTOMATION MODAL */}
+     {/* 👇 NAYA: SUPER PROFILE AUTOMATION MODAL (V2) */}
       {autoDmModal.show && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4" onClick={() => setAutoDmModal({ show: false, linkObj: null })}>
           <div className="bg-white/95 backdrop-blur-xl border border-white/20 w-full max-w-lg rounded-3xl shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in slide-in-from-bottom-8 duration-300 overflow-hidden" onClick={e => e.stopPropagation()}>
             
-            {/* Header */}
-            <div className="p-5 border-b border-slate-200 bg-white flex justify-between items-center relative overflow-hidden">
+            {/* Header: Super Profile Logo & Bold Text */}
+            <div className="p-4 border-b border-slate-200 bg-white flex justify-between items-center relative overflow-hidden">
                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
-               <div>
-                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 relative z-10">
-                     <span className="text-2xl animate-bounce">🚀</span> Instagram Auto-DM
-                  </h2>
-                  <p className="text-xs font-bold text-slate-500 mt-1">Powered by SuperProfile.bio</p>
-               </div>
-               <button onClick={() => setAutoDmModal({ show: false, linkObj: null })} className="w-8 h-8 bg-slate-100 rounded-full text-slate-600 font-bold flex items-center justify-center hover:bg-slate-200 relative z-10">✕</button>
+               <h2 className="text-[15px] sm:text-[17px] font-black text-slate-900 flex items-center gap-2 relative z-10">
+                  <img src="https://framerusercontent.com/images/qR0PG28vXBMzeFtmwPbhvZQc.png?scale-down-to=512&width=1752&height=1703" alt="Super Profile" className="w-6 h-6 object-contain" />
+                  Set DM Automation on superprofile.bio
+               </h2>
+               <button onClick={() => setAutoDmModal({ show: false, linkObj: null })} className="w-8 h-8 bg-slate-100 rounded-full text-slate-600 font-bold flex items-center justify-center hover:bg-slate-200 relative z-10 flex-shrink-0 ml-1">✕</button>
             </div>
 
             {/* Tabs */}
             <div className="flex border-b border-slate-200 bg-slate-50 px-2 pt-2">
-               <button onClick={() => setDmTab("guide")} className={`flex-1 py-2.5 text-sm font-extrabold transition-all border-b-2 ${dmTab === "guide" ? "border-purple-600 text-purple-700" : "border-transparent text-slate-400 hover:text-slate-600"}`}>1. Quick Guide</button>
-               <button onClick={() => setDmTab("templates")} className={`flex-1 py-2.5 text-sm font-extrabold transition-all border-b-2 ${dmTab === "templates" ? "border-purple-600 text-purple-700" : "border-transparent text-slate-400 hover:text-slate-600"}`}>2. Copy Templates</button>
+               <button onClick={() => setDmTab("guide")} className={`flex-1 py-2.5 text-sm font-extrabold transition-all border-b-2 ${dmTab === "guide" ? "border-purple-600 text-purple-700" : "border-transparent text-slate-400 hover:text-slate-600"}`}>Quick Guide</button>
+               <button onClick={() => setDmTab("templates")} className={`flex-1 py-2.5 text-sm font-extrabold transition-all border-b-2 ${dmTab === "templates" ? "border-purple-600 text-purple-700" : "border-transparent text-slate-400 hover:text-slate-600"}`}>Get Templates</button>
             </div>
 
             {/* Content Body */}
@@ -556,57 +583,94 @@ function AddlinkContent() {
                
                {/* TAB 1: GUIDE */}
                {dmTab === "guide" && (
-                 <div className="space-y-5 animate-in fade-in duration-300">
-                    <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+                 <div className="space-y-6 animate-in fade-in duration-300">
+                  <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
                        <h3 className="font-bold text-sm text-slate-900 mb-2">Why use Super Profile?</h3>
                        <ul className="text-xs text-slate-600 space-y-2 font-medium">
-                          <li className="flex items-center gap-2"><span className="text-emerald-500">✔️</span> 100% Free Auto-DM feature.</li>
-                          <li className="flex items-center gap-2"><span className="text-blue-500">✔️</span> Meta (Instagram) Verified & Safe.</li>
-                          <li className="flex items-center gap-2"><span className="text-purple-500">✔️</span> Send link + multiple buttons in DM.</li>
+                          <li className="flex items-center gap-2"><span className="text-emerald-500">✔️</span> Unlimited AutoDMs for Reels & Posts in Free Plan</li>
+                          <li className="flex items-center gap-2"><span className="text-blue-500">✔️</span> Meta (Instagram) Verified Automation tool & Safe to Use.</li>
+                          <li className="flex items-center gap-2"><span className="text-purple-500">✔️</span> Send Text + multiple Link buttons in DM with Easy Setup.</li>
                        </ul>
                     </div>
-
-                    {/* Video Card */}
-                    <div className="relative w-full aspect-video bg-slate-900 rounded-2xl overflow-hidden shadow-lg border border-slate-300 group cursor-pointer" onClick={() => setPlayVideo(true)}>
-                       {playVideo ? (
-                          <iframe className="w-full h-full" src="https://www.youtube.com/embed/Pj15b67K9Dk?autoplay=1" frameBorder="0" allowFullScreen></iframe>
-                       ) : (
-                          <>
-                             <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" />
-                             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <div className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.6)] group-hover:scale-110 transition-transform">
-                                   <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                                </div>
-                                <span className="text-white font-bold mt-2 bg-black/50 px-3 py-1 rounded-full text-xs backdrop-blur-sm border border-white/10">How to Setup Tutorial</span>
-                             </div>
-                          </>
-                       )}
+                    
+                    {/* Clean Original YouTube Card (Fixed Embed & No Overlays) */}
+                    <div className="w-full h-[180px] sm:h-[220px] bg-slate-900 rounded-2xl overflow-hidden shadow-lg border border-slate-300">
+                      {/* Note: Iframe handles thumbnail and play state automatically */}
+                      <iframe 
+                        className="w-full h-full" 
+                        src="https://youtube.be/embed/N2MlDIDCFt0?si=J4rWigdUKSidZSrP" // 👈 Embed URL
+                        frameBorder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen
+                        title="Setup Tutorial"
+                      ></iframe>
                     </div>
 
-                    <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center">
-                       <p className="text-xs font-bold text-slate-500 mb-3">Steps to follow:</p>
-                       <div className="flex items-center justify-center gap-2 text-[10px] font-extrabold uppercase tracking-wider text-slate-800">
-                          <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">Sign Up</span>
-                          <span className="text-slate-300">➔</span>
-                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">Connect IG</span>
-                          <span className="text-slate-300">➔</span>
-                          <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded">Setup Auto</span>
+                    {/* 👇 NAYA: Premium Progress Bar UI */}
+                    <div className="pt-4 pb-2 text-center relative">
+                       <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-8">Steps to follow for free automation</p>
+                       
+                       <div className="flex items-start justify-between relative max-w-[320px] mx-auto px-4">
+                          {/* Connector line (Landscape) */}
+                          <div className="absolute top-[24px] left-[20%] right-[20%] h-[2px] bg-slate-200 z-0"></div>
+                          
+                          {/* Step 1: Sign Up */}
+                          <div className="flex flex-col items-center relative z-10 w-[70px]">
+                             <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-slate-100 mb-3">
+                                {/* Isometric-style Sign Up SVG */}
+                                <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7">
+                                  <rect x="4" y="6" width="14" height="12" rx="2" fill="#fcd34d" stroke="#0f172a" strokeWidth="1.5" strokeLinejoin="round"/>
+                                  <path d="M7 10h8M7 14h4" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round"/>
+                                  <path d="M14 14l4 4 2-1.5L19 14l2-1.5-4-1z" fill="white" stroke="#0f172a" strokeWidth="1.5" strokeLinejoin="round"/>
+                                </svg>
+                             </div>
+                             <span className="text-[10px] font-black text-slate-800 uppercase leading-tight">1. Sign Up</span>
+                          </div>
+
+                          {/* Step 2: Connect IG */}
+                          <div className="flex flex-col items-center relative z-10 w-[70px]">
+                             <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-slate-100 mb-3">
+                                {/* Isometric-style Camera/Connect SVG */}
+                                <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7">
+                                  <path d="M5 8h14v10a2 2 0 01-2 2H7a2 2 0 01-2-2V8z" fill="#fcd34d" stroke="#0f172a" strokeWidth="1.5" strokeLinejoin="round"/>
+                                  <path d="M9 8V5a1 1 0 011-1h4a1 1 0 011 1v3" fill="white" stroke="#0f172a" strokeWidth="1.5" strokeLinejoin="round"/>
+                                  <circle cx="12" cy="14" r="3" fill="white" stroke="#0f172a" strokeWidth="1.5"/>
+                                  <circle cx="16.5" cy="10.5" r="0.5" fill="#0f172a"/>
+                                </svg>
+                             </div>
+                             <span className="text-[10px] font-black text-slate-800 uppercase leading-tight">2. Connect IG</span>
+                          </div>
+
+                          {/* Step 3: Set Auto */}
+                          <div className="flex flex-col items-center relative z-10 w-[70px]">
+                             <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-slate-100 mb-3">
+                                {/* Isometric-style Chat/Browser SVG */}
+                                <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7">
+                                  <rect x="3" y="4" width="18" height="16" rx="2" fill="white" stroke="#0f172a" strokeWidth="1.5" strokeLinejoin="round"/>
+                                  <path d="M3 8h18" stroke="#0f172a" strokeWidth="1.5"/>
+                                  <path d="M7 13h10M7 17h6" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round"/>
+                                  <path d="M17 17l3 3v-3h-3z" fill="#fcd34d" stroke="#0f172a" strokeWidth="1.5" strokeLinejoin="round"/>
+                                </svg>
+                             </div>
+                             <span className="text-[10px] font-black text-slate-800 uppercase leading-tight">3. Set Auto</span>
+                          </div>
                        </div>
                     </div>
+  
                  </div>
                )}
 
-               {/* TAB 2: TEMPLATES */}
+               {/* TAB 2: TEMPLATES (Dynamic Text) */}
                {dmTab === "templates" && (
                  <div className="space-y-4 animate-in fade-in duration-300">
                     
-                    {/* DM Content Box */}
+                    {/* DM Content Box (Randomized) */}
                     <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm relative group">
                        <label className="text-[10px] font-extrabold text-slate-400 uppercase">DM Content Box</label>
                        <div className="mt-1 text-xs font-medium text-slate-700 bg-slate-50 p-2 rounded border border-slate-100 whitespace-pre-wrap">
-                          Hey there! Thanks for commenting 🙌 As promised, here is the link for you ⬇️{'\n\n'}Grab this awesome deal: {autoDmModal.linkObj?.title}{'\n\n'}Click "Shop Now" below before it expires! 🚀
+                          {randomDmText}
                        </div>
-                       <button onClick={() => { navigator.clipboard.writeText(`Hey there! Thanks for commenting 🙌 As promised, here is the link for you ⬇️\n\nGrab this awesome deal: ${autoDmModal.linkObj?.title}\n\nClick "Shop Now" below before it expires! 🚀`); alert("DM Content Copied!"); }} className="absolute top-3 right-3 text-blue-600 bg-blue-50 p-1.5 rounded-md hover:bg-blue-100 transition-colors">
+                       <button onClick={() => { navigator.clipboard.writeText(randomDmText); showToast("DM Content Copied!"); }} className="absolute top-3 right-3 text-slate-400 bg-slate-100 p-1.5 rounded-md hover:bg-slate-200 transition-colors">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                        </button>
                     </div>
@@ -618,7 +682,7 @@ function AddlinkContent() {
                           <div className="text-xs font-bold text-slate-700 bg-slate-50 p-2 rounded border border-slate-100 truncate">Shop Now</div>
                           <div className="text-[10px] font-medium text-blue-600 bg-slate-50 p-2 rounded border border-slate-100 truncate">{autoDmModal.linkObj?.url}</div>
                        </div>
-                       <button onClick={() => { navigator.clipboard.writeText(`Name: Shop Now\nLink: ${autoDmModal.linkObj?.url}`); alert("Button 1 Copied!"); }} className="absolute top-3 right-3 text-blue-600 bg-blue-50 p-1.5 rounded-md hover:bg-blue-100 transition-colors">
+                       <button onClick={() => { navigator.clipboard.writeText(`Name: Shop Now\nLink: ${autoDmModal.linkObj?.url}`); showToast("Button 1 Copied!"); }} className="absolute top-3 right-3 text-slate-400 bg-slate-100 p-1.5 rounded-md hover:bg-slate-200 transition-colors">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                        </button>
                     </div>
@@ -630,7 +694,7 @@ function AddlinkContent() {
                           <div className="text-xs font-bold text-slate-700 bg-slate-50 p-2 rounded border border-slate-100 truncate">Visit my store 🚀</div>
                           <div className="text-[10px] font-medium text-blue-600 bg-slate-50 p-2 rounded border border-slate-100 truncate">https://getbuylink.vercel.app/{username}</div>
                        </div>
-                       <button onClick={() => { navigator.clipboard.writeText(`Name: Visit my store 🚀\nLink: https://getbuylink.vercel.app/${username}`); alert("Button 2 Copied!"); }} className="absolute top-3 right-3 text-blue-600 bg-blue-50 p-1.5 rounded-md hover:bg-blue-100 transition-colors">
+                       <button onClick={() => { navigator.clipboard.writeText(`Name: Visit my store 🚀\nLink: https://getbuylink.vercel.app/${username}`); showToast("Button 2 Copied!"); }} className="absolute top-3 right-3 text-slate-400 bg-slate-100 p-1.5 rounded-md hover:bg-slate-200 transition-colors">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                        </button>
                     </div>
@@ -642,15 +706,15 @@ function AddlinkContent() {
                           <div className="text-xs font-bold text-slate-700 bg-slate-50 p-2 rounded border border-slate-100 truncate">Live Deals ⚡</div>
                           <div className="text-[10px] font-medium text-blue-600 bg-slate-50 p-2 rounded border border-slate-100 truncate">https://getbuylink.vercel.app/{username}?tab=liveoffer</div>
                        </div>
-                       <button onClick={() => { navigator.clipboard.writeText(`Name: Live Deals ⚡\nLink: https://getbuylink.vercel.app/${username}?tab=liveoffer`); alert("Button 3 Copied!"); }} className="absolute top-3 right-3 text-blue-600 bg-blue-50 p-1.5 rounded-md hover:bg-blue-100 transition-colors">
+                       <button onClick={() => { navigator.clipboard.writeText(`Name: Live Deals ⚡\nLink: https://getbuylink.vercel.app/${username}?tab=liveoffer`); showToast("Button 3 Copied!"); }} className="absolute top-3 right-3 text-slate-400 bg-slate-100 p-1.5 rounded-md hover:bg-slate-200 transition-colors">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                        </button>
                     </div>
 
                     <button onClick={() => { 
-                       const fullText = `DM CONTENT:\nHey there! Thanks for commenting 🙌 As promised, here is the link for you ⬇️\n\nGrab this awesome deal: ${autoDmModal.linkObj?.title}\n\nClick "Shop Now" below before it expires! 🚀\n\nBUTTON 1:\nName: Shop Now\nLink: ${autoDmModal.linkObj?.url}\n\nBUTTON 2:\nName: Visit my store 🚀\nLink: https://getbuylink.vercel.app/${username}\n\nBUTTON 3:\nName: Live Deals ⚡\nLink: https://getbuylink.vercel.app/${username}?tab=liveoffer`;
+                       const fullText = `--- DM CONTENT ---\n${randomDmText}\n\n--- BUTTON 1 ---\nName: Shop Now\nLink: ${autoDmModal.linkObj?.url}\n\n--- BUTTON 2 ---\nName: Visit my store 🚀\nLink: https://getbuylink.vercel.app/${username}\n\n--- BUTTON 3 ---\nName: Live Deals ⚡\nLink: https://getbuylink.vercel.app/${username}?tab=liveoffer`;
                        navigator.clipboard.writeText(fullText); 
-                       alert("All templates copied to clipboard!"); 
+                       showToast("All templates copied"); 
                     }} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-sm shadow-md hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                        Copy All Templates
@@ -659,16 +723,15 @@ function AddlinkContent() {
                )}
             </div>
 
-            {/* Footer / CTA Actions */}
+            {/* Footer / CTA Actions: Only One Button in Guide */}
             <div className="p-4 border-t border-slate-200 bg-white space-y-2">
                {dmTab === "guide" ? (
-                  <div className="flex gap-2">
-                     <a href="https://superprofile.bio/login" target="_blank" className="flex-1 text-center py-3 bg-purple-100 text-purple-700 font-extrabold rounded-xl text-sm hover:bg-purple-200 transition-colors">1. Sign Up</a>
-                     <a href="https://superprofile.bio/dashboard/automations" target="_blank" className="flex-1 text-center py-3 bg-purple-600 text-white font-extrabold rounded-xl text-sm shadow-md shadow-purple-200 hover:bg-purple-700 transition-colors">2. Setup Auto</a>
-                  </div>
+                  <a href="https://superprofile.bio/login" target="_blank" className="block text-center py-3 bg-slate-900 text-white font-extrabold rounded-xl text-sm shadow-md hover:bg-slate-800 transition-colors">
+                     Sign Up & connect instagram on Super Profile ➔
+                  </a>
                ) : (
-                  <a href="https://superprofile.bio/dashboard/automations" target="_blank" className="block text-center py-3 bg-purple-600 text-white font-extrabold rounded-xl text-sm shadow-md shadow-purple-200 hover:bg-purple-700 transition-colors">
-                     Go to Super Profile Automation ➔
+                  <a href="https://superprofile.bio/dashboard/automations" target="_blank" className="block text-center py-3 bg-purple-600 text-white font-extrabold rounded-xl text-sm shadow-md hover:bg-purple-700 transition-colors">
+                     Go to Automations Dashboard ➔
                   </a>
                )}
                <p className="text-[9px] text-slate-400 text-center leading-tight mt-2 px-2">
@@ -676,6 +739,16 @@ function AddlinkContent() {
                </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* BEAUTIFUL TOAST NOTIFICATION */}
+      {toastMessage && (
+        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[200] bg-slate-900/95 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-8 fade-in duration-300">
+          <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+          </div>
+          <span className="font-bold text-sm tracking-wide">{toastMessage}</span>
         </div>
       )}
 
