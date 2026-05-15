@@ -32,6 +32,12 @@ function AddlinkContent() {
   const [infoModal, setInfoModal] = useState({ show: false, title: "", desc: "" });
   const [successDrawer, setSuccessDrawer] = useState({ show: false, links: [] });
 
+  // 👇 NAYA: Username aur Auto-DM Modal ke states
+  const [username, setUsername] = useState("");
+  const [autoDmModal, setAutoDmModal] = useState({ show: false, linkObj: null });
+  const [dmTab, setDmTab] = useState("guide"); // 'guide' or 'templates'
+  const [playVideo, setPlayVideo] = useState(false);
+
   // 🚨 THE BULLETPROOF GATEKEEPER 🚨
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -49,6 +55,7 @@ function AddlinkContent() {
             if (!currentUsername || currentUsername === "creator") {
               router.replace("/creators"); // ⛔ Block Access & Send to Setup
             } else {
+              setUsername(currentUsername); // 👈 NAYA: Username save
               setLoading(false); // ✅ Access Granted
             }
           }
@@ -239,11 +246,17 @@ function AddlinkContent() {
                       <p className="font-bold text-slate-900 text-sm line-clamp-1 mb-1">{linkObj.title}</p>
                       <p className="text-blue-600 text-xs font-medium truncate">{linkObj.url}</p>
                     </div>
-                    <button onClick={() => handleShare(linkObj.title, linkObj.url)} className="w-full md:w-auto px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-md transition-colors flex items-center justify-center gap-2 flex-shrink-0">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-                      Share
-                    </button>
-                  </div>
+                    {/* 👇 NAYA: Split Buttons (70% Share, 30% Auto-DM) */}
+                    <div className="flex w-full md:w-auto gap-2 flex-shrink-0 mt-3 md:mt-0">
+                      <button onClick={() => handleShare(linkObj.title, linkObj.url)} className="flex-[2] px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-md transition-colors flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                        Share
+                      </button>
+                      <button onClick={() => { setAutoDmModal({ show: true, linkObj }); setDmTab('guide'); setPlayVideo(false); }} className="flex-[1] px-3 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow-md transition-transform active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap">
+                        <span className="text-lg leading-none">🤖</span> Auto-DM
+                      </button>
+                    </div>
+                    </div>
                 ))
               ) : (
                 <div className="text-center p-6 text-slate-500 font-bold">Deals successfully saved to your profile!</div>
@@ -469,6 +482,20 @@ function AddlinkContent() {
           </div>
         )}
 
+        {/* 👇 NAYA: SCRAPER DATA NOTE */}
+        <div className="mt-8 pt-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
+             <span className="text-blue-500 text-xl mt-0.5">ℹ️</span>
+             <div>
+                <h3 className="text-sm font-extrabold text-blue-900 mb-1">Note: Data Accuracy & Fetching</h3>
+                <ul className="text-xs text-blue-700 font-medium space-y-1.5 list-disc pl-4">
+                   <li>Our scraper fetches live data, but prices/discounts may occasionally mismatch due to store updates. Please cross-verify with the store before publishing.</li>
+                   <li>If a link fails to fetch data, simply enter the Product Title, Image URL, and Price manually to publish it.</li>
+                </ul>
+             </div>
+          </div>
+        </div>
+
         {/* 🚨 NAYA: PRO TIPS BULLET POINTS */}
         <div className="mt-8 pt-8 border-t border-slate-200">
            <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-4">Pro Tips for Conversions</h3>
@@ -500,6 +527,158 @@ function AddlinkContent() {
         </div>
 
       </div>
+
+     {/* 👇 NAYA: SUPER PROFILE AUTOMATION MODAL */}
+      {autoDmModal.show && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4" onClick={() => setAutoDmModal({ show: false, linkObj: null })}>
+          <div className="bg-white/95 backdrop-blur-xl border border-white/20 w-full max-w-lg rounded-3xl shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in slide-in-from-bottom-8 duration-300 overflow-hidden" onClick={e => e.stopPropagation()}>
+            
+            {/* Header */}
+            <div className="p-5 border-b border-slate-200 bg-white flex justify-between items-center relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+               <div>
+                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 relative z-10">
+                     <span className="text-2xl animate-bounce">🚀</span> Instagram Auto-DM
+                  </h2>
+                  <p className="text-xs font-bold text-slate-500 mt-1">Powered by SuperProfile.bio</p>
+               </div>
+               <button onClick={() => setAutoDmModal({ show: false, linkObj: null })} className="w-8 h-8 bg-slate-100 rounded-full text-slate-600 font-bold flex items-center justify-center hover:bg-slate-200 relative z-10">✕</button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-slate-200 bg-slate-50 px-2 pt-2">
+               <button onClick={() => setDmTab("guide")} className={`flex-1 py-2.5 text-sm font-extrabold transition-all border-b-2 ${dmTab === "guide" ? "border-purple-600 text-purple-700" : "border-transparent text-slate-400 hover:text-slate-600"}`}>1. Quick Guide</button>
+               <button onClick={() => setDmTab("templates")} className={`flex-1 py-2.5 text-sm font-extrabold transition-all border-b-2 ${dmTab === "templates" ? "border-purple-600 text-purple-700" : "border-transparent text-slate-400 hover:text-slate-600"}`}>2. Copy Templates</button>
+            </div>
+
+            {/* Content Body */}
+            <div className="p-5 overflow-y-auto flex-1 bg-slate-50/50 [&::-webkit-scrollbar]:hidden">
+               
+               {/* TAB 1: GUIDE */}
+               {dmTab === "guide" && (
+                 <div className="space-y-5 animate-in fade-in duration-300">
+                    <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+                       <h3 className="font-bold text-sm text-slate-900 mb-2">Why use Super Profile?</h3>
+                       <ul className="text-xs text-slate-600 space-y-2 font-medium">
+                          <li className="flex items-center gap-2"><span className="text-emerald-500">✔️</span> 100% Free Auto-DM feature.</li>
+                          <li className="flex items-center gap-2"><span className="text-blue-500">✔️</span> Meta (Instagram) Verified & Safe.</li>
+                          <li className="flex items-center gap-2"><span className="text-purple-500">✔️</span> Send link + multiple buttons in DM.</li>
+                       </ul>
+                    </div>
+
+                    {/* Video Card */}
+                    <div className="relative w-full aspect-video bg-slate-900 rounded-2xl overflow-hidden shadow-lg border border-slate-300 group cursor-pointer" onClick={() => setPlayVideo(true)}>
+                       {playVideo ? (
+                          <iframe className="w-full h-full" src="https://www.youtube.com/embed/Pj15b67K9Dk?autoplay=1" frameBorder="0" allowFullScreen></iframe>
+                       ) : (
+                          <>
+                             <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" />
+                             <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <div className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.6)] group-hover:scale-110 transition-transform">
+                                   <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                </div>
+                                <span className="text-white font-bold mt-2 bg-black/50 px-3 py-1 rounded-full text-xs backdrop-blur-sm border border-white/10">How to Setup Tutorial</span>
+                             </div>
+                          </>
+                       )}
+                    </div>
+
+                    <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center">
+                       <p className="text-xs font-bold text-slate-500 mb-3">Steps to follow:</p>
+                       <div className="flex items-center justify-center gap-2 text-[10px] font-extrabold uppercase tracking-wider text-slate-800">
+                          <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">Sign Up</span>
+                          <span className="text-slate-300">➔</span>
+                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">Connect IG</span>
+                          <span className="text-slate-300">➔</span>
+                          <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded">Setup Auto</span>
+                       </div>
+                    </div>
+                 </div>
+               )}
+
+               {/* TAB 2: TEMPLATES */}
+               {dmTab === "templates" && (
+                 <div className="space-y-4 animate-in fade-in duration-300">
+                    
+                    {/* DM Content Box */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm relative group">
+                       <label className="text-[10px] font-extrabold text-slate-400 uppercase">DM Content Box</label>
+                       <div className="mt-1 text-xs font-medium text-slate-700 bg-slate-50 p-2 rounded border border-slate-100 whitespace-pre-wrap">
+                          Hey there! Thanks for commenting 🙌 As promised, here is the link for you ⬇️{'\n\n'}Grab this awesome deal: {autoDmModal.linkObj?.title}{'\n\n'}Click "Shop Now" below before it expires! 🚀
+                       </div>
+                       <button onClick={() => { navigator.clipboard.writeText(`Hey there! Thanks for commenting 🙌 As promised, here is the link for you ⬇️\n\nGrab this awesome deal: ${autoDmModal.linkObj?.title}\n\nClick "Shop Now" below before it expires! 🚀`); alert("DM Content Copied!"); }} className="absolute top-3 right-3 text-blue-600 bg-blue-50 p-1.5 rounded-md hover:bg-blue-100 transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                       </button>
+                    </div>
+
+                    {/* Button 1 */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm relative group">
+                       <label className="text-[10px] font-extrabold text-slate-400 uppercase">Button #1 (Product Link)</label>
+                       <div className="grid grid-cols-2 gap-2 mt-1">
+                          <div className="text-xs font-bold text-slate-700 bg-slate-50 p-2 rounded border border-slate-100 truncate">Shop Now</div>
+                          <div className="text-[10px] font-medium text-blue-600 bg-slate-50 p-2 rounded border border-slate-100 truncate">{autoDmModal.linkObj?.url}</div>
+                       </div>
+                       <button onClick={() => { navigator.clipboard.writeText(`Name: Shop Now\nLink: ${autoDmModal.linkObj?.url}`); alert("Button 1 Copied!"); }} className="absolute top-3 right-3 text-blue-600 bg-blue-50 p-1.5 rounded-md hover:bg-blue-100 transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                       </button>
+                    </div>
+
+                    {/* Button 2 */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm relative group">
+                       <label className="text-[10px] font-extrabold text-slate-400 uppercase">Button #2 (Your Store)</label>
+                       <div className="grid grid-cols-2 gap-2 mt-1">
+                          <div className="text-xs font-bold text-slate-700 bg-slate-50 p-2 rounded border border-slate-100 truncate">Visit my store 🚀</div>
+                          <div className="text-[10px] font-medium text-blue-600 bg-slate-50 p-2 rounded border border-slate-100 truncate">https://getbuylink.vercel.app/{username}</div>
+                       </div>
+                       <button onClick={() => { navigator.clipboard.writeText(`Name: Visit my store 🚀\nLink: https://getbuylink.vercel.app/${username}`); alert("Button 2 Copied!"); }} className="absolute top-3 right-3 text-blue-600 bg-blue-50 p-1.5 rounded-md hover:bg-blue-100 transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                       </button>
+                    </div>
+
+                    {/* Button 3 */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm relative group">
+                       <label className="text-[10px] font-extrabold text-slate-400 uppercase">Button #3 (Live Offers)</label>
+                       <div className="grid grid-cols-2 gap-2 mt-1">
+                          <div className="text-xs font-bold text-slate-700 bg-slate-50 p-2 rounded border border-slate-100 truncate">Live Deals ⚡</div>
+                          <div className="text-[10px] font-medium text-blue-600 bg-slate-50 p-2 rounded border border-slate-100 truncate">https://getbuylink.vercel.app/{username}?tab=liveoffer</div>
+                       </div>
+                       <button onClick={() => { navigator.clipboard.writeText(`Name: Live Deals ⚡\nLink: https://getbuylink.vercel.app/${username}?tab=liveoffer`); alert("Button 3 Copied!"); }} className="absolute top-3 right-3 text-blue-600 bg-blue-50 p-1.5 rounded-md hover:bg-blue-100 transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                       </button>
+                    </div>
+
+                    <button onClick={() => { 
+                       const fullText = `DM CONTENT:\nHey there! Thanks for commenting 🙌 As promised, here is the link for you ⬇️\n\nGrab this awesome deal: ${autoDmModal.linkObj?.title}\n\nClick "Shop Now" below before it expires! 🚀\n\nBUTTON 1:\nName: Shop Now\nLink: ${autoDmModal.linkObj?.url}\n\nBUTTON 2:\nName: Visit my store 🚀\nLink: https://getbuylink.vercel.app/${username}\n\nBUTTON 3:\nName: Live Deals ⚡\nLink: https://getbuylink.vercel.app/${username}?tab=liveoffer`;
+                       navigator.clipboard.writeText(fullText); 
+                       alert("All templates copied to clipboard!"); 
+                    }} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-sm shadow-md hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                       Copy All Templates
+                    </button>
+                 </div>
+               )}
+            </div>
+
+            {/* Footer / CTA Actions */}
+            <div className="p-4 border-t border-slate-200 bg-white space-y-2">
+               {dmTab === "guide" ? (
+                  <div className="flex gap-2">
+                     <a href="https://superprofile.bio/login" target="_blank" className="flex-1 text-center py-3 bg-purple-100 text-purple-700 font-extrabold rounded-xl text-sm hover:bg-purple-200 transition-colors">1. Sign Up</a>
+                     <a href="https://superprofile.bio/dashboard/automations" target="_blank" className="flex-1 text-center py-3 bg-purple-600 text-white font-extrabold rounded-xl text-sm shadow-md shadow-purple-200 hover:bg-purple-700 transition-colors">2. Setup Auto</a>
+                  </div>
+               ) : (
+                  <a href="https://superprofile.bio/dashboard/automations" target="_blank" className="block text-center py-3 bg-purple-600 text-white font-extrabold rounded-xl text-sm shadow-md shadow-purple-200 hover:bg-purple-700 transition-colors">
+                     Go to Super Profile Automation ➔
+                  </a>
+               )}
+               <p className="text-[9px] text-slate-400 text-center leading-tight mt-2 px-2">
+                  *Disclaimer: Super Profile is a 3rd-party tool. We are not affiliated with them. If you face any account issues, please contact their support. Use automation at your own risk.
+               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
