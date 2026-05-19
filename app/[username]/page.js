@@ -486,7 +486,7 @@ export default function CreatorBioPage({ params }) {
         </div>
       )}
 
-      <div className={`w-full max-w-md min-h-screen relative pb-20 shadow-2xl transform-gpu will-change-scroll ${currentTheme.bg} ${currentTheme.text}`}>
+      <div className={`w-full max-w-md min-h-screen relative pb-20 shadow-xl ${currentTheme.bg} ${currentTheme.text}`}>
       
       {/* 🎥 THEATRE MODE */}
       {theatreMode.isOpen && (
@@ -644,19 +644,19 @@ export default function CreatorBioPage({ params }) {
             </div>
         ) : (
             <>
-                {activeTab === "home" && (
-                  <div className="grid grid-cols-2 gap-3">
+               {activeTab === "home" && (
+                  <div className="columns-2 gap-3 space-y-3">
                       {masterFeed.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No posts yet.</p> : 
-                          masterFeed.map((item, idx) => renderFeedItem(item, idx)) // 👈 Yahan se 'ordered' hat gaya
+                          orderedMasterFeed.map((item, idx) => renderFeedItem(item, idx))
                       }
                   </div>
               )}
 
               {activeTab === "trending" && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="columns-2 gap-3 space-y-3">
                       {trendingDeals.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No trending deals yet.</p> : 
-                          trendingDeals.map((deal, idx) => ( // 👈 Yahan se 'ordered' hat gaya
-                              <div key={idx} className="relative"> {/* 👈 'break-inside-avoid' bhi hata diya */}
+                          orderedTrendingDeals.map((deal, idx) => ( 
+                              <div key={idx} className="break-inside-avoid relative"> 
                                   <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
                               </div>
                           ))
@@ -665,16 +665,16 @@ export default function CreatorBioPage({ params }) {
               )}
 
               {activeTab === "liveoffer" && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="columns-2 gap-3 space-y-3">
                       {telegramDeals.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No live deals right now.</p> : 
-                          telegramDeals.map((deal, idx) => ( // 👈 Yahan se 'ordered' hat gaya
-                              <div key={idx}> {/* 👈 'break-inside-avoid' bhi hata diya */}
+                          orderedTelegramDeals.map((deal, idx) => ( 
+                              <div key={idx} className="break-inside-avoid"> 
                                   <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} showTimeAgo={true} />
                               </div>
                           ))
                       }
                   </div>
-              )}
+              )} 
                 {activeTab === "categories" && (
                     <div className="space-y-6 pb-6 mt-2">
                         {Object.keys(categoryGroups).length === 0 ? <p className="text-center opacity-60 font-bold p-8">No categories found.</p> : 
