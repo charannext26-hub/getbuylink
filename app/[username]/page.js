@@ -6,8 +6,7 @@ const THEMES = {
   minimal: { bg: "bg-slate-50", text: "text-slate-900", card: "bg-white border-slate-200 shadow-sm", tab: "bg-slate-900 text-white", tabBg: "bg-white/90 border-slate-200" },
   luxury: { bg: "bg-[#121212] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]", text: "text-white", card: "bg-white/10 border-white/20 backdrop-blur-md", tab: "bg-white text-slate-900", tabBg: "bg-black/60 border-white/10 backdrop-blur-xl" },
   fashion: { bg: "bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500", text: "text-white", card: "bg-white/20 border-white/30 backdrop-blur-md shadow-xl", tab: "bg-white text-rose-500", tabBg: "bg-white/20 border-white/10 backdrop-blur-xl" },
-  glass: { bg: "bg-[url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center bg-fixed", text: "text-white", card: "bg-black/40 border-white/20 backdrop-blur-lg shadow-xl", tab: "bg-white text-slate-900", tabBg: "bg-black/40 border-white/10 backdrop-blur-xl" }
-};
+  glass: { bg: "bg-[url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center", text: "text-white", card: "bg-black/40 border-white/20 backdrop-blur-lg shadow-xl", tab: "bg-white text-slate-900", tabBg: "bg-black/40 border-white/10 backdrop-blur-xl" }
 
 // 🛠️ Super Extractors
 const getYouTubeID = (url) => {
@@ -123,11 +122,13 @@ export default function CreatorBioPage({ params }) {
   const [isEscapingApp, setIsEscapingApp] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
 
+  // 👇 NAYA: Passive Scroll Listener (For Smooth Scrolling)
   useEffect(() => {
       const handleScroll = () => {
           setIsScrolled(window.scrollY > 200);
       };
-      window.addEventListener("scroll", handleScroll);
+      // { passive: true } browser ko smooth scroll karne ki permission deta hai
+      window.addEventListener("scroll", handleScroll, { passive: true });
       return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -485,7 +486,7 @@ export default function CreatorBioPage({ params }) {
         </div>
       )}
 
-      <div className={`w-full max-w-md min-h-screen relative pb-20 shadow-[0_0_50px_rgba(0,0,0,0.5)] ${currentTheme.bg} ${currentTheme.text}`}>
+      <div className={`w-full max-w-md min-h-screen relative pb-20 shadow-2xl transform-gpu will-change-scroll ${currentTheme.bg} ${currentTheme.text}`}>
       
       {/* 🎥 THEATRE MODE */}
       {theatreMode.isOpen && (
