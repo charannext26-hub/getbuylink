@@ -5,56 +5,61 @@ import { useRouter } from "next/navigation";
 import { QRCodeSVG } from 'qrcode.react';
 import { toPng } from 'html-to-image';
 
-// 🎨 THEMES (Optimized for 60fps Smooth Scrolling & Premium Look)
+// 🎨 THEMES (Premium Ordered & Optimized)
 const THEMES = {
-  luxury: { 
-      bg: "bg-[#121212] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]", 
+  // 1. Sabse Last wala (Midnight Neon) ab 1st par
+  midnight: { 
+      name: "Midnight Neon",
+      bg: "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900", 
       text: "text-white", 
-      // 👇 NAYA: backdrop-blur hataya aur bg-white/10 rakha
-      card: "bg-white/10 border-white/20 shadow-sm", 
-      tab: "bg-white text-slate-900", 
-      tabBg: "bg-black/80 border-white/10 backdrop-blur-md"
-  },
-  minimal: { 
-      bg: "bg-slate-50", 
-      text: "text-slate-900", 
-      card: "bg-white border-slate-200 shadow-sm", 
-      tab: "bg-slate-900 text-white", 
-      tabBg: "bg-white/90 border-slate-200" 
-  },
-  fashion: { 
-      bg: "bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500", 
-      text: "text-white", 
-      card: "bg-white/20 border-white/30 shadow-md", 
-      tab: "bg-white text-rose-500", 
-      tabBg: "bg-black/20 border-white/10 backdrop-blur-md" 
-  },
-  
-  // 👇 NAYA 1: Premium Red (Puraani bag image hata kar pure premium red gradient)
-  glass: { 
-      bg: "bg-gradient-to-br from-red-600 via-rose-700 to-slate-900", 
-      text: "text-white", 
-      card: "bg-black/40 border-white/20 shadow-md", 
-      tab: "bg-white text-rose-500", 
+      card: "bg-white/10 border-white/20 shadow-md", 
+      tab: "bg-white text-purple-400", 
       tabBg: "bg-black/60 border-white/10 backdrop-blur-md" 
   },
-
-  // 👇 NAYA 2: Royal Gold (Bohot hi trendy aur luxury yellow/gold feel)
+  // 2. Gold
   gold: { 
+      name: "Royal Gold",
       bg: "bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500", 
       text: "text-slate-900", 
       card: "bg-white/40 border-white/50 shadow-md", 
       tab: "bg-slate-900 text-amber-600", 
       tabBg: "bg-white/50 border-white/30 backdrop-blur-md" 
   },
-
-  // 👇 NAYA 3: Midnight Neon (Creators ka sabse favourite Dark Purple/Blue aesthetic)
-  midnight: { 
-      bg: "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900", 
+  // 3. Premium Red (Pehle Glass tha)
+  glass: { 
+      name: "Premium Red",
+      bg: "bg-gradient-to-br from-red-600 via-rose-700 to-slate-900", 
       text: "text-white", 
-      card: "bg-white/10 border-white/20 shadow-md", 
-      tab: "bg-white text-purple-400", 
+      card: "bg-black/40 border-white/20 shadow-md", 
+      tab: "bg-white text-rose-500", 
       tabBg: "bg-black/60 border-white/10 backdrop-blur-md" 
+  },
+  // 4. Luxury Dark 
+  luxury: { 
+      name: "Luxury Dark",
+      bg: "bg-[#121212] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]", 
+      text: "text-white", 
+      card: "bg-white/10 border-white/20 shadow-sm", 
+      tab: "bg-white text-slate-900", 
+      tabBg: "bg-black/80 border-white/10 backdrop-blur-md" 
+  },
+  // 5. Minimal (Last 2)
+  minimal: { 
+      name: "Minimal Light",
+      bg: "bg-slate-50", 
+      text: "text-slate-900", 
+      card: "bg-white border-slate-200 shadow-sm", 
+      tab: "bg-slate-900 text-white", 
+      tabBg: "bg-white/90 border-slate-200" 
+  },
+  // 6. Fashion (Last 1)
+  fashion: { 
+      name: "Fashion Sunset",
+      bg: "bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500", 
+      text: "text-white", 
+      card: "bg-white/20 border-white/30 shadow-md", 
+      tab: "bg-white text-rose-500", 
+      tabBg: "bg-black/20 border-white/10 backdrop-blur-md" 
   }
 };
 

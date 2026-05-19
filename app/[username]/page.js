@@ -1,56 +1,61 @@
 "use client";
 import { useState, useEffect, use, useRef } from "react";
 
-// 🎨 THEMES (Optimized for 60fps Smooth Scrolling & Premium Look)
+// 🎨 THEMES (Premium Ordered & Optimized)
 const THEMES = {
-  luxury: { 
-      bg: "bg-[#121212] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]", 
+  // 1. Sabse Last wala (Midnight Neon) ab 1st par
+  midnight: { 
+      name: "Midnight Neon",
+      bg: "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900", 
       text: "text-white", 
-      // 👇 NAYA: backdrop-blur hataya aur bg-white/10 rakha
-      card: "bg-white/10 border-white/20 shadow-sm", 
-      tab: "bg-white text-slate-900", 
-      tabBg: "bg-black/80 border-white/10 backdrop-blur-md" 
-  },
-  minimal: { 
-      bg: "bg-slate-50", 
-      text: "text-slate-900", 
-      card: "bg-white border-slate-200 shadow-sm", 
-      tab: "bg-slate-900 text-white", 
-      tabBg: "bg-white/90 border-slate-200" 
-  },
-  fashion: { 
-      bg: "bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500", 
-      text: "text-white", 
-      card: "bg-white/20 border-white/30 shadow-md", 
-      tab: "bg-white text-rose-500", 
-      tabBg: "bg-black/20 border-white/10 backdrop-blur-md" 
-  },
-  
-  // 👇 NAYA 1: Premium Red (Puraani bag image hata kar pure premium red gradient)
-  glass: { 
-      bg: "bg-gradient-to-br from-red-600 via-rose-700 to-slate-900", 
-      text: "text-white", 
-      card: "bg-black/40 border-white/20 shadow-md", 
-      tab: "bg-white text-rose-500", 
+      card: "bg-white/10 border-white/20 shadow-md", 
+      tab: "bg-white text-purple-400", 
       tabBg: "bg-black/60 border-white/10 backdrop-blur-md" 
   },
-
-  // 👇 NAYA 2: Royal Gold (Bohot hi trendy aur luxury yellow/gold feel)
+  // 2. Gold
   gold: { 
+      name: "Royal Gold",
       bg: "bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500", 
       text: "text-slate-900", 
       card: "bg-white/40 border-white/50 shadow-md", 
       tab: "bg-slate-900 text-amber-600", 
       tabBg: "bg-white/50 border-white/30 backdrop-blur-md" 
   },
-
-  // 👇 NAYA 3: Midnight Neon (Creators ka sabse favourite Dark Purple/Blue aesthetic)
-  midnight: { 
-      bg: "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900", 
+  // 3. Premium Red (Pehle Glass tha)
+  glass: { 
+      name: "Premium Red",
+      bg: "bg-gradient-to-br from-red-600 via-rose-700 to-slate-900", 
       text: "text-white", 
-      card: "bg-white/10 border-white/20 shadow-md", 
-      tab: "bg-white text-purple-400", 
+      card: "bg-black/40 border-white/20 shadow-md", 
+      tab: "bg-white text-rose-500", 
       tabBg: "bg-black/60 border-white/10 backdrop-blur-md" 
+  },
+  // 4. Luxury Dark 
+  luxury: { 
+      name: "Luxury Dark",
+      bg: "bg-[#121212] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]", 
+      text: "text-white", 
+      card: "bg-white/10 border-white/20 shadow-sm", 
+      tab: "bg-white text-slate-900", 
+      tabBg: "bg-black/80 border-white/10 backdrop-blur-md" 
+  },
+  // 5. Minimal (Last 2)
+  minimal: { 
+      name: "Minimal Light",
+      bg: "bg-slate-50", 
+      text: "text-slate-900", 
+      card: "bg-white border-slate-200 shadow-sm", 
+      tab: "bg-slate-900 text-white", 
+      tabBg: "bg-white/90 border-slate-200" 
+  },
+  // 6. Fashion (Last 1)
+  fashion: { 
+      name: "Fashion Sunset",
+      bg: "bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500", 
+      text: "text-white", 
+      card: "bg-white/20 border-white/30 shadow-md", 
+      tab: "bg-white text-rose-500", 
+      tabBg: "bg-black/20 border-white/10 backdrop-blur-md" 
   }
 };
 // Super Extractors
@@ -429,8 +434,13 @@ export default function CreatorBioPage({ params }) {
           return (
               <div key={uniqueKey} onClick={() => setCollectionMode({ isOpen: true, title: item.title, relatedDeals: item.deals })} className={`break-inside-avoid rounded-2xl p-2.5 shadow-sm cursor-pointer group hover:border-emerald-300 transition-colors border ${currentTheme.card}`}>
                   <div className="grid grid-cols-2 gap-1.5 mb-2 relative">
-                      {item.deals.slice(0, 4).map((d, i) => <div key={i} className="aspect-square bg-white/10 rounded-lg overflow-hidden border border-white/5"><img src={d.image} className="w-full h-full object-cover mix-blend-multiply" /></div>)}
-                  </div>
+    {/* 👇 NAYA: bg-white/10 ko bg-white kiya aur mix-blend-multiply hata diya */}
+    {item.deals.slice(0, 4).map((d, i) => (
+        <div key={i} className="aspect-square bg-white rounded-lg overflow-hidden shadow-sm border border-black/10">
+            <img src={d.image} className="w-full h-full object-cover" alt="Collection Item" />
+        </div>
+    ))}
+</div>
                   <span className="bg-blue-500/20 text-blue-300 text-[8px] font-black px-1.5 py-0.5 rounded flex w-fit items-center gap-1 border border-blue-500/30 uppercase">
                       Collection
                   </span>
@@ -674,7 +684,7 @@ export default function CreatorBioPage({ params }) {
                       </span>
                       <span className="text-[7.5px] leading-none mt-[1px]">LIVE</span>
                   </span>
-                  Offers
+                  Deals
               </button>
               
               <button onClick={() => setActiveTab("categories")} className={`pb-2 text-[10px] md:text-[11px] font-black uppercase tracking-wider border-b-2 transition-all ${activeTab === 'categories' ? 'border-emerald-500 text-emerald-500' : 'border-transparent opacity-60 hover:opacity-100'}`}>Category</button>
