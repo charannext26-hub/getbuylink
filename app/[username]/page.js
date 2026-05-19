@@ -7,8 +7,8 @@ const THEMES = {
   luxury: { bg: "bg-[#121212] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]", text: "text-white", card: "bg-white/10 border-white/20 backdrop-blur-md", tab: "bg-white text-slate-900", tabBg: "bg-black/60 border-white/10 backdrop-blur-xl" },
   fashion: { bg: "bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500", text: "text-white", card: "bg-white/20 border-white/30 backdrop-blur-md shadow-xl", tab: "bg-white text-rose-500", tabBg: "bg-white/20 border-white/10 backdrop-blur-xl" },
   glass: { bg: "bg-[url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center", text: "text-white", card: "bg-black/40 border-white/20 backdrop-blur-lg shadow-xl", tab: "bg-white text-slate-900", tabBg: "bg-black/40 border-white/10 backdrop-blur-xl" }
-
-// 🛠️ Super Extractors
+};
+// Super Extractors
 const getYouTubeID = (url) => {
     if (!url) return null;
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/i);
@@ -35,7 +35,7 @@ const getThumbnail = (url) => {
     return "https://images.unsplash.com/photo-1611262588024-d12430b98920?q=80&w=400&auto=format&fit=crop";
 };
 
-// ⏱️ Time Ago Function (For Post Timing)
+// ⏱️ auto Post Timing
 const timeAgo = (date) => {
     if (!date) return "recently";
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
