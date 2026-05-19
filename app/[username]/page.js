@@ -1,12 +1,39 @@
 "use client";
 import { useState, useEffect, use, useRef } from "react";
 
-// 🎨 THEMES
+// 🎨 THEMES (Optimized for 60fps Smooth Scrolling)
 const THEMES = {
-  minimal: { bg: "bg-slate-50", text: "text-slate-900", card: "bg-white border-slate-200 shadow-sm", tab: "bg-slate-900 text-white", tabBg: "bg-white/90 border-slate-200" },
-  luxury: { bg: "bg-[#121212] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]", text: "text-white", card: "bg-white/10 border-white/20 backdrop-blur-md", tab: "bg-white text-slate-900", tabBg: "bg-black/60 border-white/10 backdrop-blur-xl" },
-  fashion: { bg: "bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500", text: "text-white", card: "bg-white/20 border-white/30 backdrop-blur-md shadow-xl", tab: "bg-white text-rose-500", tabBg: "bg-white/20 border-white/10 backdrop-blur-xl" },
-  glass: { bg: "bg-[url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center", text: "text-white", card: "bg-black/40 border-white/20 backdrop-blur-lg shadow-xl", tab: "bg-white text-slate-900", tabBg: "bg-black/40 border-white/10 backdrop-blur-xl" }
+  minimal: { 
+      bg: "bg-slate-50", 
+      text: "text-slate-900", 
+      card: "bg-white border-slate-200 shadow-sm", 
+      tab: "bg-slate-900 text-white", 
+      tabBg: "bg-white/90 border-slate-200" 
+  },
+  luxury: { 
+      bg: "bg-[#121212] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]", 
+      text: "text-white", 
+      // 👇 NAYA: backdrop-blur hataya aur bg-white/10 rakha
+      card: "bg-white/10 border-white/20 shadow-sm", 
+      tab: "bg-white text-slate-900", 
+      tabBg: "bg-black/80 border-white/10 backdrop-blur-md" 
+  },
+  fashion: { 
+      bg: "bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500", 
+      text: "text-white", 
+      // 👇 NAYA: backdrop-blur hataya, shadow thodi light ki
+      card: "bg-white/20 border-white/30 shadow-md", 
+      tab: "bg-white text-rose-500", 
+      tabBg: "bg-black/20 border-white/10 backdrop-blur-md" 
+  },
+  glass: { 
+      bg: "bg-[url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center", 
+      text: "text-white", 
+      // 👇 NAYA: backdrop-blur hataya, readability ke liye bg-black/60 kiya
+      card: "bg-black/60 border-white/20 shadow-md", 
+      tab: "bg-white text-slate-900", 
+      tabBg: "bg-black/60 border-white/10 backdrop-blur-md" 
+  }
 };
 // Super Extractors
 const getYouTubeID = (url) => {
