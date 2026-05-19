@@ -628,7 +628,7 @@ export default function CreatorBioPage({ params }) {
                       </span>
                       <span className="text-[7.5px] leading-none mt-[1px]">LIVE</span>
                   </span>
-                  Offer/Deal
+                  Offers
               </button>
               
               <button onClick={() => setActiveTab("categories")} className={`pb-2 text-[10px] md:text-[11px] font-black uppercase tracking-wider border-b-2 transition-all ${activeTab === 'categories' ? 'border-emerald-500 text-emerald-500' : 'border-transparent opacity-60 hover:opacity-100'}`}>Category</button>
