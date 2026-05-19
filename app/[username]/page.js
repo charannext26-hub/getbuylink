@@ -333,7 +333,7 @@ export default function CreatorBioPage({ params }) {
                       {[1,2,3,4].map(i => <div key={i} className="w-10 h-10 bg-slate-300/60 rounded-xl"></div>)}
                   </div>
                   <div className="w-full h-12 bg-slate-300/60 rounded-xl mb-6"></div>
-                  <div className="columns-2 gap-3 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
                       {[1,2,3,4].map(i => <div key={i} className="w-full h-48 bg-slate-300/60 rounded-2xl"></div>)}
                   </div>
               </div>
@@ -645,37 +645,36 @@ export default function CreatorBioPage({ params }) {
         ) : (
             <>
                 {activeTab === "home" && (
-                    <div className="columns-2 gap-3 space-y-3">
-                        {masterFeed.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No posts yet.</p> : 
-                            orderedMasterFeed.map((item, idx) => renderFeedItem(item, idx))
-                        }
-                    </div>
-                )}
+                  <div className="grid grid-cols-2 gap-3">
+                      {masterFeed.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No posts yet.</p> : 
+                          masterFeed.map((item, idx) => renderFeedItem(item, idx)) // 👈 Yahan se 'ordered' hat gaya
+                      }
+                  </div>
+              )}
 
-                {activeTab === "trending" && (
-                    <div className="columns-2 gap-3 space-y-3">
-                        {trendingDeals.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No trending deals yet.</p> : 
-                            orderedTrendingDeals.map((deal, idx) => (
-                                <div key={idx} className="break-inside-avoid relative">
-                                    <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
-                                </div>
-                            ))
-                        }
-                    </div>
-                )}
+              {activeTab === "trending" && (
+                  <div className="grid grid-cols-2 gap-3">
+                      {trendingDeals.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No trending deals yet.</p> : 
+                          trendingDeals.map((deal, idx) => ( // 👈 Yahan se 'ordered' hat gaya
+                              <div key={idx} className="relative"> {/* 👈 'break-inside-avoid' bhi hata diya */}
+                                  <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
+                              </div>
+                          ))
+                      }
+                  </div>
+              )}
 
-                {activeTab === "liveoffer" && (
-                    <div className="columns-2 gap-3 space-y-3">
-                        {telegramDeals.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No live deals right now.</p> : 
-                            orderedTelegramDeals.map((deal, idx) => (
-                                <div key={idx} className="break-inside-avoid">
-                                    <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} showTimeAgo={true} />
-                                </div>
-                            ))
-                        }
-                    </div>
-                )}
-
+              {activeTab === "liveoffer" && (
+                  <div className="grid grid-cols-2 gap-3">
+                      {telegramDeals.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No live deals right now.</p> : 
+                          telegramDeals.map((deal, idx) => ( // 👈 Yahan se 'ordered' hat gaya
+                              <div key={idx}> {/* 👈 'break-inside-avoid' bhi hata diya */}
+                                  <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} showTimeAgo={true} />
+                              </div>
+                          ))
+                      }
+                  </div>
+              )}
                 {activeTab === "categories" && (
                     <div className="space-y-6 pb-6 mt-2">
                         {Object.keys(categoryGroups).length === 0 ? <p className="text-center opacity-60 font-bold p-8">No categories found.</p> : 
@@ -756,10 +755,11 @@ function LiveTimer({ targetDate }) {
 
 function GridProductCard({ deal, onClick, themeCardClass, onToast, showTimeAgo }) {
     return (
-        <div className={`border shadow-sm rounded-2xl p-2 flex flex-col hover:scale-[1.02] transition-transform cursor-pointer group backdrop-blur-sm ${themeCardClass}`} onClick={onClick}>
+        <div className={`border shadow-sm rounded-2xl p-2 flex flex-col hover:scale-[1.02] transition-transform cursor-pointer group ${themeCardClass}`} onClick={onClick}>
             
             <div className="w-full aspect-square bg-white rounded-xl mb-2 relative p-1 overflow-hidden shadow-inner border border-black/5 dark:border-white/50">
-                <img src={deal.image} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
+                {/* 👇 NAYA: loading="lazy" aur decoding="async" add kiya makkhan scroll ke liye */}
+                <img src={deal.image} loading="lazy" decoding="async" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" alt="Product" />
                 
                 {deal.discountPercent && <span className="absolute top-0 left-0 bg-rose-500 text-white text-[10px] font-black px-2 py-1 rounded-br-xl z-10 shadow-md">{deal.discountPercent}</span>}
                 
