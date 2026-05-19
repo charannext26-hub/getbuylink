@@ -12,7 +12,7 @@ const THEMES = {
 // 🛠️ Super Extractors
 const getYouTubeID = (url) => {
     if (!url) return null;
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/i);
     return match ? match[1] : null;
 };
 const getFacebookEmbedUrl = (url) => {
@@ -356,7 +356,7 @@ export default function CreatorBioPage({ params }) {
 
           return (
               <div key={uniqueKey} onClick={() => setTheatreMode({ isOpen: true, videoUrl: item.videoUrl, relatedDeals: item.deals })} className={`break-inside-avoid relative aspect-[4/5] rounded-2xl overflow-hidden cursor-pointer shadow-sm border group ${currentTheme.card}`}>
-                  <img src={thumbUrl} className="w-full h-full object-cover opacity-95 group-hover:scale-105 transition-transform duration-500 mix-blend-overlay" />
+                  <img src={thumbUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Video Thumbnail" />
 
                  {/* VIDEO SOCIAL LOGO (Top-Left) */}
                   <div className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-md rounded-lg shadow-sm z-10">
@@ -485,7 +485,7 @@ export default function CreatorBioPage({ params }) {
         </div>
       )}
 
-      <div className={`w-full max-w-md min-h-screen relative pb-20 shadow-[0_0_50px_rgba(0,0,0,0.5)] ${currentTheme.bg} ${currentTheme.text} transition-all duration-500`}>
+      <div className={`w-full max-w-md min-h-screen relative pb-20 shadow-[0_0_50px_rgba(0,0,0,0.5)] ${currentTheme.bg} ${currentTheme.text}`}>
       
       {/* 🎥 THEATRE MODE */}
       {theatreMode.isOpen && (
