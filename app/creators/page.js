@@ -1,11 +1,15 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useSession, signOut, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import UsernameForm from "./UsernameForm";
+import useSWR from "swr";
 import { QRCodeSVG } from 'qrcode.react';
 import { toPng } from 'html-to-image';
+
+// 👇 Caching Fetcher Function
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 // 🚨 Live Timer Component
 const LiveTimer = ({ targetDate }) => {
@@ -43,8 +47,6 @@ function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   
-  const [dbUser, setDbUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -84,17 +86,37 @@ function DashboardContent() {
     }
   };
 
-  const [stats, setStats] = useState({
-    ownStats: { total: 0, videoCount: 0, collectionCount: 0 },
-    platformStats: { total: 0, videoCount: 0, collectionCount: 0, clicks: 0 },
-    autoPostStats: { totalTelegramDeals: 0, linksGenerated: 0, clicks: 0 }
-  });
-
-  const [platformConfig, setPlatformConfig] = useState(null);
   const [showGlobalPopup, setShowGlobalPopup] = useState(false);
   const [drawerData, setDrawerData] = useState({ isOpen: false, sectionName: "", products: [] });
 
-  const [topCampaigns, setTopCampaigns] = useState([]);
+  // 👇 SWR CACHING MAGIC STARTS HERE
+  const userEmail = session?.user?.email;
+
+  const { data: userData, isLoading: isUserLoading } = useSWR(userEmail ? `/api/user/get-by-email?email=${userEmail}` : null, fetcher, { revalidateOnFocus: false });
+  const dbUser = userData?.success ? userData.user : null;
+
+  const { data: configData, isLoading: isConfigLoading } = useSWR(userEmail ? `/api/admin/config` : null, fetcher, { revalidateOnFocus: false });
+  const platformConfig = configData?.success ? configData.data : null;
+
+  const { data: statsData } = useSWR(userEmail ? `/api/dashboard/get-stats?email=${userEmail}` : null, fetcher);
+  const stats = statsData?.success ? statsData.data : {
+    ownStats: { total: 0, videoCount: 0, collectionCount: 0 },
+    platformStats: { total: 0, videoCount: 0, collectionCount: 0, clicks: 0 },
+    autoPostStats: { totalTelegramDeals: 0, linksGenerated: 0, clicks: 0 }
+  };
+
+  const { data: campaignsData } = useSWR(userEmail ? '/api/campaigns' : null, fetcher, { revalidateOnFocus: false });
+  const topCampaigns = useMemo(() => {
+    if (!campaignsData?.success || !campaignsData?.campaigns) return [];
+    const vipList = ["flipkart", "myntra", "shopsy", "nykaa", "mamaearth", "boat", "ajio", "meesho", "croma", "swiggy", "zomato"];
+    let orderedVips = [];
+    vipList.forEach(v => {
+       const found = campaignsData.campaigns.find(camp => (camp.name || "").toLowerCase().includes(v));
+       if(found) orderedVips.push(found);
+    });
+    return orderedVips.slice(0, 10);
+  }, [campaignsData]);
+
   const [processingAction, setProcessingAction] = useState(null); 
   const [toastMessage, setToastMessage] = useState(null);
   const [activeVideo, setActiveVideo] = useState(null);
@@ -131,54 +153,14 @@ function DashboardContent() {
     setProcessingAction(null); 
   };
 
+ // 👇 NAYA: Authentication aur Popup Logic
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    } else if (status === "authenticated" && session?.user?.email) {
-      const userEmail = session.user.email;
-      
-      Promise.all([
-        fetch(`/api/user/get-by-email?email=${userEmail}`).then(res => res.json()),
-        fetch(`/api/admin/config`).then(res => res.json())
-      ])
-      .then(([userData, configData]) => {
-        if (userData.success && userData.user) setDbUser(userData.user);
-        if (configData.success && configData.data) {
-          setPlatformConfig(configData.data);
-          if (configData.data.globalPopup?.isActive) setShowGlobalPopup(true);
-        }
-        setLoading(false); 
-      })
-      .catch(err => {
-        console.error("Fast APIs Error:", err);
-        setLoading(false);
-      });
+    if (status === "unauthenticated") router.push("/login");
+  }, [status, router]);
 
-      fetch(`/api/dashboard/get-stats?email=${userEmail}`)
-        .then(res => res.json())
-        .then(statsData => {
-          if (statsData.success && statsData.data) setStats(statsData.data);
-        })
-        .catch(err => console.error("Stats Fetch Error:", err));
-
-      fetch('/api/campaigns')
-        .then(res => res.json())
-        .then(campaignsData => {
-          if (campaignsData.success && campaignsData.campaigns) {
-            const vipList = ["flipkart", "myntra", "shopsy", "nykaa", "mamaearth", "boat", "ajio", "meesho", "croma", "swiggy", "zomato"];
-            let orderedVips = [];
-            
-            vipList.forEach(v => {
-               const found = campaignsData.campaigns.find(camp => (camp.name || "").toLowerCase().includes(v));
-               if(found) orderedVips.push(found);
-            });
-            
-            setTopCampaigns(orderedVips.slice(0, 10));
-          }
-        })
-        .catch(err => console.error("Campaigns Fetch Error:", err));
-    }
-  }, [status, session?.user?.email, router]);
+  useEffect(() => {
+    if (platformConfig?.globalPopup?.isActive) setShowGlobalPopup(true);
+  }, [platformConfig]);
 
   useEffect(() => {
     if (session?.user?.name) {
@@ -248,8 +230,25 @@ function DashboardContent() {
   const waMessage = encodeURIComponent(`Hi Support Team,\n\nI need some assistance regarding my creator account.\n\n*Creator Details:*\nName: ${session?.user?.name || 'N/A'}\nEmail: ${session?.user?.email || 'N/A'}\n\n*My Query:* `);
   const waUrl = `https://wa.me/${waNumber}?text=${waMessage}`;
 
-  if (status === "loading" || loading) {
-    return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
+  // 👇 NAYA: Premium Skeleton Loader (Chamakta hua shadow)
+  if (status === "loading" || isUserLoading || isConfigLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 font-sans">
+        {/* Nav Skeleton */}
+        <div className="w-full h-14 bg-white border-b border-slate-200 animate-pulse"></div>
+        <div className="max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="w-full h-16 bg-slate-200 rounded-xl animate-pulse"></div>
+            <div className="w-full h-48 bg-slate-200 rounded-2xl animate-pulse"></div>
+            <div className="w-full h-32 bg-slate-200 rounded-2xl animate-pulse"></div>
+          </div>
+          <div className="space-y-6">
+            <div className="w-full h-36 bg-slate-200 rounded-2xl animate-pulse"></div>
+            <div className="w-full h-64 bg-slate-200 rounded-2xl animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -373,7 +372,12 @@ function DashboardContent() {
 
               {/* ACTIVITY ANALYTICS */}
               <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm">
-                <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Today's Activity</h3>
+                <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                  <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Today's Activity</h3>
+                  <Link href="/creators/analytics" className="text-[10px] font-extrabold text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded-md transition-colors flex items-center gap-1 active:scale-95">
+                    Detail Insights <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                  </Link>
+                </div>
                 
                 <div className="grid grid-cols-3 gap-2 md:gap-6 divide-x divide-slate-100">
                   <div className="pr-1 md:pr-4">
@@ -412,9 +416,6 @@ function DashboardContent() {
                   </div>
                 </div>
 
-                <Link href="/creators/analytics" className="mt-5 block w-full text-center bg-slate-50 hover:bg-slate-100 text-blue-600 font-extrabold text-xs py-3 rounded-xl transition-colors border border-slate-100">
-                  See Detail Insights →
-                </Link>
               </div>
 
               {/* YOUTUBE/TUTORIAL SLIDER */}

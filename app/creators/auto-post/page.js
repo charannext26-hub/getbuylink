@@ -2,6 +2,10 @@
 import { useState, useEffect } from "react";
 import { useSession, SessionProvider } from "next-auth/react"; 
 import { useRouter } from "next/navigation";
+import useSWR from "swr"; // 👈 NAYA: SWR Magic
+
+// 👇 NAYA: Caching Fetcher Function
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 const ALL_CATEGORIES = [
   "Men's Fashion", "Women's Fashion", "Electronics & Mobiles", 
@@ -12,18 +16,26 @@ function AutoPostContent() {
   const { data: session, status } = useSession(); 
   const router = useRouter();
 
-  const [isActive, setIsActive] = useState(false);
-  const [selectedCats, setSelectedCats] = useState([]);
-  const [deals, setDeals] = useState([]);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(false); // Sirf buttons disable karne ke liye 
   const [creatorUsername, setCreatorUsername] = useState("");
-
-  const [activeTab, setActiveTab] = useState("auto_deals"); 
-  const [platformDeals, setPlatformDeals] = useState([]);
-  const [ownDeals, setOwnDeals] = useState([]);
   
+  const [activeTab, setActiveTab] = useState("auto_deals"); 
   const [filterTab2, setFilterTab2] = useState("all"); 
   const [filterTab3, setFilterTab3] = useState("all"); 
+
+  const userEmail = session?.user?.email;
+
+  // 👇 NAYA: SWR Caching
+  const { data: userData, isLoading: isUserLoading, mutate: mutateUser } = useSWR(userEmail ? `/api/user/get-by-email?email=${userEmail}` : null, fetcher, { revalidateOnFocus: false });
+  const { data: dealsData, mutate: mutateDeals } = useSWR(userEmail ? `/api/deals/get-filtered?email=${userEmail}` : null, fetcher);
+  const { data: manualDealsData, mutate: mutateManualDeals } = useSWR(userEmail ? `/api/deals/get-manual-deals?email=${userEmail}` : null, fetcher);
+
+  const isActive = userData?.success ? (userData.user.autodeal_active || false) : false;
+  const selectedCats = userData?.success ? (userData.user.autoDealCategories || []) : [];
+  
+  const deals = dealsData?.success ? dealsData.deals : [];
+  const platformDeals = manualDealsData?.success ? manualDealsData.data.platform : [];
+  const ownDeals = manualDealsData?.success ? manualDealsData.data.own : [];
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState(""); 
@@ -41,59 +53,30 @@ function AutoPostContent() {
     setTimeout(() => { setToastMessage(null); }, 3000);
   };
 
-  const fetchDeals = async (email) => {
-    try {
-      const res = await fetch(`/api/deals/get-filtered?email=${email}`);
-      const data = await res.json();
-      if (data.success) setDeals(data.deals);
-    } catch (err) { console.error("Deals fetch error:", err); }
-  };
-
-  const fetchManualDeals = async (email) => {
-    try {
-      const res = await fetch(`/api/deals/get-manual-deals?email=${email}`);
-      const data = await res.json();
-      if (data.success) {
-        setPlatformDeals(data.data.platform);
-        setOwnDeals(data.data.own);
-      }
-    } catch (err) { console.error("Manual Deals fetch error:", err); }
+  // 👇 NAYA: SWR ke mutate functions (Refresh karne ke liye)
+  const refreshData = () => {
+    mutateDeals();
+    mutateManualDeals();
   };
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login"); 
+    if (status === "unauthenticated") router.push("/login");
+    if (userData?.success && userData?.user) {
+       const uname = userData.user.username;
+       if (!uname || uname === "creator") router.replace("/creators");
+       else setCreatorUsername(uname);
     }
+  }, [status, router, userData]);
 
-    if (status === "authenticated" && session?.user?.email) {
-      fetch(`/api/user/get-by-email?email=${session.user.email}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.user) {
-            const currentUsername = data.user.username;
-            if (!currentUsername || currentUsername === "creator") {
-              router.replace("/creators"); 
-            } else {
-              setCreatorUsername(currentUsername);
-              setIsActive(data.user.autodeal_active || false);
-              setSelectedCats(data.user.autoDealCategories || []);
-              fetchDeals(session.user.email);
-              fetchManualDeals(session.user.email);
-              setLoading(false); 
-            }
-          }
-        });
-    }
-  }, [status, session, router]);
-
+  // 👇 NAYA: Toggle Handlers
   const handleCategoryToggle = (cat) => {
-    if (selectedCats.includes(cat)) setSelectedCats(selectedCats.filter(c => c !== cat));
-    else setSelectedCats([...selectedCats, cat]);
+    const newCats = selectedCats.includes(cat) ? selectedCats.filter(c => c !== cat) : [...selectedCats, cat];
+    mutateUser({ ...userData, user: { ...userData.user, autoDealCategories: newCats } }, false);
   };
 
   const handleSelectAll = () => {
-    if (selectedCats.length === ALL_CATEGORIES.length) setSelectedCats([]); 
-    else setSelectedCats([...ALL_CATEGORIES]); 
+    const newCats = selectedCats.length === ALL_CATEGORIES.length ? [] : [...ALL_CATEGORIES];
+    mutateUser({ ...userData, user: { ...userData.user, autoDealCategories: newCats } }, false);
   };
 
   const saveSettings = async () => {
@@ -108,7 +91,7 @@ function AutoPostContent() {
       const data = await res.json();
       if (data.success) {
         showToast("✅ Settings Saved Successfully!");
-        fetchDeals(session.user.email); 
+        refreshData(); 
       }
     } catch (err) { showToast("⚠️ Error saving settings!"); }
     setLoading(false);
@@ -165,7 +148,8 @@ function AutoPostContent() {
       const res = await fetch(`/api/deals/delete?id=${dealId}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        fetchManualDeals(session.user.email); 
+        refreshData();
+         
         showToast("✅ Product Deleted!");
         if (selectedGroup && !selectedGroup.isBatch) closeDrawer(); 
       }
@@ -197,7 +181,7 @@ function AutoPostContent() {
       const data = await res.json();
       if (data.success) {
          showToast("✅ Details Updated Successfully!");
-         fetchManualDeals(session.user.email); 
+         refreshData(); 
          closeDrawer();
       } else {
          showToast("⚠️ Error: " + data.message);
@@ -298,7 +282,7 @@ function AutoPostContent() {
       const data = await res.json();
       if (data.success) {
         setNewLinkLabel(""); 
-        fetchManualDeals(session.user.email); 
+        refreshData();
         closeDrawer(); 
         showToast("✅ Link Added Successfully!");
       } else {
@@ -327,8 +311,25 @@ function AutoPostContent() {
     setTimeout(() => { setSelectedGroup(null); setDrawerMode(""); }, 300); 
   };
 
-  if (loading || status === "loading") return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
-  if (!session) return null; 
+  // 👇 NAYA: Skeleton Loader (Instant Load Experience)
+  if (isUserLoading || status === "loading") {
+    return (
+      <div className="min-h-screen bg-slate-50 p-4 md:p-6 font-sans">
+        <div className="max-w-4xl mx-auto">
+          {/* Tabs Skeleton */}
+          <div className="w-full h-12 bg-slate-200 rounded-xl animate-pulse mb-6"></div>
+          
+          {/* Main Box Skeleton */}
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+            <div className="w-full h-32 bg-slate-200 rounded-xl animate-pulse"></div>
+            <div className="w-full h-24 bg-slate-200 rounded-xl animate-pulse"></div>
+            <div className="w-full h-24 bg-slate-200 rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (!session) return null;
 
   const renderGroupedDeals = (groupedArray, type, filterMode) => {
     let filteredArray = groupedArray;
@@ -435,7 +436,8 @@ function AutoPostContent() {
                       <span className="text-[10px] font-bold text-slate-600">Status</span>
                       {/* 🚨 FIX: Bigger Toggle with ON/OFF labels */}
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" checked={isActive} onChange={() => setIsActive(!isActive)} />
+                        {/* 👇 NAYA: SWR Toggle Handler */}
+                        <input type="checkbox" className="sr-only peer" checked={isActive} onChange={() => mutateUser({ ...userData, user: { ...userData.user, autodeal_active: !isActive } }, false)} />
                         <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
                         <span className={`ml-2 text-[10px] font-black uppercase tracking-wider ${isActive ? 'text-emerald-600' : 'text-slate-500'}`}>{isActive ? "ON" : "OFF"}</span>
                       </label>
