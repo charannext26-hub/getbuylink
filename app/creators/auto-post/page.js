@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSession, SessionProvider } from "next-auth/react"; 
 import { useRouter } from "next/navigation";
 import useSWR from "swr"; // 👈 NAYA: SWR Magic
@@ -24,6 +24,26 @@ function AutoPostContent() {
   const [filterTab3, setFilterTab3] = useState("all"); 
 
   const userEmail = session?.user?.email;
+
+  // 👇 NAYA: Search, Filter States aur Time Helper
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filterMenu, setFilterMenu] = useState("date"); // 'date' ya 'store'
+  const [dateFilter, setDateFilter] = useState("all_time");
+  const [customDate, setCustomDate] = useState({ start: "", end: "" });
+  const [selectedStore, setSelectedStore] = useState("all");
+
+  const timeAgo = (date) => {
+    if (!date) return "";
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    let interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + "d ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + "h ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + "m ago";
+    return "Just now";
+  };
 
   // 👇 NAYA: SWR Caching
   const { data: userData, isLoading: isUserLoading, mutate: mutateUser } = useSWR(userEmail ? `/api/user/get-by-email?email=${userEmail}` : null, fetcher, { revalidateOnFocus: false });
@@ -311,7 +331,60 @@ function AutoPostContent() {
     setTimeout(() => { setSelectedGroup(null); setDrawerMode(""); }, 300); 
   };
 
-  // 👇 NAYA: Skeleton Loader (Instant Load Experience)
+  // ==========================================
+  // 1️⃣ SABSE PEHLE: Filter Engine aur useMemo
+  // ==========================================
+  const filterEngine = (dataList, isBatchMode = false) => {
+    if (!dataList) return [];
+    return dataList.filter(item => {
+      const d = isBatchMode ? (item.deals?.[0] || item) : (item.deal || item);
+      
+      // 1. Search Query
+      const q = searchQuery.toLowerCase();
+      if (q && !(d.title || "").toLowerCase().includes(q) && !(d.store || "").toLowerCase().includes(q)) return false;
+      
+      // 2. Store Filter
+      if (selectedStore !== "all" && d.store !== selectedStore) return false;
+      
+      // 3. Date Filter
+      if (dateFilter !== "all_time" && (d.createdAt || d.updatedAt)) {
+        const itemDate = new Date(d.createdAt || d.updatedAt);
+        const now = new Date();
+        const diffDays = (now - itemDate) / (1000 * 60 * 60 * 24);
+        
+        if (dateFilter === "today" && diffDays > 1) return false;
+        if (dateFilter === "yesterday" && (diffDays <= 1 || diffDays > 2)) return false;
+        if (dateFilter === "last_3" && diffDays > 3) return false;
+        if (dateFilter === "last_7" && diffDays > 7) return false;
+        if (dateFilter === "last_30" && diffDays > 30) return false;
+        if (dateFilter === "custom" && customDate.start && customDate.end) {
+          const start = new Date(customDate.start);
+          const end = new Date(customDate.end);
+          end.setHours(23, 59, 59, 999);
+          if (itemDate < start || itemDate > end) return false;
+        }
+      }
+      return true;
+    });
+  };
+
+  const filteredAutoDeals = filterEngine(deals, false);
+  const filteredPlatformDeals = filterEngine(platformDeals, true);
+  const filteredOwnDeals = filterEngine(ownDeals, true);
+
+  const availableStores = useMemo(() => {
+    const stores = new Set();
+    const activeData = activeTab === "auto_deals" ? deals : (activeTab === "platform_links" ? platformDeals : ownDeals);
+    activeData.forEach(item => {
+      const d = (item.isBatch ? item.deals?.[0] : item.deal) || item;
+      if (d.store) stores.add(d.store);
+    });
+    return Array.from(stores);
+  }, [activeTab, deals, platformDeals, ownDeals]);
+
+  // ==========================================
+  // 2️⃣ USKE BAAD: Skeleton Loader (Early Return)
+  // ==========================================
   if (isUserLoading || status === "loading") {
     return (
       <div className="min-h-screen bg-slate-50 p-4 md:p-6 font-sans">
@@ -331,67 +404,64 @@ function AutoPostContent() {
   }
   if (!session) return null;
 
+  // ==========================================
+  // 3️⃣ USKE BAAD: Render Grouped Deals Code
+  // ==========================================
   const renderGroupedDeals = (groupedArray, type, filterMode) => {
-    let filteredArray = groupedArray;
-    if (filterMode === "single") filteredArray = groupedArray.filter(g => !g.isBatch);
-    if (filterMode === "collection") filteredArray = groupedArray.filter(g => g.isBatch);
+    let finalArray = groupedArray;
+    if (filterMode === "single") finalArray = groupedArray.filter(g => !g.isBatch);
+    if (filterMode === "collection") finalArray = groupedArray.filter(g => g.isBatch);
 
-    if (filteredArray.length === 0) return <div className="text-center p-6 text-slate-400 font-bold border border-dashed rounded-lg">No deals match this filter.</div>;
+    if (finalArray.length === 0) return <div className="text-center p-6 text-slate-400 font-bold border border-dashed rounded-lg">No deals match this filter.</div>;
     
-    return filteredArray.map((group, idx) => (
-      <div key={idx} className="flex flex-col p-4 border border-slate-200 rounded-xl bg-white mb-3 shadow-sm hover:shadow-md transition-all">
+    return finalArray.map((group, idx) => (
+      <div key={idx} className="flex flex-col p-3 border border-slate-200 rounded-xl bg-white mb-2 shadow-sm hover:shadow-md transition-all">
         {group.isBatch ? (
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-slate-50 rounded-lg border border-slate-100 overflow-hidden flex-shrink-0 relative">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-slate-50 rounded-lg border border-slate-100 overflow-hidden flex-shrink-0">
                <img src={group.deals[0]?.image || "https://via.placeholder.com/150"} alt="preview" className="w-full h-full object-contain p-1" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">Collection</span>
-              <h3 className="font-bold text-slate-900 mt-1 line-clamp-1">{group.collectionName}</h3>
-              <div className="flex items-center gap-2 mt-0.5">
-                <p className="text-xs text-slate-500 font-medium">{group.deals.length} Products</p>
-                {/* 🚨 Click Count UI for Collections (Only Platform) */}
+              <div className="flex items-center justify-between mb-0.5">
+                 <span className="text-[9px] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">Collection</span>
+                 <span className="text-[9px] font-medium text-slate-400">{timeAgo(group.deals[0]?.createdAt)}</span>
+              </div>
+              <h3 className="text-[11px] font-bold text-slate-900 line-clamp-2 leading-tight mb-1">{group.collectionName}</h3>
+              <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold">
+                <span>{group.deals.length} Products</span>
                 {type === "platform" && (
-                  <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                    {group.totalClicks || 0}
-                  </span>
+                  <>
+                    <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                    <span className="flex items-center gap-0.5 text-slate-500 bg-slate-100 px-1.5 rounded"><svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> {group.totalClicks || 0}</span>
+                  </>
                 )}
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2 shrink-0">
-              <button onClick={() => openDrawer(group, 'view')} className="px-3 py-1.5 bg-slate-100 text-slate-700 font-bold text-xs rounded hover:bg-slate-200 w-full sm:w-auto">See All</button>
-              <button onClick={() => openDrawer(group, 'edit')} className="p-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 w-full sm:w-auto flex justify-center">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-              </button>
+            <div className="flex flex-col items-center gap-1.5 shrink-0">
+              <button onClick={() => openDrawer(group, 'view')} className="px-2.5 py-1 bg-slate-100 text-slate-700 font-bold text-[10px] rounded hover:bg-slate-200 w-full">See All</button>
+              <button onClick={() => openDrawer(group, 'edit')} className="p-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 w-full flex justify-center"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-slate-50 rounded-lg border border-slate-100 overflow-hidden flex-shrink-0 relative">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-slate-50 rounded-lg border border-slate-100 overflow-hidden flex-shrink-0">
                <img src={group.deal.image || "https://via.placeholder.com/150"} alt="preview" className="w-full h-full object-contain p-1" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-slate-900 line-clamp-1">{group.deal.title}</h3>
-              <div className="flex items-center gap-2 mt-0.5">
-                <p className="text-xs text-slate-500 font-medium">{group.deal.store}</p>
-                {/* 🚨 Click Count UI for Single Links (Only Platform) */}
-                {type === "platform" && (
-                  <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                    {group.deal.clicks || 0}
-                  </span>
-                )}
+              <div className="flex items-center justify-between mb-0.5">
+                 <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{group.deal.store || "Store"}</span>
+                 <span className="text-[9px] font-medium text-slate-400">{timeAgo(group.deal.createdAt)}</span>
               </div>
+              <h3 className="text-[11px] font-bold text-slate-900 line-clamp-2 leading-tight mb-1">{group.deal.title}</h3>
+              {type === "platform" && (
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold">
+                  <span className="flex items-center gap-0.5 text-slate-500 bg-slate-100 px-1.5 rounded"><svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> {group.deal.clicks || 0}</span>
+                </div>
+              )}
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2 shrink-0">
-              <button onClick={() => shareManualLink(group.deal, type)} className="px-3 py-1.5 bg-blue-100 text-blue-800 font-bold text-xs rounded hover:bg-blue-200 w-full sm:w-auto flex items-center gap-1 justify-center">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-                Share
-              </button>
-              <button onClick={() => openDrawer(group, 'edit')} className="p-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 w-full sm:w-auto flex justify-center">
-                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-              </button>
+            <div className="flex flex-col items-center gap-1.5 shrink-0">
+              <button onClick={() => shareManualLink(group.deal, type)} className="px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-extrabold rounded hover:bg-blue-200 w-full flex items-center gap-1 justify-center">Share</button>
+              <button onClick={() => openDrawer(group, 'edit')} className="p-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 w-full flex justify-center"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
             </div>
           </div>
         )}
@@ -410,11 +480,29 @@ function AutoPostContent() {
 
       <div className="max-w-4xl mx-auto">
         
-        {/* 🚨 UPDATED TAB STYLES (Analytics Page Style) */}
-        <div className="bg-slate-200/70 p-1.5 rounded-2xl flex gap-1 overflow-x-auto hide-scrollbar mb-6 shadow-sm">
-          <button onClick={() => setActiveTab("auto_deals")} className={`flex-1 py-2.5 px-4 rounded-xl text-[11px] md:text-xs font-black whitespace-nowrap transition-all ${activeTab === "auto_deals" ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100/50'}`}>Auto Post</button>
-          <button onClick={() => setActiveTab("platform_links")} className={`flex-1 py-2.5 px-4 rounded-xl text-[11px] md:text-xs font-black whitespace-nowrap transition-all ${activeTab === "platform_links" ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100/50'}`}>Platform Links</button>
-          <button onClick={() => setActiveTab("own_links")} className={`flex-1 py-2.5 px-4 rounded-xl text-[11px] md:text-xs font-black whitespace-nowrap transition-all ${activeTab === "own_links" ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100/50'}`}>Own Affiliate Links</button>
+        {/* 👇 NAYA: Search Bar & Filter Button */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="relative flex-1 bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+            <svg className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input 
+              type="text" 
+              value={searchQuery} 
+              onChange={(e) => setSearchQuery(e.target.value)} 
+              placeholder="Search products or stores..." 
+              className="w-full pl-8 pr-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          <button onClick={() => setIsFilterOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 transition-colors text-slate-700">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            <span className="text-[10px] font-extrabold uppercase">Filter</span>
+          </button>
+        </div>
+
+        {/* 👇 NAYA: Compact (Patla) Tabs */}
+        <div className="bg-slate-200/70 p-1 rounded-xl flex gap-1 overflow-x-auto hide-scrollbar mb-4 shadow-sm">
+          <button onClick={() => setActiveTab("auto_deals")} className={`flex-1 py-1.5 px-3 rounded-lg text-[10px] font-black whitespace-nowrap transition-all ${activeTab === "auto_deals" ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Auto Post</button>
+          <button onClick={() => setActiveTab("platform_links")} className={`flex-1 py-1.5 px-3 rounded-lg text-[10px] font-black whitespace-nowrap transition-all ${activeTab === "platform_links" ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Platform Links</button>
+          <button onClick={() => setActiveTab("own_links")} className={`flex-1 py-1.5 px-3 rounded-lg text-[10px] font-black whitespace-nowrap transition-all ${activeTab === "own_links" ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Own Links</button>
         </div>
 
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
@@ -466,7 +554,7 @@ function AutoPostContent() {
 
               {/* AUTO POST DEALS LIST */}
               <div className="space-y-3">
-                {deals.length === 0 ? (
+                {filteredAutoDeals.length === 0 ? (
                   <div className="text-center p-8 text-slate-400 font-bold border-2 border-dashed rounded-xl bg-slate-50">No active auto-post deals.</div>
                 ) : (
                   deals.map(deal => (
@@ -476,19 +564,24 @@ function AutoPostContent() {
                       </div>
                       <div className="flex flex-col flex-1 w-full min-w-0">
                         
-                        <div className="flex items-center gap-2 mb-1">
-                           <span className="text-[10px] font-extrabold text-blue-600 uppercase">{deal.category || "General"}</span>
-                           {/* 🚨 Click Count UI for Auto Post */}
-                           <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md flex items-center gap-1">
-                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                             {deal.clicks || 0}
-                           </span>
+                        {/* 👇 NAYA: Time & Store Added (Cleaned Up) */}
+                        <div className="flex items-center justify-between mb-1">
+                           <span className="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded uppercase">{deal.category || "General"}</span>
+                           <span className="text-[9px] font-bold text-slate-400">{deal.store || "Store"} • {timeAgo(deal.createdAt || deal.updatedAt)}</span>
                         </div>
                         
-                        <span className="font-bold text-slate-900 line-clamp-1">{deal.title}</span>
-                        <div className="text-sm mt-1 flex items-center gap-2">
-                          <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-extrabold text-xs">₹{deal.dealPrice || deal.price || "Deal"}</span>
-                          {deal.originalPrice && <span className="text-slate-400 line-through text-xs font-semibold">₹{deal.originalPrice}</span>}
+                        <span className="font-bold text-slate-900 text-xs line-clamp-2 leading-tight">{deal.title}</span>
+                        
+                        <div className="text-sm mt-1.5 flex items-center gap-2">
+                          <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-extrabold text-xs">
+                            {String(deal.dealPrice || deal.price || "Deal").toLowerCase() === 'deal' ? 'Deal' : `₹${String(deal.dealPrice || deal.price).replace(/₹/g, '').trim()}`}
+                          </span>
+                          {deal.originalPrice && <span className="text-slate-400 line-through text-xs font-semibold">₹{String(deal.originalPrice).replace(/₹/g, '').trim()}</span>}
+                          
+                          <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md flex items-center gap-1 ml-auto">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            {deal.clicks || 0}
+                          </span>
                         </div>
                       </div>
                       <button onClick={() => shareAffiliateLink(deal)} className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-extrabold text-sm rounded-xl shadow-md hover:bg-blue-700 whitespace-nowrap flex justify-center items-center gap-2 shrink-0">
@@ -527,7 +620,7 @@ function AutoPostContent() {
               </div>
 
               {activeTab === "platform_links" 
-                ? renderGroupedDeals(platformDeals, "platform", filterTab2) 
+                ? renderGroupedDeals(filteredPlatformDeals, "platform", filterTab2) 
                 : renderGroupedDeals(ownDeals, "own", filterTab3)
               }
             </div>
@@ -665,6 +758,67 @@ function AutoPostContent() {
         </div>
       )}
 
+    {/* 👇 NAYA: Filter Popup Modal */}
+      {isFilterOpen && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setIsFilterOpen(false); }}>
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-3.5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-black text-sm text-slate-800 flex items-center gap-1.5"><svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg> Filter Deals</h3>
+              <button onClick={() => setIsFilterOpen(false)} className="w-7 h-7 bg-slate-200 rounded-full text-slate-600 hover:bg-slate-800 hover:text-white font-extrabold flex items-center justify-center transition-colors">✕</button>
+            </div>
+            
+            <div className="flex h-[280px]">
+              {/* Left Side Tab Menu */}
+              <div className="w-[35%] bg-slate-50 border-r border-slate-100 flex flex-col text-[11px] font-black">
+                <button className={`p-3 text-left transition-colors ${filterMenu === 'date' ? 'bg-white text-blue-600 border-l-4 border-blue-600' : 'text-slate-500'}`} onClick={() => setFilterMenu('date')}>Day & Date</button>
+                <button className={`p-3 text-left transition-colors ${filterMenu === 'store' ? 'bg-white text-blue-600 border-l-4 border-blue-600' : 'text-slate-500'}`} onClick={() => setFilterMenu('store')}>Store</button>
+              </div>
+              
+              {/* Right Side Options */}
+              <div className="w-[65%] p-4 overflow-y-auto bg-white text-[11px] font-bold text-slate-700">
+                {filterMenu === 'date' && (
+                  <div className="space-y-3">
+                    {['all_time', 'today', 'yesterday', 'last_3', 'last_7', 'last_30', 'custom'].map(opt => (
+                      <label key={opt} className="flex items-center gap-2 cursor-pointer group">
+                        <input type="radio" checked={dateFilter === opt} onChange={() => setDateFilter(opt)} className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500" />
+                        <span className="capitalize group-hover:text-blue-600">{opt.replace('_', ' ')}</span>
+                      </label>
+                    ))}
+                    
+                    {dateFilter === 'custom' && (
+                      <div className="flex flex-col gap-2 mt-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 animate-in fade-in">
+                        <input type="date" value={customDate.start} onChange={e => setCustomDate({ ...customDate, start: e.target.value })} className="p-1.5 border border-slate-200 rounded text-[10px] focus:outline-none focus:border-blue-500" />
+                        <span className="text-center text-slate-400 text-[9px] uppercase">to</span>
+                        <input type="date" value={customDate.end} onChange={e => setCustomDate({ ...customDate, end: e.target.value })} className="p-1.5 border border-slate-200 rounded text-[10px] focus:outline-none focus:border-blue-500" />
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {filterMenu === 'store' && (
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="radio" checked={selectedStore === 'all'} onChange={() => setSelectedStore('all')} className="w-3.5 h-3.5 text-blue-600" />
+                      <span className="group-hover:text-blue-600">All Stores</span>
+                    </label>
+                    {availableStores.length === 0 && <p className="text-[10px] text-slate-400 font-normal italic mt-2">No stores found.</p>}
+                    {availableStores.map(st => (
+                      <label key={st} className="flex items-center gap-2 cursor-pointer group">
+                        <input type="radio" checked={selectedStore === st} onChange={() => setSelectedStore(st)} className="w-3.5 h-3.5 text-blue-600" />
+                        <span className="group-hover:text-blue-600 truncate">{st}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="p-3 border-t border-slate-100 flex justify-end bg-white">
+               <button onClick={() => setIsFilterOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-[11px] font-black transition-colors shadow-sm active:scale-95">Apply Filter</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
