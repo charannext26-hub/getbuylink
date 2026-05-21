@@ -2,8 +2,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { QRCodeSVG } from 'qrcode.react';
 import { toPng } from 'html-to-image';
+
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 // 🎨 THEMES (Premium Ordered & Optimized)
 const THEMES = {
@@ -67,7 +70,7 @@ function AccountContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [loading, setLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false); // 👈 NAYA: Smart Init State
   const [saving, setSaving] = useState(false);
   
   const [toastMessage, setToastMessage] = useState(null);
@@ -135,50 +138,51 @@ function AccountContent() {
     }, 3000);
   };
 
+  // 👇 NAYA: SWR Caching Engine
+  const userEmail = session?.user?.email;
+  const { data: userData } = useSWR(userEmail ? `/api/user/get-by-email?email=${userEmail}` : null, fetcher, { revalidateOnFocus: false });
+  
+  const fetchedUsername = userData?.success ? userData.user.username : null;
+  const { data: statsData } = useSWR(fetchedUsername ? `/api/analytics/get-data?username=${fetchedUsername}&timeline=all` : null, fetcher, { revalidateOnFocus: false });
+
+  // 👇 NAYA: Auth Check
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
+  }, [status, router]);
 
-    if (status === "authenticated" && session?.user?.email) {
-      setLoading(true);
-      fetch(`/api/user/get-by-email?email=${session.user.email}`)
-        .then(res => res.json())
-        .then(async data => {
-          if (data.success && data.user) {
-            const u = data.user;
-            
-            if (!u.username || u.username === "creator") {
-              router.replace("/creators"); 
-              return;
-            }
+  // 👇 NAYA: Data Sync Engine (Ye typing ke waqt form ko reset hone se rokega)
+  useEffect(() => {
+    if (userData?.success && userData?.user && !isInitialized) {
+      const u = userData.user;
+      
+      if (!u.username || u.username === "creator") {
+        router.replace("/creators"); 
+        return;
+      }
 
-            try {
-              const statsRes = await fetch(`/api/analytics/get-data?username=${u.username}&timeline=all`);
-              const statsData = await statsRes.json();
-              if (statsData.success && statsData.data?.overall) {
-                setTotalEarnings(statsData.data.overall.totalEarnings || 0);
-              }
-            } catch (err) {
-              console.error("Failed to fetch earnings for account page:", err);
-            }
-
-            setEmail(u.email);
-            setUsername(u.username);
-            setFormData({
-              name: u.name || "",
-              image: u.image || "",
-              bio: u.bio || "",
-              mobileNumber: u.mobileNumber || "",
-              bioTheme: u.bioTheme || "minimal",
-              amazonTag: u.amazonTag || "",
-              salesBoosterActive: u.salesBoosterActive || false,
-              banners: u.banners || [],
-              socialHandles: u.socialHandles || []
-            });
-            setLoading(false);
-          }
-        });
+      setEmail(u.email);
+      setUsername(u.username);
+      setFormData({
+        name: u.name || "",
+        image: u.image || "",
+        bio: u.bio || "",
+        mobileNumber: u.mobileNumber || "",
+        bioTheme: u.bioTheme || "minimal",
+        amazonTag: u.amazonTag || "",
+        salesBoosterActive: u.salesBoosterActive || false,
+        banners: u.banners || [],
+        socialHandles: u.socialHandles || []
+      });
+      setIsInitialized(true); // ✅ Ek baar load hone ke baad isko lock kar dega
     }
-  }, [status, session, router]);
+  }, [userData, isInitialized, router]);
+
+  // 👇 NAYA: Analytics Earning Sync
+  useEffect(() => {
+    if (statsData?.success && statsData.data?.overall) {
+      setTotalEarnings(statsData.data.overall.totalEarnings || 0);
+    }
+  }, [statsData]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -222,8 +226,26 @@ function AccountContent() {
     showToast("✅ Bio Link Copied!");
   };
 
-  if (loading || status === "loading") {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
+  // 👇 NAYA: Premium Skeleton Loader (Instant Load)
+  if (!isInitialized || status === "loading") {
+    return (
+      <div className="min-h-screen bg-slate-50 font-sans p-4 md:p-8">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
+          {/* Left Side: Form Skeleton */}
+          <div className="flex-1 space-y-6">
+            <div className="w-48 h-10 bg-slate-200 rounded-lg animate-pulse mb-6"></div>
+            <div className="w-full h-16 bg-slate-200 rounded-xl animate-pulse"></div>
+            <div className="w-full h-40 bg-slate-200 rounded-2xl animate-pulse"></div>
+            <div className="w-full h-96 bg-slate-200 rounded-2xl animate-pulse"></div>
+          </div>
+          {/* Right Side: Phone Frame Skeleton */}
+          <div className="hidden lg:block w-[350px] shrink-0">
+            <div className="w-32 h-5 bg-slate-200 rounded mx-auto mb-4 animate-pulse"></div>
+            <div className="w-[320px] h-[650px] mx-auto bg-slate-200 rounded-[2.5rem] shadow-xl animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const bioLink = `${window.location.origin}/${username}`;
