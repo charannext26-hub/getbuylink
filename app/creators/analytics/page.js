@@ -1,13 +1,13 @@
 "use client";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSession, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from "recharts";
-import useSWR from "swr"; // 👈 SWR Magic Cache
+import useSWR from "swr"; // 👈 NAYA: SWR Magic Cache
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899', '#14b8a6', '#f43f5e', '#84cc16', '#6366f1'];
 
-// 👈 Fetcher Function for SWR
+// 👇 NAYA: Caching Fetcher Function
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
 function AnalyticsDashboard() {
@@ -22,8 +22,9 @@ function AnalyticsDashboard() {
   // Custom Filter Popups States
   const [isTimeFilterOpen, setIsTimeFilterOpen] = useState(false);
   const [isStoreFilterOpen, setIsStoreFilterOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Temp states for Time Modal (Jab tak Apply na dabe tab tak save nahi hoga)
+  // Temp states for Time Modal
   const [tempTimeline, setTempTimeline] = useState("3days");
   const [tempCustomDate, setTempCustomDate] = useState({ start: "", end: "" });
   
@@ -68,7 +69,8 @@ function AnalyticsDashboard() {
     ? `custom&start=${customDate.start}&end=${customDate.end}`
     : timeline;
 
-  const { data: statsData, mutate: mutateStats } = useSWR(fetchedUsername ? `/api/analytics/get-data?username=${fetchedUsername}&timeline=${timelineQuery}` : null, fetcher);
+  // keepPreviousData: true ensures UI doesn't flash when changing filters
+  const { data: statsData, mutate: mutateStats } = useSWR(fetchedUsername ? `/api/analytics/get-data?username=${fetchedUsername}&timeline=${timelineQuery}` : null, fetcher, { keepPreviousData: true });
   const { data: histData, mutate: mutateHist } = useSWR(fetchedUsername ? `/api/admin/payouts?username=${fetchedUsername}` : null, fetcher);
 
   const stats = statsData?.success ? statsData.data : null;
@@ -167,19 +169,28 @@ function AnalyticsDashboard() {
     );
   }
 
-  // Intermediate fetching state for Stats
+  // 👇 NAYA: Premium Floating Dots Wave Animation
   if (!stats) return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-slate-500 font-bold text-sm">Crunching Numbers...</p>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center bg-slate-50">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-3 h-3 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
+        <p className="text-slate-400 font-extrabold text-[10px] uppercase tracking-widest">Processing Data...</p>
       </div>
   );
 
   const currentSourceStats = linkSourceTab === "auto" ? stats.autoPostStats : stats.manualPostStats;
   const uniqueStores = ["All", ...new Set(currentSourceStats.links.map(l => l.store || "Unknown"))];
   
+  // 🚨 FIX: Smart Search + Store Filter + High Commission Sort
   const filteredLinks = currentSourceStats.links
-    .filter(l => linkStoreFilter === "All" || (l.store || "Unknown") === linkStoreFilter)
+    .filter(l => {
+        const matchesSearch = searchQuery === "" || (l.title || "").toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStore = linkStoreFilter === "All" || (l.store || "Unknown") === linkStoreFilter;
+        return matchesSearch && matchesStore;
+    })
     .sort((a, b) => (b.earnings || 0) - (a.earnings || 0));
 
   let allTransactions = [];
@@ -238,7 +249,7 @@ function AnalyticsDashboard() {
                <button onClick={() => setActiveMainTab("payouts")} className={`shrink-0 px-3 py-2 rounded-lg text-[11px] font-black transition-all ${activeMainTab === 'payouts' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Payouts</button>
             </div>
             
-            {/* 👇 NAYA: Custom Time Filter Button */}
+            {/* 👇 Custom Time Filter Button */}
             <button onClick={() => { setTempTimeline(timeline); setTempCustomDate(customDate); setIsTimeFilterOpen(true); }} className="bg-white border border-slate-200 text-slate-700 font-bold text-[11px] py-1.5 px-3 rounded-lg shadow-sm flex items-center gap-1.5 hover:bg-slate-50 active:scale-95 transition-all">
               {timeline === 'today' ? 'Today' : timeline === 'yesterday' ? 'Yesterday' : timeline === '3days' ? 'Last 3 Days' : timeline === '7days' ? 'Last 7 Days' : timeline === '30days' ? 'Last 30 Days' : timeline === 'custom' ? 'Custom Date' : 'All Time'}
               <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
@@ -329,20 +340,36 @@ function AnalyticsDashboard() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Top Performing Links</h3>
                 
-                {/* 👇 NAYA: Custom Store Filter Button */}
-                <button onClick={() => setIsStoreFilterOpen(true)} className="bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase py-1.5 px-3 rounded-lg flex items-center gap-1.5 hover:bg-slate-50 active:scale-95 transition-all w-full sm:w-auto justify-between sm:justify-start">
-                  <span className="truncate max-w-[100px]">{linkStoreFilter}</span>
-                  <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
+                {/* 👇 Search & Filter Container */}
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                   <div className="relative flex-1 sm:w-48 bg-white border border-slate-200 rounded-lg shadow-sm">
+                      <input 
+                        type="text" placeholder="Search link..." 
+                        onChange={(e) => setSearchQuery(e.target.value)} 
+                        className="w-full pl-3 pr-3 py-1.5 text-[10px] font-bold outline-none rounded-lg focus:ring-1 focus:ring-blue-500"
+                      />
+                   </div>
+                   <button onClick={() => setIsStoreFilterOpen(true)} className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase text-slate-600 flex items-center gap-1 hover:bg-slate-50">
+                      <span className="truncate max-w-[60px]">{linkStoreFilter}</span>
+                      <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                   </button>
+                </div>
               </div>
+
               <div className="space-y-2">
                 {filteredLinks.length === 0 ? (
-                  <div className="text-center py-8 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400 font-bold text-xs">No active links found.</div>
+                  <div className="text-center py-8 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400 font-bold text-xs">No active links found matching filter.</div>
                 ) : (
                   filteredLinks.map((link, idx) => (
                     <div key={idx} className="bg-white border border-slate-200 p-3 rounded-xl flex items-center justify-between gap-3 hover:border-blue-300 hover:shadow-sm transition-all group">
                        <div className="flex items-center gap-3 overflow-hidden flex-1">
-                          <img src={link.imageUrl?.startsWith('http') ? link.imageUrl : 'https://via.placeholder.com/150?text=Product'} alt="product" className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-lg object-contain shrink-0 p-0.5" />
+                          {/* 👇 FIX: Image property perfectly mapped */}
+                          <img 
+                            src={link.image || link.imageUrl || 'https://via.placeholder.com/150?text=Product'} 
+                            alt="product" 
+                            className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-lg object-contain shrink-0 p-0.5" 
+                            onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=Product"; }}
+                          />
                           <div className="flex-1 overflow-hidden">
                              <h4 className="font-extrabold text-slate-800 text-[11px] md:text-xs line-clamp-1">{link.title || "Untitled Product"}</h4>
                              <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{link.store || "Store"}</p>
@@ -378,7 +405,6 @@ function AnalyticsDashboard() {
                    <p className="text-[10px] font-bold text-slate-500 mt-1">Discover exactly what your audience is buying through your links.</p>
                 </div>
                 
-                {/* 👇 NAYA: Custom Store Filter Button */}
                 <button onClick={() => setIsStoreFilterOpen(true)} className="bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase py-1.5 px-3 rounded-lg flex items-center gap-1.5 hover:bg-slate-50 active:scale-95 transition-all w-full sm:w-auto justify-between sm:justify-start">
                   <span className="truncate max-w-[100px]">{orderStoreFilter}</span>
                   <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
@@ -538,7 +564,7 @@ function AnalyticsDashboard() {
             <div className="bg-white w-full max-w-2xl rounded-t-[2rem] shadow-2xl flex flex-col max-h-[92vh] animate-in slide-in-from-bottom-full duration-300">
               <div className="p-4 md:p-6 border-b border-slate-100 flex items-start justify-between shrink-0">
                  <div className="flex items-center gap-4 overflow-hidden flex-1 pr-4">
-                   <img src={selectedLink.imageUrl?.startsWith('http') ? selectedLink.imageUrl : 'https://via.placeholder.com/150?text=Product'} className="w-14 h-14 rounded-xl object-contain bg-slate-50 border border-slate-200 shrink-0 p-1" />
+                   <img src={selectedLink.image || selectedLink.imageUrl || 'https://via.placeholder.com/150?text=Product'} className="w-14 h-14 rounded-xl object-contain bg-slate-50 border border-slate-200 shrink-0 p-1" />
                    <div className="overflow-hidden">
                      <h2 className="font-black text-base md:text-lg text-slate-900 leading-tight mb-1.5 truncate">{selectedLink.title}</h2>
                      <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/go/${selectedLink.shortCode}`); showToast("✅ Link copied successfully!"); }} className="flex items-center gap-1.5 text-[10px] font-extrabold text-blue-600 hover:text-white hover:bg-blue-600 transition-colors uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md w-max border border-blue-100">
@@ -674,7 +700,7 @@ function AnalyticsDashboard() {
          </div>
       )}
 
-      {/* 👇 NAYA: Custom Time Filter Modal (With Custom Date Selector) */}
+      {/* 👇 Time Filter Modal (With Custom Date Selector) */}
       {isTimeFilterOpen && (
         <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 animate-in fade-in" onClick={() => setIsTimeFilterOpen(false)}>
           <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
@@ -732,7 +758,7 @@ function AnalyticsDashboard() {
         </div>
       )}
 
-      {/* 👇 NAYA: Custom Store Filter Modal */}
+      {/* 👇 Custom Store Filter Modal */}
       {isStoreFilterOpen && (
         <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 animate-in fade-in" onClick={() => setIsStoreFilterOpen(false)}>
           <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl max-h-[70vh] animate-in slide-in-from-bottom sm:zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
