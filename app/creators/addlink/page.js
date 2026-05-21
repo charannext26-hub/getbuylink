@@ -2,6 +2,10 @@
 import { useState, useEffect } from "react";
 import { useSession, SessionProvider } from "next-auth/react"; 
 import { useRouter } from "next/navigation";
+import useSWR from "swr"; // 👈 NAYA: Magic Cache
+
+// 👇 Caching Fetcher Function
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 // 🚨 EXTENDED CATEGORIES LIST
 const ALL_CATEGORIES = [
@@ -65,30 +69,19 @@ function AddlinkContent() {
     }, 2500); // 2.5 seconds ke baad auto-hide ho jayega
   };
 
-  // 🚨 THE BULLETPROOF GATEKEEPER 🚨
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
+  // 👇 NAYA: User SWR Cache
+  const userEmail = session?.user?.email;
+  const { data: userData, isLoading: isUserLoading } = useSWR(userEmail ? `/api/user/get-by-email?email=${userEmail}` : null, fetcher, { revalidateOnFocus: false });
 
-    if (status === "authenticated" && session?.user?.email) {
-      fetch(`/api/user/get-by-email?email=${session.user.email}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.user) {
-            const currentUsername = data.user.username;
-            
-            // Check valid username
-            if (!currentUsername || currentUsername === "creator") {
-              router.replace("/creators"); // ⛔ Block Access & Send to Setup
-            } else {
-              setUsername(currentUsername); // 👈 NAYA: Username save
-              setLoading(false); // ✅ Access Granted
-            }
-          }
-        });
+  // 🚨 THE SWR BULLETPROOF GATEKEEPER 🚨
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/login");
+    if (userData?.success && userData?.user) {
+       const uname = userData.user.username;
+       if (!uname || uname === "creator") router.replace("/creators");
+       else setUsername(uname);
     }
-  }, [status, session, router]);
+  }, [status, router, userData]);
 
   const extractUrls = (text) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -231,8 +224,19 @@ function AddlinkContent() {
     }
   };
 
-  // 🚨 GATEKEEPER LOADING SCREEN
-  if (loading || status === "loading") return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
+  // 👇 NAYA: Instant Skeleton Loader
+  if (isUserLoading || status === "loading") {
+    return (
+      <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="w-2/3 h-8 bg-slate-200 rounded animate-pulse"></div>
+          <div className="w-full h-24 bg-slate-200 rounded-2xl animate-pulse"></div>
+          <div className="w-full h-48 bg-slate-200 rounded-2xl animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
+  if (!session) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans relative pb-20">
@@ -301,63 +305,45 @@ function AddlinkContent() {
 
       <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
         
-        {/* HEADER */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Add Links & Collections</h1>
-          <p className="text-slate-500 font-bold text-sm mt-1">Generate trackable smart links to monetize your audience.</p>
+        {/* 👇 NAYA: Compact One-Line Header */}
+        <div className="mb-4 flex flex-col md:flex-row md:items-end gap-1 md:gap-3">
+          <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-none">Add Links & Collection</h1>
+          <p className="text-slate-500 font-bold text-xs md:text-sm mb-0.5">Generate smart links to monetize your audience.</p>
         </div>
 
-        {/* 1. LINK MODE SELECTION */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <h2 className="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        {/* 👇 NAYA: Compact Side-by-Side Monetization Method */}
+        <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
+          <h2 className="text-sm font-extrabold text-slate-800 mb-3 flex items-center gap-1.5">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             Monetization Method
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <div className="grid grid-cols-2 gap-2 md:gap-4">
             
-            {/* PREMIUM LINK OPTION */}
-            <div 
-              onClick={() => setLinkMode("platform")}
-              className={`cursor-pointer relative p-5 rounded-xl border-2 transition-all ${linkMode === 'platform' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}
-            >
-              <div className="flex items-center gap-3">
-                <input type="radio" checked={linkMode === 'platform'} readOnly className="w-5 h-5 accent-blue-600 pointer-events-none" />
-                <div className="font-extrabold text-slate-800">Generate Premium Link</div>
+            {/* PREMIUM LINK */}
+            <div onClick={() => setLinkMode("platform")} className={`cursor-pointer relative p-2.5 md:p-3 rounded-xl border-2 transition-all flex flex-col justify-center ${linkMode === 'platform' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}>
+              <div className="flex items-center gap-2">
+                <input type="radio" checked={linkMode === 'platform'} readOnly className="w-3.5 h-3.5 accent-blue-600 pointer-events-none flex-shrink-0" />
+                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">Premium Link</div>
               </div>
-              
-              <div className="ml-8 mt-1">
-                <button 
-                  onClick={(e) => { e.stopPropagation(); router.push('/campaign-rates'); }} 
-                  className="text-[11px] font-bold text-slate-400 hover:text-blue-600 flex items-center gap-1 transition-colors w-fit"
-                >
-                  check store profit rate
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+              <div className="ml-5.5 mt-1 pl-1">
+                <button onClick={(e) => { e.stopPropagation(); router.push('/campaign-rates'); }} className="text-[9px] font-bold text-slate-400 hover:text-blue-600 flex items-center gap-1 transition-colors w-fit">
+                  check profit rate <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>
               </div>
-
-              <button 
-                onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Premium Link", desc: "Our system automatically converts regular e-commerce product links into trackable, monetized links for you. You don't need your own affiliate account." }); }} 
-                className="absolute top-4 right-4 text-slate-400 hover:text-blue-600 z-10"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <button onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Premium Link", desc: "Our system automatically converts regular e-commerce product links into trackable, monetized links for you. You don't need your own affiliate account." }); }} className="absolute top-2 right-2 text-slate-300 hover:text-blue-600 z-10">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               </button>
             </div>
 
-            {/* OWN LINK OPTION */}
-            <div 
-              onClick={() => setLinkMode("own")}
-              className={`cursor-pointer relative p-5 rounded-xl border-2 transition-all ${linkMode === 'own' ? 'border-purple-600 bg-purple-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}
-            >
-              <div className="flex items-center gap-3">
-                <input type="radio" checked={linkMode === 'own'} readOnly className="w-5 h-5 accent-purple-600 pointer-events-none" />
-                <div className="font-extrabold text-slate-800">Personal Affiliate Link</div>
+            {/* OWN LINK */}
+            <div onClick={() => setLinkMode("own")} className={`cursor-pointer relative p-2.5 md:p-3 rounded-xl border-2 transition-all flex flex-col justify-center ${linkMode === 'own' ? 'border-purple-600 bg-purple-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}>
+              <div className="flex items-center gap-2">
+                <input type="radio" checked={linkMode === 'own'} readOnly className="w-3.5 h-3.5 accent-purple-600 pointer-events-none flex-shrink-0" />
+                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">Personal Affiliate</div>
               </div>
-              
-              <button 
-                onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Personal Link", desc: "Paste your existing Amazon/Flipkart affiliate link here. We will save it exactly as is to display on your page." }); }} 
-                className="absolute top-4 right-4 text-slate-400 hover:text-purple-600 z-10"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <button onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Personal Link", desc: "Paste your existing Amazon/Flipkart affiliate link here. We will save it exactly as is to display on your page." }); }} className="absolute top-2 right-2 text-slate-300 hover:text-purple-600 z-10">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               </button>
             </div>
 

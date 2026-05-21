@@ -331,40 +331,76 @@ function AutoPostContent() {
     setTimeout(() => { setSelectedGroup(null); setDrawerMode(""); }, 300); 
   };
 
-  // ==========================================
-  // 1️⃣ SABSE PEHLE: Filter Engine aur useMemo
-  // ==========================================
-  const filterEngine = (dataList, isBatchMode = false) => {
+  // 👇 NAYA: PRO Filter & Search Engine (100% Accurate for All Tabs)
+  const filterEngine = (dataList, isGroupedMode = false) => {
     if (!dataList) return [];
+
+    // Search words ko alag-alag split karna taaki "shoes amazon" dono words aage-peeche bhi match karein
+    const queryWords = searchQuery.toLowerCase().split(" ").filter(w => w.trim() !== "");
+
     return dataList.filter(item => {
-      const d = isBatchMode ? (item.deals?.[0] || item) : (item.deal || item);
-      
-      // 1. Search Query
-      const q = searchQuery.toLowerCase();
-      if (q && !(d.title || "").toLowerCase().includes(q) && !(d.store || "").toLowerCase().includes(q)) return false;
-      
-      // 2. Store Filter
-      if (selectedStore !== "all" && d.store !== selectedStore) return false;
-      
-      // 3. Date Filter
-      if (dateFilter !== "all_time" && (d.createdAt || d.updatedAt)) {
-        const itemDate = new Date(d.createdAt || d.updatedAt);
-        const now = new Date();
-        const diffDays = (now - itemDate) / (1000 * 60 * 60 * 24);
+      let titleStr = "";
+      let storeStr = "";
+      let dateStr = null;
+
+      // 1. Data Extract Karna (Auto Post aur Manual dono ke liye alag logic)
+      if (isGroupedMode) {
+        if (item.isBatch) {
+          titleStr = (item.collectionName || "").toLowerCase();
+          storeStr = (item.deals?.[0]?.store || "").toLowerCase();
+          dateStr = item.deals?.[0]?.createdAt || item.deals?.[0]?.updatedAt || item.createdAt;
+        } else {
+          titleStr = (item.deal?.title || "").toLowerCase();
+          storeStr = (item.deal?.store || "").toLowerCase();
+          dateStr = item.deal?.createdAt || item.deal?.updatedAt || item.createdAt;
+        }
+      } else {
+        // Auto Post mode
+        titleStr = (item.title || "").toLowerCase();
+        storeStr = (item.store || "").toLowerCase();
+        dateStr = item.createdAt || item.updatedAt;
+      }
+
+      // 2. Search Keyword Match (Title ya Store dono me se kahin bhi ho toh dikhega)
+      if (queryWords.length > 0) {
+        const isMatch = queryWords.every(word => titleStr.includes(word) || storeStr.includes(word));
+        if (!isMatch) return false;
+      }
+
+      // 3. Store Filter Match (Case Insensitive)
+      if (selectedStore !== "all" && storeStr !== selectedStore.toLowerCase()) {
+        return false;
+      }
+
+      // 4. Date Filter Match (Midnight to Midnight Perfect Logic)
+      if (dateFilter !== "all_time") {
+        if (!dateStr) return false;
         
-        if (dateFilter === "today" && diffDays > 1) return false;
-        if (dateFilter === "yesterday" && (diffDays <= 1 || diffDays > 2)) return false;
+        const itemDate = new Date(dateStr);
+        itemDate.setHours(0, 0, 0, 0); // Raat 12 baje se set karega calculation ke liye
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const diffDays = Math.round((today - itemDate) / (1000 * 60 * 60 * 24));
+
+        if (dateFilter === "today" && diffDays > 0) return false;
+        if (dateFilter === "yesterday" && diffDays !== 1) return false;
         if (dateFilter === "last_3" && diffDays > 3) return false;
         if (dateFilter === "last_7" && diffDays > 7) return false;
         if (dateFilter === "last_30" && diffDays > 30) return false;
+        
         if (dateFilter === "custom" && customDate.start && customDate.end) {
           const start = new Date(customDate.start);
+          start.setHours(0, 0, 0, 0);
           const end = new Date(customDate.end);
           end.setHours(23, 59, 59, 999);
-          if (itemDate < start || itemDate > end) return false;
+          
+          const realTimeDate = new Date(dateStr);
+          if (realTimeDate < start || realTimeDate > end) return false;
         }
       }
-      return true;
+
+      return true; // Agar sab filters pass ho gaye, toh data dikhao
     });
   };
 
@@ -375,11 +411,19 @@ function AutoPostContent() {
   const availableStores = useMemo(() => {
     const stores = new Set();
     const activeData = activeTab === "auto_deals" ? deals : (activeTab === "platform_links" ? platformDeals : ownDeals);
-    activeData.forEach(item => {
-      const d = (item.isBatch ? item.deals?.[0] : item.deal) || item;
-      if (d.store) stores.add(d.store);
-    });
-    return Array.from(stores);
+    
+    if (activeData) {
+      activeData.forEach(item => {
+        let st = "";
+        if (activeTab === "auto_deals") {
+          st = item.store;
+        } else {
+          st = item.isBatch ? item.deals?.[0]?.store : item.deal?.store;
+        }
+        if (st) stores.add(st.trim());
+      });
+    }
+    return Array.from(stores).sort(); // Alphabetical sort karke return karega
   }, [activeTab, deals, platformDeals, ownDeals]);
 
   // ==========================================
@@ -557,7 +601,7 @@ function AutoPostContent() {
                 {filteredAutoDeals.length === 0 ? (
                   <div className="text-center p-8 text-slate-400 font-bold border-2 border-dashed rounded-xl bg-slate-50">No active auto-post deals.</div>
                 ) : (
-                  deals.map(deal => (
+                  filteredAutoDeals.map(deal => (
                     <div key={deal._id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 border border-slate-200 rounded-xl hover:shadow-md transition-shadow bg-white">
                       <div className="w-16 h-16 bg-slate-50 rounded-lg border border-slate-100 overflow-hidden flex-shrink-0 self-center sm:self-auto">
                          <img src={deal.image || "https://via.placeholder.com/150"} alt="preview" className="w-full h-full object-contain p-1" />
