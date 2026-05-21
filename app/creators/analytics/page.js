@@ -1,21 +1,31 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSession, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from "recharts";
+import useSWR from "swr"; // 👈 SWR Magic Cache
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899', '#14b8a6', '#f43f5e', '#84cc16', '#6366f1'];
+
+// 👈 Fetcher Function for SWR
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 function AnalyticsDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
-  
   // Navigation & Filters
   const [activeMainTab, setActiveMainTab] = useState("insights"); 
-  const [timeline, setTimeline] = useState("3days"); // 🚨 FIX: Default Last 3 Days set kar diya
+  const [timeline, setTimeline] = useState("3days"); 
+  const [customDate, setCustomDate] = useState({ start: "", end: "" });
+  
+  // Custom Filter Popups States
+  const [isTimeFilterOpen, setIsTimeFilterOpen] = useState(false);
+  const [isStoreFilterOpen, setIsStoreFilterOpen] = useState(false);
+
+  // Temp states for Time Modal (Jab tak Apply na dabe tab tak save nahi hoga)
+  const [tempTimeline, setTempTimeline] = useState("3days");
+  const [tempCustomDate, setTempCustomDate] = useState({ start: "", end: "" });
   
   // Sub-tabs & Filters
   const [pieTab, setPieTab] = useState("store"); 
@@ -28,97 +38,68 @@ function AnalyticsDashboard() {
   const [toastMessage, setToastMessage] = useState(null);
 
   // --- PAYOUT STATES ---
-  const [payoutHistory, setPayoutHistory] = useState([]);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("UPI");
   const [paymentDetails, setPaymentDetails] = useState(""); 
-  const [bankAccount, setBankAccount] = useState("");       
-  const [ifscCode, setIfscCode] = useState("");             
+  const [bankAccount, setBankAccount] = useState("");      
+  const [ifscCode, setIfscCode] = useState("");            
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [creatorUsername, setCreatorUsername] = useState(""); 
-  
-  // MASTER STATE FOR WALLET BALANCE
-  const [analyticsSummary, setAnalyticsSummary] = useState({
-      totalEarnings: 0,
-      approvedEarnings: 0,
-      pendingEarnings: 0,
-      availableBalance: 0
-  });
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // 🚨 FIX: Wallet Button URL Catch Logic (Direct Payout Tab Khulna)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("tab") === "payouts") {
-        setActiveMainTab("payouts");
-      }
+      if (params.get("tab") === "payouts") setActiveMainTab("payouts");
     }
   }, []);
 
-  const fetchAnalyticsAndHistory = useCallback(async (username, timeFilter) => {
-    try {
-      const statsRes = await fetch(`/api/analytics/get-data?username=${username}&timeline=${timeFilter}`);
-      const statsData = await statsRes.json();
+  // 👇 SWR CACHING ENGINE
+  const userEmail = session?.user?.email;
+  const { data: userData, isLoading: isUserLoading } = useSWR(userEmail ? `/api/user/get-by-email?email=${userEmail}` : null, fetcher, { revalidateOnFocus: false });
+  const fetchedUsername = userData?.success ? userData.user.username : null;
+
+  // Custom Date Query Logic
+  const timelineQuery = timeline === 'custom' && customDate.start && customDate.end
+    ? `custom&start=${customDate.start}&end=${customDate.end}`
+    : timeline;
+
+  const { data: statsData, mutate: mutateStats } = useSWR(fetchedUsername ? `/api/analytics/get-data?username=${fetchedUsername}&timeline=${timelineQuery}` : null, fetcher);
+  const { data: histData, mutate: mutateHist } = useSWR(fetchedUsername ? `/api/admin/payouts?username=${fetchedUsername}` : null, fetcher);
+
+  const stats = statsData?.success ? statsData.data : null;
+  const payoutHistory = histData?.success ? histData.data : [];
+
+  const analyticsSummary = useMemo(() => {
+      if (!stats || !payoutHistory) return { totalEarnings: 0, approvedEarnings: 0, pendingEarnings: 0, availableBalance: 0 };
       
-      const histRes = await fetch(`/api/admin/payouts?username=${username}`);
-      const histData = await histRes.json();
+      const { approvedEarnings, totalEarnings, pendingEarnings } = stats.overall;
+      const totalProcessedOrPendingPayouts = payoutHistory.reduce((sum, req) => {
+          if (req.status !== 'rejected') return sum + (parseFloat(req.amount) || 0);
+          return sum;
+      }, 0);
+      const finalAvailableBalance = Math.max(0, (approvedEarnings || 0) - totalProcessedOrPendingPayouts);
 
-      if (statsData.success && histData.success) {
-          setStats(statsData.data);
-          const history = histData.data;
-          setPayoutHistory(history);
-          
-          const { approvedEarnings, totalEarnings, pendingEarnings } = statsData.data.overall;
-          
-          const totalProcessedOrPendingPayouts = history.reduce((sum, req) => {
-              if (req.status !== 'rejected') return sum + (parseFloat(req.amount) || 0);
-              return sum;
-          }, 0);
-
-          const finalAvailableBalance = Math.max(0, (approvedEarnings || 0) - totalProcessedOrPendingPayouts);
-
-          setAnalyticsSummary({
-              totalEarnings: totalEarnings || 0,
-              approvedEarnings: approvedEarnings || 0,
-              pendingEarnings: pendingEarnings || 0,
-              availableBalance: finalAvailableBalance
-          });
-      } else {
-          showToast("❌ Failed to fetch data.");
-      }
-    } catch (err) {
-      console.error("Failed to fetch data:", err);
-      showToast("❌ Server Error.");
-    }
-    setLoading(false);
-  }, []);
+      return {
+          totalEarnings: totalEarnings || 0,
+          approvedEarnings: approvedEarnings || 0,
+          pendingEarnings: pendingEarnings || 0,
+          availableBalance: finalAvailableBalance
+      };
+  }, [stats, payoutHistory]);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
-
-    if (status === "authenticated" && session?.user?.email) {
-      setLoading(true);
-      fetch(`/api/user/get-by-email?email=${session.user.email}`)
-        .then(res => res.json())
-        .then(userData => {
-          if (userData.success && userData.user) {
-            const currentUsername = userData.user.username;
-            
-            if (!currentUsername || currentUsername === "creator") {
-              router.replace("/creators"); 
-            } else {
-              setCreatorUsername(currentUsername);
-              fetchAnalyticsAndHistory(currentUsername, timeline);
-            }
-          }
-        });
+    if (fetchedUsername && fetchedUsername !== "creator") {
+        setCreatorUsername(fetchedUsername);
+    } else if (fetchedUsername === "creator") {
+        router.replace("/creators"); 
     }
-  }, [status, session, router, timeline, fetchAnalyticsAndHistory]);
+  }, [status, fetchedUsername, router]);
 
   const handleWithdraw = async () => {
     let finalPaymentDetails = "";
@@ -157,7 +138,7 @@ function AnalyticsDashboard() {
         setBankAccount("");
         setIfscCode("");
         
-        await fetchAnalyticsAndHistory(creatorUsername, timeline);
+        mutateHist(); // Refresh Payouts Data
       } else {
         showToast("❌ " + data.message);
       }
@@ -168,24 +149,38 @@ function AnalyticsDashboard() {
     setIsSubmitting(false);
   };
 
-  if (status === "loading" || loading && !stats) {
+  // 👇 PREMIUM SKELETON LOADER
+  if (isUserLoading || status === "loading") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-slate-500 font-bold text-sm">Fetching Data...</p>
+      <div className="min-h-screen bg-slate-50 p-4 md:p-6 font-sans">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="w-full flex justify-between mb-4">
+             <div className="w-40 h-8 bg-slate-200 rounded animate-pulse"></div>
+             <div className="w-24 h-8 bg-slate-200 rounded animate-pulse"></div>
+          </div>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+             {[1,2,3,4,5,6].map(i => <div key={i} className="h-20 bg-slate-200 rounded-xl animate-pulse"></div>)}
+          </div>
+          <div className="w-full h-64 bg-slate-200 rounded-2xl animate-pulse mt-4"></div>
+        </div>
       </div>
     );
   }
 
-  if (!stats) return <div className="text-center p-10 font-bold text-slate-500">No data found.</div>;
+  // Intermediate fetching state for Stats
+  if (!stats) return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-slate-500 font-bold text-sm">Crunching Numbers...</p>
+      </div>
+  );
 
   const currentSourceStats = linkSourceTab === "auto" ? stats.autoPostStats : stats.manualPostStats;
   const uniqueStores = ["All", ...new Set(currentSourceStats.links.map(l => l.store || "Unknown"))];
   
-  // 🚨 FIX: Filter and SORT by highest commission
   const filteredLinks = currentSourceStats.links
     .filter(l => linkStoreFilter === "All" || (l.store || "Unknown") === linkStoreFilter)
-    .sort((a, b) => (b.earnings || 0) - (a.earnings || 0)); // High commission wala upar
+    .sort((a, b) => (b.earnings || 0) - (a.earnings || 0));
 
   let allTransactions = [];
   const allStoreNames = new Set();
@@ -242,15 +237,12 @@ function AnalyticsDashboard() {
                <button onClick={() => setActiveMainTab("orders")} className={`shrink-0 px-3 py-2 rounded-lg text-[11px] font-black transition-all ${activeMainTab === 'orders' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Order Insight</button>
                <button onClick={() => setActiveMainTab("payouts")} className={`shrink-0 px-3 py-2 rounded-lg text-[11px] font-black transition-all ${activeMainTab === 'payouts' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Payouts</button>
             </div>
-            {/* 🚨 FIX: "Last 3 Days" Added here */}
-            <select value={timeline} onChange={(e) => setTimeline(e.target.value)} className="bg-white border border-slate-200 text-slate-700 font-bold text-[11px] py-2 px-3 rounded-xl shadow-sm outline-none focus:border-blue-500 cursor-pointer">
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="3days">Last 3 Days</option>
-              <option value="7days">Last 7 Days</option>
-              <option value="30days">Last 30 Days</option>
-              <option value="all">All Time</option>
-            </select>
+            
+            {/* 👇 NAYA: Custom Time Filter Button */}
+            <button onClick={() => { setTempTimeline(timeline); setTempCustomDate(customDate); setIsTimeFilterOpen(true); }} className="bg-white border border-slate-200 text-slate-700 font-bold text-[11px] py-1.5 px-3 rounded-lg shadow-sm flex items-center gap-1.5 hover:bg-slate-50 active:scale-95 transition-all">
+              {timeline === 'today' ? 'Today' : timeline === 'yesterday' ? 'Yesterday' : timeline === '3days' ? 'Last 3 Days' : timeline === '7days' ? 'Last 7 Days' : timeline === '30days' ? 'Last 30 Days' : timeline === 'custom' ? 'Custom Date' : 'All Time'}
+              <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
           </div>
         </div>
 
@@ -336,9 +328,12 @@ function AnalyticsDashboard() {
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Top Performing Links</h3>
-                <select value={linkStoreFilter} onChange={(e) => setLinkStoreFilter(e.target.value)} className="bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase py-1.5 px-3 rounded-lg outline-none cursor-pointer w-full sm:w-auto">
-                  {uniqueStores.map(store => <option key={store} value={store}>{store}</option>)}
-                </select>
+                
+                {/* 👇 NAYA: Custom Store Filter Button */}
+                <button onClick={() => setIsStoreFilterOpen(true)} className="bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase py-1.5 px-3 rounded-lg flex items-center gap-1.5 hover:bg-slate-50 active:scale-95 transition-all w-full sm:w-auto justify-between sm:justify-start">
+                  <span className="truncate max-w-[100px]">{linkStoreFilter}</span>
+                  <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
               </div>
               <div className="space-y-2">
                 {filteredLinks.length === 0 ? (
@@ -382,9 +377,12 @@ function AnalyticsDashboard() {
                    <h2 className="text-lg font-black text-slate-900">Actual Order Insight</h2>
                    <p className="text-[10px] font-bold text-slate-500 mt-1">Discover exactly what your audience is buying through your links.</p>
                 </div>
-                <select value={orderStoreFilter} onChange={(e) => setOrderStoreFilter(e.target.value)} className="bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase py-1.5 px-3 rounded-lg outline-none cursor-pointer w-full sm:w-auto">
-                  {uniqueOrderStores.map(store => <option key={store} value={store}>{store}</option>)}
-                </select>
+                
+                {/* 👇 NAYA: Custom Store Filter Button */}
+                <button onClick={() => setIsStoreFilterOpen(true)} className="bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase py-1.5 px-3 rounded-lg flex items-center gap-1.5 hover:bg-slate-50 active:scale-95 transition-all w-full sm:w-auto justify-between sm:justify-start">
+                  <span className="truncate max-w-[100px]">{orderStoreFilter}</span>
+                  <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
              </div>
              <div className="space-y-3">
                {filteredOrders.length === 0 ? (
@@ -674,6 +672,90 @@ function AnalyticsDashboard() {
                </div>
             </div>
          </div>
+      )}
+
+      {/* 👇 NAYA: Custom Time Filter Modal (With Custom Date Selector) */}
+      {isTimeFilterOpen && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 animate-in fade-in" onClick={() => setIsTimeFilterOpen(false)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-black text-sm text-slate-800 flex items-center gap-1.5">⏱️ Select Time Period</h3>
+              <button onClick={() => setIsTimeFilterOpen(false)} className="w-7 h-7 bg-slate-200 rounded-full text-slate-600 hover:bg-slate-800 hover:text-white font-extrabold flex items-center justify-center transition-colors">✕</button>
+            </div>
+            
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+               {[
+                 { id: 'today', label: 'Today' },
+                 { id: 'yesterday', label: 'Yesterday' },
+                 { id: '3days', label: 'Last 3 Days' },
+                 { id: '7days', label: 'Last 7 Days' },
+                 { id: '30days', label: 'Last 30 Days' },
+                 { id: 'custom', label: 'Custom Date Range' },
+                 { id: 'all', label: 'All Time' }
+               ].map(opt => (
+                 <div key={opt.id}>
+                   <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors mb-2 ${tempTimeline === opt.id ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 hover:bg-slate-100 border border-transparent'}`}>
+                     <input type="radio" checked={tempTimeline === opt.id} onChange={() => setTempTimeline(opt.id)} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                     <span className={`font-bold text-xs ${tempTimeline === opt.id ? 'text-blue-700' : 'text-slate-700'}`}>{opt.label}</span>
+                   </label>
+                   
+                   {/* Custom Date Inputs show only when 'custom' is selected */}
+                   {opt.id === 'custom' && tempTimeline === 'custom' && (
+                     <div className="flex flex-col gap-2 mb-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm animate-in fade-in">
+                       <div>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Start Date</label>
+                          <input type="date" value={tempCustomDate.start} onChange={e => setTempCustomDate({ ...tempCustomDate, start: e.target.value })} className="w-full p-2 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-blue-500" />
+                       </div>
+                       <div>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">End Date</label>
+                          <input type="date" value={tempCustomDate.end} onChange={e => setTempCustomDate({ ...tempCustomDate, end: e.target.value })} className="w-full p-2 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-blue-500" />
+                       </div>
+                     </div>
+                   )}
+                 </div>
+               ))}
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 flex justify-end bg-slate-50">
+               <button 
+                 onClick={() => { 
+                   setTimeline(tempTimeline); 
+                   setCustomDate(tempCustomDate); 
+                   setIsTimeFilterOpen(false); 
+                 }} 
+                 className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-xs font-black transition-colors shadow-md active:scale-95 uppercase tracking-wider"
+               >
+                 Apply Filter
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 👇 NAYA: Custom Store Filter Modal */}
+      {isStoreFilterOpen && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 animate-in fade-in" onClick={() => setIsStoreFilterOpen(false)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl max-h-[70vh] animate-in slide-in-from-bottom sm:zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-black text-sm text-slate-800 flex items-center gap-1.5">🛍️ Select Store</h3>
+              <button onClick={() => setIsStoreFilterOpen(false)} className="w-7 h-7 bg-slate-200 rounded-full text-slate-600 hover:bg-slate-800 hover:text-white font-extrabold flex items-center justify-center transition-colors">✕</button>
+            </div>
+            <div className="p-3 overflow-y-auto">
+               {(activeMainTab === 'orders' ? uniqueOrderStores : uniqueStores).map(store => {
+                 const isActive = activeMainTab === 'orders' ? orderStoreFilter === store : linkStoreFilter === store;
+                 return (
+                 <button key={store} onClick={() => { 
+                    if(activeMainTab === 'orders') setOrderStoreFilter(store); 
+                    else setLinkStoreFilter(store); 
+                    setIsStoreFilterOpen(false); 
+                 }} className={`w-full text-left p-4 text-xs font-bold rounded-xl transition-colors mb-2 uppercase flex items-center justify-between ${isActive ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-50 hover:bg-slate-100 border border-transparent text-slate-600'}`}>
+                    {store}
+                    {isActive && <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                 </button>
+               )})}
+            </div>
+          </div>
+        </div>
       )}
 
       <style jsx>{`
