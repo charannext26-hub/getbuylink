@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import * as cheerio from "cheerio";
 
-// ⏱️ FAST TIMEOUT ENGINE 
+// ⏱️ FAST TIMEOUT ENGINE (Bina iske Vercel crash ho jayega)
 async function fetchWithTimeout(resource, options = {}, timeoutMs = 8000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -15,10 +15,14 @@ async function fetchWithTimeout(resource, options = {}, timeoutMs = 8000) {
   }
 }
 
-// SIMPLIFIED EXPANDER (Only for testing)
+// SIMPLIFIED EXPANDER
 async function expandUrl(shortUrl) {
   try {
-    const res = await fetchWithTimeout(shortUrl, { method: 'GET', redirect: 'manual' }, 4000);
+    const res = await fetchWithTimeout(shortUrl, { 
+      method: 'GET', 
+      redirect: 'manual',
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    }, 5000);
     if (res.status >= 300 && res.status < 400) {
       const loc = res.headers.get('location');
       return loc ? expandUrl(loc) : shortUrl;
@@ -29,12 +33,19 @@ async function expandUrl(shortUrl) {
   }
 }
 
+// 🛡️ CHECK IF PAGE IS BLOCKED
+function isBlocked(htmlText) {
+  if (!htmlText) return true;
+  const t = htmlText.toLowerCase();
+  return t.includes("access denied") || t.includes("robot check") || t.includes("are you a human") || t.includes("just a moment");
+}
+
 export async function POST(req) {
   try {
     const { url } = await req.json();
     if (!url) return NextResponse.json({ success: false, error: "URL missing" });
 
-    // Step 1: Expand URL
+    // Step 1: Link Expand (Short to Long)
     const expandedUrl = await expandUrl(url);
     console.log("TESTING EXPANDED URL:", expandedUrl);
 
@@ -42,52 +53,72 @@ export async function POST(req) {
     let methodUsed = "";
 
     // ==========================================
-    // 🧪 TEST LAB AREA: Change variables to test different methods
+    // 🧪 4-STAGE SERVER BYPASS ENGINE
     // ==========================================
-    const USE_ALL_ORIGINS = true; 
-    const USE_GOOGLE_CACHE = false; // Set to true to test Google Cache bypass
-    
-    // METHOD 1: All Origins Proxy
-    if (USE_ALL_ORIGINS) {
-      console.log("Trying AllOrigins...");
-      try {
-        const res = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(expandedUrl)}`, {}, 5000);
-        const data = await res.json();
-        if (data.contents && !data.contents.includes("access denied")) {
-          html = data.contents;
-          methodUsed = "AllOrigins Proxy";
-        }
-      } catch (e) { console.log("AllOrigins failed"); }
-    }
 
-    // METHOD 2: Google Cache Bypass (Very Powerful Free Trick)
-    if (!html && USE_GOOGLE_CACHE) {
-       console.log("Trying Google Web Cache...");
-       try {
-         const cacheUrl = `https://webcache.googleusercontent.com/search?q=cache:${encodeURIComponent(expandedUrl)}`;
-         const res = await fetchWithTimeout(cacheUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }, 6000);
-         const cacheHtml = await res.text();
-         if (!cacheHtml.includes("404") && cacheHtml.length > 5000) {
-            html = cacheHtml;
-            methodUsed = "Google Cache Bypass";
-         }
-       } catch (e) { console.log("Google Cache failed"); }
-    }
+    // METHOD 1: Googlebot Spoofing (Datacenter IP hone ke bawajood bots allow hote hain)
+    console.log("▶️ Trying Method 1: Googlebot Spoofing...");
+    try {
+      const res1 = await fetchWithTimeout(expandedUrl, { 
+        headers: { 
+          'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+          'Accept': 'text/html,application/xhtml+xml',
+        } 
+      }, 5000);
+      const html1 = await res1.text();
+      if (!isBlocked(html1)) {
+         html = html1;
+         methodUsed = "Googlebot Spoofing";
+      }
+    } catch (e) {}
 
-    // METHOD 3: Vercel Direct Fetch Fallback
+    // METHOD 2: AllOrigins RAW (Open Free Proxy)
     if (!html) {
-      console.log("Trying Direct Fetch...");
+      console.log("▶️ Trying Method 2: AllOrigins RAW...");
       try {
-        const res = await fetchWithTimeout(expandedUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }, 5000);
-        const directHtml = await res.text();
-        if (!directHtml.includes("access denied")) {
-           html = directHtml;
-           methodUsed = "Vercel Direct";
+        // .win/raw returns raw HTML directly instead of JSON
+        const res2 = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(expandedUrl)}`, {}, 6000);
+        const html2 = await res2.text();
+        if (!isBlocked(html2)) {
+          html = html2;
+          methodUsed = "AllOrigins RAW Proxy";
         }
       } catch (e) {}
     }
 
-    if (!html) return NextResponse.json({ success: false, error: "All methods blocked by Meesho" });
+    // METHOD 3: CorsProxy.io (Powerful Datacenter Masking)
+    if (!html) {
+      console.log("▶️ Trying Method 3: CorsProxy.io...");
+      try {
+        const res3 = await fetchWithTimeout(`https://corsproxy.io/?${encodeURIComponent(expandedUrl)}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0' }
+        }, 6000);
+        const html3 = await res3.text();
+        if (!isBlocked(html3)) {
+          html = html3;
+          methodUsed = "CorsProxy.io Bypass";
+        }
+      } catch (e) {}
+    }
+
+    // METHOD 4: Google Web Cache (Ultimate Fallback - Gets data from Google's DB)
+    if (!html) {
+       console.log("▶️ Trying Method 4: Google Web Cache...");
+       try {
+         const cacheUrl = `https://webcache.googleusercontent.com/search?q=cache:${encodeURIComponent(expandedUrl)}`;
+         const res4 = await fetchWithTimeout(cacheUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }, 6000);
+         const html4 = await res4.text();
+         if (!html4.includes("404") && !isBlocked(html4)) {
+            html = html4;
+            methodUsed = "Google Cache Extraction";
+         }
+       } catch (e) {}
+    }
+
+    // FAILSAFE
+    if (!html) {
+      return NextResponse.json({ success: false, error: "All 4 Bypasses Blocked by Meesho WAF (Cloudflare/Akamai)." });
+    }
 
     // ==========================================
     // 🧠 DATA EXTRACTION ENGINE (Title, Image, ID)
@@ -98,29 +129,16 @@ export async function POST(req) {
     let image = $('meta[property="og:image"]').attr('content') || '';
     let productId = "";
 
-    // MEESHO PRODUCT ID EXTRACTION LOGIC
-    // Logic 1: From URL
-    const idMatchUrl = expandedUrl.match(/\/s\/p\/([^/?]+)/i) || expandedUrl.match(/[?&]product_id=(\d+)/i);
+    // 🎯 LOGIC 1: URL se Product ID nikalna (e.g. /s/p/89z7xn)
+    const idMatchUrl = expandedUrl.match(/\/s\/p\/([^/?]+)/i) || expandedUrl.match(/[?&]product_id=([^&]+)/i);
     if (idMatchUrl && idMatchUrl[1]) {
       productId = idMatchUrl[1];
     }
     
-    // Logic 2: From Image URL (If image is https://images.meesho.com/images/products/123456/original_1.jpg)
+    // 🎯 LOGIC 2: Agar URL mein nahi mila toh Image Link se try karna
     if (!productId && image) {
-      const imgIdMatch = image.match(/\/products\/(\d+)\//i);
+      const imgIdMatch = image.match(/\/products\/([^/]+)\//i);
       if (imgIdMatch && imgIdMatch[1]) productId = imgIdMatch[1];
-    }
-
-    // Logic 3: From JSON-LD / __NEXT_DATA__
-    if (!productId || !title) {
-       const nextData = $('#__NEXT_DATA__').html();
-       if (nextData) {
-         try {
-           const jsonData = JSON.parse(nextData);
-           // Try to dig into Meesho's specific JSON structure (This changes often, requires trial & error)
-           // You can log `jsonData` here to inspect it in your terminal
-         } catch(e) {}
-       }
     }
 
     // Cleaning title
