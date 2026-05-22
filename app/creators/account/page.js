@@ -307,34 +307,35 @@ function AccountContent() {
             </div>
           </div>
 
-          {/* Compact Security, Contact & Earnings Box */}
-          <div className="bg-slate-900 rounded-2xl shadow-lg p-1.5 flex flex-col md:flex-row gap-1.5">
-            <div className="flex-1 bg-white rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-4 justify-between border border-slate-200">
-              <div className="flex gap-4">
-                <div className="space-y-1">
-                  <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Username</p>
-                  <p className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded border border-slate-100 cursor-not-allowed">@{username}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Email (Locked)</p>
-                  <p className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded border border-slate-100 truncate max-w-[120px] sm:max-w-xs cursor-not-allowed">{email}</p>
-                </div>
+          {/* 👇 NAYA: Compact Account Info & Earnings (Amazon Box Style) */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex flex-row items-stretch gap-3">
+            
+            {/* Left Side: Stacked Inputs */}
+            <div className="flex-1 flex flex-col justify-between gap-2">
+              <div className="flex justify-between items-center bg-slate-50 p-1.5 px-3 rounded-lg border border-slate-100">
+                 <span className="text-[9px] font-extrabold text-slate-400 uppercase">User</span>
+                 <span className="text-[11px] font-bold text-slate-600">@{username}</span>
               </div>
-              <div className="space-y-1 w-full md:w-auto mt-2 md:mt-0 pt-3 md:pt-0 border-t border-slate-100 md:border-none">
-                <p className="text-[9px] font-extrabold text-blue-600 uppercase tracking-wider flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                  WhatsApp No.
-                </p>
-                <input type="text" name="mobileNumber" value={formData.mobileNumber} onChange={handleChange} placeholder="+91..." className="w-full bg-blue-50/50 border border-blue-100 rounded-lg p-2 text-sm font-bold text-slate-800 focus:border-blue-500 outline-none transition-colors" />
+              <div className="flex justify-between items-center bg-slate-50 p-1.5 px-3 rounded-lg border border-slate-100">
+                 <span className="text-[9px] font-extrabold text-slate-400 uppercase">Email</span>
+                 <span className="text-[11px] font-bold text-slate-600 truncate max-w-[100px] sm:max-w-[150px]">{email}</span>
+              </div>
+              <div className="flex justify-between items-center bg-blue-50/50 p-1.5 px-3 rounded-lg border border-blue-100">
+                 <span className="text-[9px] font-extrabold text-blue-600 uppercase whitespace-nowrap mr-2">WA No.</span>
+                 <input type="text" name="mobileNumber" value={formData.mobileNumber} onChange={handleChange} placeholder="+91..." className="w-full bg-transparent text-right text-[11px] font-bold text-slate-800 outline-none placeholder:text-blue-300" />
               </div>
             </div>
-            <div className="bg-emerald-500 rounded-xl p-4 flex flex-col justify-center relative overflow-hidden shrink-0 min-w-[140px]">
-              <div className="relative z-10">
-                <p className="text-[9px] font-black text-emerald-100 uppercase tracking-wider mb-1">Total Mined</p>
-                <p className="font-black text-xl text-white">₹{totalEarnings.toFixed(2)}</p>
+
+            {/* Right Side: Total Mined (Compact with ₹ Watermark) */}
+            <div className="w-28 sm:w-32 bg-emerald-500 rounded-xl p-3 flex flex-col items-center justify-center relative overflow-hidden shrink-0">
+              <div className="relative z-10 text-center">
+                <p className="text-[8px] font-black text-emerald-100 uppercase tracking-wider mb-0.5">Total Mined</p>
+                <p className="font-black text-lg text-white">₹{totalEarnings.toFixed(2)}</p>
               </div>
-              <svg className="absolute -right-4 -bottom-4 w-20 h-20 text-emerald-600 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              {/* Rupee Watermark */}
+              <span className="absolute -right-1 -bottom-4 text-[65px] font-black text-emerald-600 opacity-50 select-none leading-none">₹</span>
             </div>
+
           </div>
 
           {/* PROFILE DETAILS */}
@@ -453,11 +454,12 @@ function AccountContent() {
                     </div>
                   )})}
 
+                  {/* 👇 Mobile Responsive Banner Inputs */}
                   <div className="flex flex-col gap-2 pt-2 border-t border-slate-200">
                     <input type="text" value={newBannerImage} onChange={(e) => setNewBannerImage(e.target.value)} placeholder="1. Paste Banner Image URL..." className="w-full border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
-                    <div className="flex gap-2">
-                      <input type="text" value={newBannerLink} onChange={(e) => setNewBannerLink(e.target.value)} placeholder="2. Banner Redirect Link (Optional)..." className="flex-1 border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
-                      <button onClick={handleAddBanner} className="px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-xs hover:bg-slate-700 shadow-sm whitespace-nowrap">Add Banner</button>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input type="text" value={newBannerLink} onChange={(e) => setNewBannerLink(e.target.value)} placeholder="2. Banner Redirect Link (Optional)..." className="flex-1 w-full border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
+                      <button onClick={handleAddBanner} className="w-full sm:w-auto px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-xs hover:bg-slate-700 shadow-sm">Add Banner</button>
                     </div>
                   </div>
                 </div>
@@ -484,10 +486,11 @@ function AccountContent() {
                     </div>
                   )})}
 
+                  {/* 👇 Mobile Responsive Social Inputs */}
                   <div className="flex flex-col gap-2 pt-2 border-t border-slate-200">
-                    <div className="flex gap-2">
-                      <input type="text" value={newSocialTitle} onChange={(e) => setNewSocialTitle(e.target.value)} placeholder="Title (e.g. Join VIP Group)" className="w-1/3 border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
-                      <input type="text" value={newSocialLink} onChange={(e) => setNewSocialLink(e.target.value)} placeholder="Paste Link URL..." className="flex-1 border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input type="text" value={newSocialTitle} onChange={(e) => setNewSocialTitle(e.target.value)} placeholder="Title (e.g. Join VIP Group)" className="w-full sm:w-1/3 border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
+                      <input type="text" value={newSocialLink} onChange={(e) => setNewSocialLink(e.target.value)} placeholder="Paste Link URL..." className="w-full flex-1 border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
                     </div>
                     <button onClick={handleAddSocial} className="w-full py-2 bg-slate-800 text-white rounded-lg font-bold text-xs hover:bg-slate-700 shadow-sm text-center">Add Social Button</button>
                   </div>
