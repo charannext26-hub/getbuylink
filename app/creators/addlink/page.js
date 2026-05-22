@@ -323,11 +323,11 @@ function AddlinkContent() {
             <div onClick={() => setLinkMode("platform")} className={`cursor-pointer relative p-2.5 md:p-3 rounded-xl border-2 transition-all flex flex-col justify-center ${linkMode === 'platform' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}>
               <div className="flex items-center gap-2">
                 <input type="radio" checked={linkMode === 'platform'} readOnly className="w-3.5 h-3.5 accent-blue-600 pointer-events-none flex-shrink-0" />
-                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">Convert Link</div>
+                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">Convert affiliate Link</div>
               </div>
               <div className="ml-5.5 mt-1 pl-1">
                 <button onClick={(e) => { e.stopPropagation(); router.push('/campaign-rates'); }} className="text-[9px] font-bold text-slate-400 hover:text-blue-600 flex items-center gap-1 transition-colors w-fit">
-                  check profit rate <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                  check campaign & rate <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>
               </div>
               <button onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Premium Link", desc: "Our system automatically converts regular e-commerce product links into trackable, monetized links for you. You don't need your own affiliate account." }); }} className="absolute top-2 right-2 text-slate-300 hover:text-blue-600 z-10">
@@ -353,13 +353,13 @@ function AddlinkContent() {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
            <h2 className="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">
              <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-             Paste Shopping Links
+             Paste your links here
            </h2>
            
           {/* 🚨 NAYA: Updated Placeholder */}
           <textarea 
             rows="5" 
-            placeholder="Paste your links here. E.g.:&#10;https://amzn.in/d/shortlink&#10;https://www.flipkart.com/long-product-url/p/itm..."
+            placeholder="E.g.:&#10;https://amzn.in/d/shortlink&#10;https://www.flipkart.com/long-product-url/p/itm..."
             value={rawLinks}
             onChange={(e) => setRawLinks(e.target.value)}
             className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-4 text-slate-900 text-sm font-medium focus:outline-none focus:border-blue-500 transition-colors placeholder:text-slate-400"
@@ -460,7 +460,7 @@ function AddlinkContent() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                </button>
              </h2>
-             <input type="text" placeholder="https://instagram.com/reel/..." value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-3.5 text-slate-900 font-bold text-sm focus:border-blue-500 outline-none" />
+             <input type="text" placeholder="Paste insta,youtube vedio link..." value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-3.5 text-slate-900 font-bold text-sm focus:border-blue-500 outline-none" />
            </div>
            
            <div className="space-y-4">
