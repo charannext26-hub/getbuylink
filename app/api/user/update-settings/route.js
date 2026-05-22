@@ -11,12 +11,12 @@ export async function POST(req) {
     const { 
       email, 
       name, 
-      image, // Profile image URL update karne ke liye
+      image, 
       bio, 
-      mobileNumber, // 🚨 NAYA
-      bioTheme,     // 🚨 NAYA
-      banners, 
-      socialHandles, 
+      mobileNumber, 
+      bioTheme,     
+      banners,         // 👈 NAYA: Ab ye objects ka array aayega [{image, link}]
+      socialHandles,   // 👈 NAYA: Ab ye objects ka array aayega [{title, link}]
       autodeal_active, 
       autoDealCategories, 
       amazonTag,
@@ -33,8 +33,8 @@ export async function POST(req) {
           bio, 
           mobileNumber,
           bioTheme,
-          banners, 
-          socialHandles, 
+          banners,       // 👈 MongoDB naye objects ko direct yahan save kar lega
+          socialHandles, // 👈 MongoDB naye objects ko direct yahan save kar lega
           autodeal_active, 
           autoDealCategories, 
           amazonTag,

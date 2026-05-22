@@ -314,8 +314,7 @@ function AddlinkContent() {
         {/* 👇 NAYA: Compact Side-by-Side Monetization Method */}
         <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
           <h2 className="text-sm font-extrabold text-slate-800 mb-3 flex items-center gap-1.5">
-            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            Monetization Method
+          How Proceed your Link
           </h2>
           
           <div className="grid grid-cols-2 gap-2 md:gap-4">
@@ -324,7 +323,7 @@ function AddlinkContent() {
             <div onClick={() => setLinkMode("platform")} className={`cursor-pointer relative p-2.5 md:p-3 rounded-xl border-2 transition-all flex flex-col justify-center ${linkMode === 'platform' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}>
               <div className="flex items-center gap-2">
                 <input type="radio" checked={linkMode === 'platform'} readOnly className="w-3.5 h-3.5 accent-blue-600 pointer-events-none flex-shrink-0" />
-                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">Premium Link</div>
+                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">Convert Link</div>
               </div>
               <div className="ml-5.5 mt-1 pl-1">
                 <button onClick={(e) => { e.stopPropagation(); router.push('/campaign-rates'); }} className="text-[9px] font-bold text-slate-400 hover:text-blue-600 flex items-center gap-1 transition-colors w-fit">
@@ -340,7 +339,7 @@ function AddlinkContent() {
             <div onClick={() => setLinkMode("own")} className={`cursor-pointer relative p-2.5 md:p-3 rounded-xl border-2 transition-all flex flex-col justify-center ${linkMode === 'own' ? 'border-purple-600 bg-purple-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}>
               <div className="flex items-center gap-2">
                 <input type="radio" checked={linkMode === 'own'} readOnly className="w-3.5 h-3.5 accent-purple-600 pointer-events-none flex-shrink-0" />
-                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">Personal Affiliate</div>
+                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">without convert</div>
               </div>
               <button onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Personal Link", desc: "Paste your existing Amazon/Flipkart affiliate link here. We will save it exactly as is to display on your page." }); }} className="absolute top-2 right-2 text-slate-300 hover:text-purple-600 z-10">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

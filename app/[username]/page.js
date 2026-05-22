@@ -113,22 +113,32 @@ const SVGS = {
     default: <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
 };
 
-const getSocialDetails = (socialStr) => {
-    if (!socialStr) return { name: 'Link', url: '#', icon: SVGS.default };
-    let rawUrl = typeof socialStr === 'string' ? socialStr.trim() : (socialStr.url || "");
+const getSocialDetails = (socialObj) => {
+    if (!socialObj) return { name: 'Link', url: '#', icon: SVGS.default };
+
+    // 👇 NAYA: Check karega ki purana string format hai ya naya object format
+    const isString = typeof socialObj === 'string';
+    let rawUrl = isString ? socialObj.trim() : (socialObj.link || "");
+    let customTitle = isString ? null : socialObj.title; // Creator ka diya hua naam
+
     let url = rawUrl;
     if (url.startsWith('@')) url = `https://t.me/${url.substring(1)}`;
     let lowerUrl = url.toLowerCase();
 
-    if (lowerUrl.includes('whatsapp') || lowerUrl.includes('wa.me')) return { name: 'WhatsApp', url, icon: SVGS.whatsapp };
-    if (lowerUrl.includes('instagram')) return { name: 'Instagram', url, icon: SVGS.instagram };
-    if (lowerUrl.includes('youtube')) return { name: 'YouTube', url, icon: SVGS.youtube };
-    if (lowerUrl.includes('telegram') || lowerUrl.includes('t.me')) return { name: 'Telegram', url, icon: SVGS.telegram };
-    if (lowerUrl.includes('facebook') || lowerUrl.includes('fb.com')) return { name: 'Facebook', url, icon: SVGS.facebook };
-    
-    let domain = "Link";
-    try { domain = new URL(url).hostname.replace('www.', '').split('.')[0]; } catch(e) {}
-    return { name: domain, url, icon: SVGS.default };
+    let icon = SVGS.default;
+    let defaultName = "Link";
+
+    if (lowerUrl.includes('whatsapp') || lowerUrl.includes('wa.me')) { icon = SVGS.whatsapp; defaultName = 'WhatsApp'; }
+    else if (lowerUrl.includes('instagram')) { icon = SVGS.instagram; defaultName = 'Instagram'; }
+    else if (lowerUrl.includes('youtube')) { icon = SVGS.youtube; defaultName = 'YouTube'; }
+    else if (lowerUrl.includes('telegram') || lowerUrl.includes('t.me')) { icon = SVGS.telegram; defaultName = 'Telegram'; }
+    else if (lowerUrl.includes('facebook') || lowerUrl.includes('fb.com')) { icon = SVGS.facebook; defaultName = 'Facebook'; }
+    else {
+        try { defaultName = new URL(url).hostname.replace('www.', '').split('.')[0]; } catch(e) {}
+    }
+
+    // 👇 NAYA: Agar customTitle hai toh wo dikhega, warna default name
+    return { name: customTitle || defaultName, url, icon };
 };
 
 const applyMasonryOrder = (items) => {
@@ -604,8 +614,26 @@ export default function CreatorBioPage({ params }) {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
               </button>
               {creator.banners?.length > 0 ? (
-                  <div ref={bannerScrollRef} className="w-full h-full bg-white/5 rounded-2xl overflow-x-auto flex snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden shadow-lg border border-white/10">
-                      {creator.banners.map((img, i) => <div key={i} className="min-w-full h-full snap-center flex-shrink-0"><img src={img} className="w-full h-full object-cover" alt="Banner" /></div>)}
+                  <div ref={bannerScrollRef} className="w-full h-full bg-white/5 rounded-2xl overflow-x-auto flex snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden shadow-lg border border-white/10 relative z-20">
+                      {creator.banners.map((item, i) => {
+                          // 👇 NAYA: Handle Object {image, link} format
+                          const imgSrc = typeof item === 'string' ? item : item.image;
+                          const imgLink = typeof item === 'string' ? null : item.link;
+                          
+                          const BannerImg = <img src={imgSrc} className="w-full h-full object-cover" alt="Banner" />;
+                          
+                          return (
+                              <div key={i} className="min-w-full h-full snap-center flex-shrink-0">
+                                  {imgLink ? (
+                                      <a href={imgLink} target="_blank" rel="noopener noreferrer" className="w-full h-full block cursor-pointer">
+                                          {BannerImg}
+                                      </a>
+                                  ) : (
+                                      BannerImg
+                                  )}
+                              </div>
+                          );
+                      })}
                   </div>
               ) : <div className="w-full h-full bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl shadow-inner flex items-center justify-center text-white/40 text-xs font-bold">No Banners</div>}
           </div>

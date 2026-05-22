@@ -313,15 +313,15 @@ function AccountContent() {
             {/* Left Side: Stacked Inputs */}
             <div className="flex-1 flex flex-col justify-between gap-2">
               <div className="flex justify-between items-center bg-slate-50 p-1.5 px-3 rounded-lg border border-slate-100">
-                 <span className="text-[9px] font-extrabold text-slate-400 uppercase">User</span>
+                 <span className="text-[9px] font-extrabold text-slate-400 ">UserId</span>
                  <span className="text-[11px] font-bold text-slate-600">@{username}</span>
               </div>
               <div className="flex justify-between items-center bg-slate-50 p-1.5 px-3 rounded-lg border border-slate-100">
-                 <span className="text-[9px] font-extrabold text-slate-400 uppercase">Email</span>
+                 <span className="text-[9px] font-extrabold text-slate-400 ">Email</span>
                  <span className="text-[11px] font-bold text-slate-600 truncate max-w-[100px] sm:max-w-[150px]">{email}</span>
               </div>
               <div className="flex justify-between items-center bg-blue-50/50 p-1.5 px-3 rounded-lg border border-blue-100">
-                 <span className="text-[9px] font-extrabold text-blue-600 uppercase whitespace-nowrap mr-2">WA No.</span>
+                 <span className="text-[9px] font-extrabold text-blue-600 whitespace-nowrap mr-2">Phone Number</span>
                  <input type="text" name="mobileNumber" value={formData.mobileNumber} onChange={handleChange} placeholder="+91..." className="w-full bg-transparent text-right text-[11px] font-bold text-slate-800 outline-none placeholder:text-blue-300" />
               </div>
             </div>
