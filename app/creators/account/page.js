@@ -10,7 +10,6 @@ const fetcher = (url) => fetch(url).then((res) => res.json());
 
 // 🎨 THEMES (Premium Ordered & Optimized)
 const THEMES = {
-  // 1. Sabse Last wala (Midnight Neon) ab 1st par
   midnight: { 
       name: "Midnight Neon",
       bg: "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900", 
@@ -19,7 +18,6 @@ const THEMES = {
       tab: "bg-white text-purple-400", 
       tabBg: "bg-black/60 border-white/10 backdrop-blur-md" 
   },
-  // 2. Gold
   gold: { 
       name: "Royal Gold",
       bg: "bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500", 
@@ -28,7 +26,6 @@ const THEMES = {
       tab: "bg-slate-900 text-amber-600", 
       tabBg: "bg-white/50 border-white/30 backdrop-blur-md" 
   },
-  // 3. Premium Red (Pehle Glass tha)
   glass: { 
       name: "Premium Red",
       bg: "bg-gradient-to-br from-red-600 via-rose-700 to-slate-900", 
@@ -37,7 +34,6 @@ const THEMES = {
       tab: "bg-white text-rose-500", 
       tabBg: "bg-black/60 border-white/10 backdrop-blur-md" 
   },
-  // 4. Luxury Dark 
   luxury: { 
       name: "Luxury Dark",
       bg: "bg-[#121212] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]", 
@@ -46,7 +42,6 @@ const THEMES = {
       tab: "bg-white text-slate-900", 
       tabBg: "bg-black/80 border-white/10 backdrop-blur-md" 
   },
-  // 5. Minimal (Last 2)
   minimal: { 
       name: "Minimal Light",
       bg: "bg-slate-50", 
@@ -55,7 +50,6 @@ const THEMES = {
       tab: "bg-slate-900 text-white", 
       tabBg: "bg-white/90 border-slate-200" 
   },
-  // 6. Fashion (Last 1)
   fashion: { 
       name: "Fashion Sunset",
       bg: "bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500", 
@@ -70,40 +64,13 @@ function AccountContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [isInitialized, setIsInitialized] = useState(false); // 👈 NAYA: Smart Init State
+  const [isInitialized, setIsInitialized] = useState(false); 
   const [saving, setSaving] = useState(false);
-  
   const [toastMessage, setToastMessage] = useState(null);
 
-  // 👇 YAHAN SE QR CODE KA LOGIC PASTE KAREIN 👇
   const [showQRModal, setShowQRModal] = useState(false);
   const qrCardRef = useRef(null);
 
-  const downloadQRCard = async () => {
-    if (!qrCardRef.current) return;
-    
-    try {
-      showToast("⏳ Generating high-quality QR...");
-      
-      // Modern html-to-image library ka use kar rahe hain
-      const dataUrl = await toPng(qrCardRef.current, { 
-        cacheBust: true,
-        pixelRatio: 4, // 4x High Resolution ke liye
-        backgroundColor: '#ffffff'
-      });
-      
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `${username}-LinkFav-QR.png`;
-      link.click();
-      
-      showToast("✅ QR Code Downloaded!");
-    } catch (err) {
-      console.error("QR Download Error:", err);
-      showToast("⚠️ Error downloading QR.");
-    }
-  };
-  
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [totalEarnings, setTotalEarnings] = useState(0);
@@ -120,37 +87,38 @@ function AccountContent() {
     socialHandles: []
   });
 
-  const [newBanner, setNewBanner] = useState("");
-  const [newSocial, setNewSocial] = useState("");
+  // 👇 NAYA: Dual Inputs for Banners & Socials
+  const [newBannerImage, setNewBannerImage] = useState("");
+  const [newBannerLink, setNewBannerLink] = useState("");
+  
+  const [newSocialTitle, setNewSocialTitle] = useState("");
+  const [newSocialLink, setNewSocialLink] = useState("");
   
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   
-  // 🚨 YAHAN APNA YOUTUBE LINK DAALIYE
   const videoTutorialUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"; 
-
   const bioMaxLength = 150;
 
   const showToast = (msg) => {
     setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // 👇 NAYA: SWR Caching Engine
+  // 👇 SWR Caching Engine
   const userEmail = session?.user?.email;
   const { data: userData } = useSWR(userEmail ? `/api/user/get-by-email?email=${userEmail}` : null, fetcher, { revalidateOnFocus: false });
   
   const fetchedUsername = userData?.success ? userData.user.username : null;
   const { data: statsData } = useSWR(fetchedUsername ? `/api/analytics/get-data?username=${fetchedUsername}&timeline=all` : null, fetcher, { revalidateOnFocus: false });
 
-  // 👇 NAYA: Auth Check
+  // Auth Check
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
 
-  // 👇 NAYA: Data Sync Engine (Ye typing ke waqt form ko reset hone se rokega)
+  // Data Sync Engine (Prevents form reset while typing)
   useEffect(() => {
     if (userData?.success && userData?.user && !isInitialized) {
       const u = userData.user;
@@ -173,11 +141,11 @@ function AccountContent() {
         banners: u.banners || [],
         socialHandles: u.socialHandles || []
       });
-      setIsInitialized(true); // ✅ Ek baar load hone ke baad isko lock kar dega
+      setIsInitialized(true); 
     }
   }, [userData, isInitialized, router]);
 
-  // 👇 NAYA: Analytics Earning Sync
+  // Analytics Earning Sync
   useEffect(() => {
     if (statsData?.success && statsData.data?.overall) {
       setTotalEarnings(statsData.data.overall.totalEarnings || 0);
@@ -188,10 +156,19 @@ function AccountContent() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const addArrayItem = (field, value, resetSetter) => {
-    if (!value.trim()) return;
-    setFormData({ ...formData, [field]: [...formData[field], value] });
-    resetSetter("");
+  // 👇 Modified Array Handlers for Objects
+  const handleAddBanner = () => {
+    if (!newBannerImage.trim()) return showToast("⚠️ Please enter Banner Image URL");
+    setFormData({ ...formData, banners: [...formData.banners, { image: newBannerImage, link: newBannerLink }] });
+    setNewBannerImage(""); 
+    setNewBannerLink("");
+  };
+
+  const handleAddSocial = () => {
+    if (!newSocialTitle.trim() || !newSocialLink.trim()) return showToast("⚠️ Please enter both Title and Link");
+    setFormData({ ...formData, socialHandles: [...formData.socialHandles, { title: newSocialTitle, link: newSocialLink }] });
+    setNewSocialTitle(""); 
+    setNewSocialLink("");
   };
 
   const removeArrayItem = (field, index) => {
@@ -226,19 +203,37 @@ function AccountContent() {
     showToast("✅ Bio Link Copied!");
   };
 
-  // 👇 NAYA: Premium Skeleton Loader (Instant Load)
+  const downloadQRCard = async () => {
+    if (!qrCardRef.current) return;
+    try {
+      showToast("⏳ Generating high-quality QR...");
+      const dataUrl = await toPng(qrCardRef.current, { 
+        cacheBust: true,
+        pixelRatio: 4, 
+        backgroundColor: '#ffffff'
+      });
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `${username}-LinkFav-QR.png`;
+      link.click();
+      showToast("✅ QR Code Downloaded!");
+    } catch (err) {
+      console.error("QR Download Error:", err);
+      showToast("⚠️ Error downloading QR.");
+    }
+  };
+
+  // Premium Skeleton Loader
   if (!isInitialized || status === "loading") {
     return (
       <div className="min-h-screen bg-slate-50 font-sans p-4 md:p-8">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
-          {/* Left Side: Form Skeleton */}
           <div className="flex-1 space-y-6">
             <div className="w-48 h-10 bg-slate-200 rounded-lg animate-pulse mb-6"></div>
             <div className="w-full h-16 bg-slate-200 rounded-xl animate-pulse"></div>
             <div className="w-full h-40 bg-slate-200 rounded-2xl animate-pulse"></div>
             <div className="w-full h-96 bg-slate-200 rounded-2xl animate-pulse"></div>
           </div>
-          {/* Right Side: Phone Frame Skeleton */}
           <div className="hidden lg:block w-[350px] shrink-0">
             <div className="w-32 h-5 bg-slate-200 rounded mx-auto mb-4 animate-pulse"></div>
             <div className="w-[320px] h-[650px] mx-auto bg-slate-200 rounded-[2.5rem] shadow-xl animate-pulse"></div>
@@ -260,37 +255,16 @@ function AccountContent() {
         </div>
       )}
 
-      {/* 🚨 NAYA: IN-PAGE VIDEO MODAL (Fixed Close Button & Backdrop Click) */}
+      {/* IN-PAGE VIDEO MODAL */}
       {isVideoModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          
-          {/* 1. Backdrop (Bahar click karne par band hoga) */}
-          <div 
-            className="absolute inset-0 bg-slate-900/80 transition-opacity" 
-            onClick={() => setIsVideoModalOpen(false)}
-          ></div>
-
-          {/* 2. Modal Content */}
+          <div className="absolute inset-0 bg-slate-900/80 transition-opacity" onClick={() => setIsVideoModalOpen(false)}></div>
           <div className="bg-slate-900 border border-slate-700 p-2 rounded-2xl w-full max-w-4xl shadow-2xl relative z-10">
-            
-            {/* Close Button */}
-            <button 
-              onClick={() => setIsVideoModalOpen(false)} 
-              className="absolute -top-12 right-0 text-white hover:text-red-400 font-bold bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full transition-colors flex items-center gap-2 z-20 shadow-lg"
-            >
+            <button onClick={() => setIsVideoModalOpen(false)} className="absolute -top-12 right-0 text-white hover:text-red-400 font-bold bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full transition-colors flex items-center gap-2 z-20 shadow-lg">
               Close <span className="text-xl">✕</span>
             </button>
-
-            {/* Fixed Video Aspect Ratio to 16:9 */}
             <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black">
-              <iframe 
-                src={videoTutorialUrl} 
-                title="How to get Image URL"
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                allowFullScreen
-                className="absolute top-0 left-0 w-full h-full"
-              ></iframe>
+              <iframe src={videoTutorialUrl} title="Tutorial" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen className="absolute top-0 left-0 w-full h-full"></iframe>
             </div>
           </div>
         </div>
@@ -303,76 +277,67 @@ function AccountContent() {
         {/* ========================================== */}
         <div className="flex-1 space-y-6">
           
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Creator Profile</h1>
+          {/* Compact Header */}
+          <div className="flex items-end gap-2 mb-2">
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Account</h1>
+            <span className="text-xs font-bold text-slate-500 mb-[2px]">Settings & Overview</span>
+          </div>
 
-          {/* 1. THE BIO LINK BAR (Same as Creator Page - White Theme) */}
-<div className="bg-white border-[0.5px] border-slate-200/70 rounded-xl py-2 px-3 shadow-sm flex items-center justify-between gap-2 overflow-hidden hover:border-slate-300 transition-colors">
-  
-  <div className="flex flex-col min-w-0 flex-1 pl-1">
-    <div className="flex items-center gap-1.5 mb-0.5">
-      <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider leading-none">Your Page Link</p>
-      <button onClick={copyBioLink} className="text-slate-400 hover:text-emerald-500 active:scale-95 transition-all" title="Copy Link">
-        {typeof isCopied !== "undefined" && isCopied ? (
-          <svg className="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
-        ) : (
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-        )}
-      </button>
-    </div>
-    <span className="font-black text-[12px] md:text-sm truncate block text-slate-800 leading-tight">linkfav.com/{username}</span>
-  </div>
-
-  <div className="flex shrink-0 gap-1.5 items-center">
-    
-    <button 
-      onClick={() => setShowQRModal(true)} 
-      className="flex items-center justify-center p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors rounded-lg border border-indigo-100 active:scale-95" 
-      title="Show QR Code"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 md:w-5 md:h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
-      </svg>
-    </button>
-
-    <a 
-      href={bioLink} 
-      target="_blank" 
-      rel="noreferrer" 
-      className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white transition-colors px-3 py-2 rounded-lg font-extrabold text-[10px] md:text-xs shadow-md shadow-blue-500/30 active:scale-95"
-    >
-      View <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-    </a>
-
-  </div>
-</div>
-
-          {/* 2. ACCOUNT SECURITY & EARNINGS (READ-ONLY) */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-sm font-extrabold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-              Account Security & Overview
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <p className="text-xs font-bold text-slate-500 mb-1">Username (Locked)</p>
-                <p className="font-bold text-slate-900">@{username}</p>
+          {/* BIO LINK BAR */}
+          <div className="bg-white border-[0.5px] border-slate-200/70 rounded-xl py-2 px-3 shadow-sm flex items-center justify-between gap-2 overflow-hidden hover:border-slate-300 transition-colors">
+            <div className="flex flex-col min-w-0 flex-1 pl-1">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider leading-none">Your Page Link</p>
+                <button onClick={copyBioLink} className="text-slate-400 hover:text-emerald-500 active:scale-95 transition-all" title="Copy Link">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                </button>
               </div>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 overflow-hidden">
-                <p className="text-xs font-bold text-slate-500 mb-1">Email Address</p>
-                <p className="font-bold text-slate-900 truncate">{email}</p>
-              </div>
-              <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-emerald-700 mb-1">All-Time Earnings</p>
-                  <p className="font-black text-2xl text-emerald-900">₹{totalEarnings.toFixed(2)}</p>
-                </div>
-                <svg className="w-8 h-8 text-emerald-500 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              </div>
+              <span className="font-black text-[12px] md:text-sm truncate block text-slate-800 leading-tight">linkfav.com/{username}</span>
+            </div>
+            <div className="flex shrink-0 gap-1.5 items-center">
+              <button onClick={() => setShowQRModal(true)} className="flex items-center justify-center p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors rounded-lg border border-indigo-100 active:scale-95" title="Show QR Code">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 md:w-5 md:h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
+                </svg>
+              </button>
+              <a href={bioLink} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white transition-colors px-3 py-2 rounded-lg font-extrabold text-[10px] md:text-xs shadow-md shadow-blue-500/30 active:scale-95">
+                View <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+              </a>
             </div>
           </div>
 
-          {/* 3. PROFILE DETAILS */}
+          {/* Compact Security, Contact & Earnings Box */}
+          <div className="bg-slate-900 rounded-2xl shadow-lg p-1.5 flex flex-col md:flex-row gap-1.5">
+            <div className="flex-1 bg-white rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-4 justify-between border border-slate-200">
+              <div className="flex gap-4">
+                <div className="space-y-1">
+                  <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Username</p>
+                  <p className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded border border-slate-100 cursor-not-allowed">@{username}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Email (Locked)</p>
+                  <p className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded border border-slate-100 truncate max-w-[120px] sm:max-w-xs cursor-not-allowed">{email}</p>
+                </div>
+              </div>
+              <div className="space-y-1 w-full md:w-auto mt-2 md:mt-0 pt-3 md:pt-0 border-t border-slate-100 md:border-none">
+                <p className="text-[9px] font-extrabold text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                  WhatsApp No.
+                </p>
+                <input type="text" name="mobileNumber" value={formData.mobileNumber} onChange={handleChange} placeholder="+91..." className="w-full bg-blue-50/50 border border-blue-100 rounded-lg p-2 text-sm font-bold text-slate-800 focus:border-blue-500 outline-none transition-colors" />
+              </div>
+            </div>
+            <div className="bg-emerald-500 rounded-xl p-4 flex flex-col justify-center relative overflow-hidden shrink-0 min-w-[140px]">
+              <div className="relative z-10">
+                <p className="text-[9px] font-black text-emerald-100 uppercase tracking-wider mb-1">Total Mined</p>
+                <p className="font-black text-xl text-white">₹{totalEarnings.toFixed(2)}</p>
+              </div>
+              <svg className="absolute -right-4 -bottom-4 w-20 h-20 text-emerald-600 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+          </div>
+
+          {/* PROFILE DETAILS */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
             <h2 className="text-sm font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -387,7 +352,6 @@ function AccountContent() {
                 <div className="flex-1 w-full">
                   <div className="flex justify-between items-end mb-1">
                     <label className="block text-xs font-bold text-slate-600">Profile Image URL</label>
-                    {/* 🚨 NAYA: Play Icon Button */}
                     <button type="button" onClick={() => setIsVideoModalOpen(true)} className="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-1 rounded flex items-center gap-1 hover:bg-blue-100 transition-colors">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> How to add
                     </button>
@@ -401,13 +365,13 @@ function AccountContent() {
                 <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Your Brand Name" className="w-full border-2 border-slate-200 rounded-xl p-2.5 font-bold focus:border-blue-500 outline-none transition-colors" />
               </div>
 
+              {/* Custom Theme Selector Button */}
               <div>
                 <label className="block text-xs font-bold text-slate-600 mb-1">Premium Bio Theme</label>
-                <select name="bioTheme" value={formData.bioTheme} onChange={handleChange} className="w-full border-2 border-slate-200 rounded-xl p-2.5 font-bold focus:border-blue-500 outline-none transition-colors bg-white">
-                  {Object.entries(THEMES).map(([key, theme]) => (
-                    <option key={key} value={key}>{theme.name}</option>
-                  ))}
-                </select>
+                <button type="button" onClick={() => setIsThemeModalOpen(true)} className="w-full border-2 border-slate-200 rounded-xl p-2.5 font-bold focus:border-blue-500 outline-none transition-colors bg-white text-left flex justify-between items-center">
+                  <span>{THEMES[formData.bioTheme]?.name || "Select Theme"}</span>
+                  <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
               </div>
 
               <div className="md:col-span-2">
@@ -426,14 +390,27 @@ function AccountContent() {
                   className={`w-full border-2 rounded-xl p-3 font-medium outline-none transition-colors ${formData.bio.length > bioMaxLength ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'}`}
                 ></textarea>
                 {formData.bio.length > bioMaxLength && <p className="text-[10px] text-red-500 font-bold mt-1">Bio is too long, extra text might be hidden on mobile.</p>}
+                
+                {/* Patla Sales Booster Toggle */}
+                <div className="mt-4 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-lg p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🔥</span>
+                    <div>
+                      <p className="text-xs font-extrabold text-indigo-900 leading-tight">Live Sales Booster Popups</p>
+                      <p className="text-[9px] font-semibold text-indigo-700/70">Show recent purchase popups to visitors.</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" checked={formData.salesBoosterActive} onChange={(e) => setFormData({ ...formData, salesBoosterActive: e.target.checked })} />
+                    <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 shadow-inner"></div>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* 4. MEDIA & SOCIALS (TRUE DROPDOWN FIX) */}
+          {/* MEDIA & SOCIALS */}
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden transition-all duration-300">
-            
-            {/* Dropdown Header */}
             <button 
               onClick={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
               className="w-full p-5 md:p-6 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors"
@@ -447,35 +424,41 @@ function AccountContent() {
               </div>
             </button>
 
-            {/* 🚨 NAYA: Conditional Rendering fixes the empty height issue */}
             {isMediaSectionOpen && (
               <div className="p-5 md:p-6 border-t border-slate-100 space-y-6">
                 
                 {/* Banners */}
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                   <div className="flex justify-between items-center">
-                    <label className="block text-sm font-bold text-slate-800">Auto-Sliding Banners (Images)</label>
+                    <label className="block text-sm font-bold text-slate-800">Auto-Sliding Banners</label>
                     <button type="button" onClick={() => setIsVideoModalOpen(true)} className="text-[10px] font-extrabold text-blue-600 bg-white border border-blue-100 px-2 py-1 rounded shadow-sm flex items-center gap-1 hover:bg-blue-50 transition-colors">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> How to set
                     </button>
                   </div>
                   
-                  {formData.banners.map((url, idx) => (
+                  {formData.banners.map((item, idx) => {
+                    // Handle both strings (old format) and objects (new format) gracefully
+                    const imgUrl = typeof item === 'string' ? item : item.image;
+                    const linkUrl = typeof item === 'string' ? "" : item.link;
+                    return (
                     <div key={idx} className="flex items-center gap-2 bg-white p-2 border rounded-lg shadow-sm">
-                      <img src={url} alt="banner" className="w-10 h-10 object-cover rounded bg-slate-100" />
-                      <span className="flex-1 text-xs truncate text-slate-500">{url}</span>
+                      <img src={imgUrl} alt="banner" className="w-10 h-10 object-cover rounded bg-slate-100" />
+                      <div className="flex-1 overflow-hidden">
+                        <p className="text-xs truncate text-slate-700 font-bold">{imgUrl}</p>
+                        {linkUrl && <p className="text-[10px] truncate text-slate-400 mt-0.5">🔗 {linkUrl}</p>}
+                      </div>
                       <button onClick={() => removeArrayItem('banners', idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                       </button>
                     </div>
-                  ))}
+                  )})}
 
-                  <div className="flex gap-2 pt-2">
-                    <input type="text" value={newBanner} onChange={(e) => setNewBanner(e.target.value)} placeholder="Paste banner image URL..." className="flex-1 border-2 border-slate-200 rounded-lg p-2 text-sm focus:border-blue-500 outline-none" />
-                    <button onClick={() => addArrayItem('banners', newBanner, setNewBanner)} className="px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-sm hover:bg-slate-700 flex items-center gap-1 shadow-sm">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                      Add
-                    </button>
+                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-200">
+                    <input type="text" value={newBannerImage} onChange={(e) => setNewBannerImage(e.target.value)} placeholder="1. Paste Banner Image URL..." className="w-full border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
+                    <div className="flex gap-2">
+                      <input type="text" value={newBannerLink} onChange={(e) => setNewBannerLink(e.target.value)} placeholder="2. Banner Redirect Link (Optional)..." className="flex-1 border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
+                      <button onClick={handleAddBanner} className="px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-xs hover:bg-slate-700 shadow-sm whitespace-nowrap">Add Banner</button>
+                    </div>
                   </div>
                 </div>
 
@@ -483,24 +466,30 @@ function AccountContent() {
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                   <label className="block text-sm font-bold text-slate-800">Social Handles (Profile Links)</label>
                   
-                  {formData.socialHandles.map((url, idx) => (
+                  {formData.socialHandles.map((item, idx) => {
+                    const title = typeof item === 'string' ? "Social Link" : item.title;
+                    const url = typeof item === 'string' ? item : item.link;
+                    return (
                     <div key={idx} className="flex items-center gap-2 bg-white p-2 border rounded-lg shadow-sm">
-                      <div className="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 rounded">
+                      <div className="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 rounded shrink-0">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
                       </div>
-                      <span className="flex-1 text-xs truncate text-slate-500">{url}</span>
+                      <div className="flex-1 overflow-hidden">
+                        <p className="text-xs font-bold text-slate-700 truncate">{title}</p>
+                        <p className="text-[10px] text-slate-400 truncate mt-0.5">{url}</p>
+                      </div>
                       <button onClick={() => removeArrayItem('socialHandles', idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                       </button>
                     </div>
-                  ))}
+                  )})}
 
-                  <div className="flex gap-2 pt-2">
-                    <input type="text" value={newSocial} onChange={(e) => setNewSocial(e.target.value)} placeholder="Insta/YT Profile URL..." className="flex-1 border-2 border-slate-200 rounded-lg p-2 text-sm focus:border-blue-500 outline-none" />
-                    <button onClick={() => addArrayItem('socialHandles', newSocial, setNewSocial)} className="px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-sm hover:bg-slate-700 flex items-center gap-1 shadow-sm">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                      Add
-                    </button>
+                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-200">
+                    <div className="flex gap-2">
+                      <input type="text" value={newSocialTitle} onChange={(e) => setNewSocialTitle(e.target.value)} placeholder="Title (e.g. Join VIP Group)" className="w-1/3 border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
+                      <input type="text" value={newSocialLink} onChange={(e) => setNewSocialLink(e.target.value)} placeholder="Paste Link URL..." className="flex-1 border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
+                    </div>
+                    <button onClick={handleAddSocial} className="w-full py-2 bg-slate-800 text-white rounded-lg font-bold text-xs hover:bg-slate-700 shadow-sm text-center">Add Social Button</button>
                   </div>
                 </div>
 
@@ -508,48 +497,13 @@ function AccountContent() {
             )}
           </div>
 
-          {/* 5. BUSINESS & CONTACT */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
-            <h2 className="text-sm font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-              Business Settings
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">WhatsApp / Mobile No.</label>
-                <input type="text" name="mobileNumber" value={formData.mobileNumber} onChange={handleChange} placeholder="+91..." className="w-full border-2 border-slate-200 rounded-xl p-2.5 font-bold focus:border-blue-500 outline-none transition-colors" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Amazon Associates Tag</label>
-                <input type="text" name="amazonTag" value={formData.amazonTag} onChange={handleChange} placeholder="yourbrand-21" className="w-full border-2 border-slate-200 rounded-xl p-2.5 font-bold focus:border-blue-500 outline-none transition-colors" />
-              </div>
+          {/* Compact Amazon Tag */}
+          <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-3 justify-between shadow-sm mt-4">
+            <div>
+              <p className="text-xs font-extrabold text-orange-900 mb-0.5">Amazon Associates Tag</p>
+              <p className="text-[10px] font-semibold text-orange-700/70">Enter your tag to auto-convert all Amazon links.</p>
             </div>
-          </div>
-
-          {/* 6. GROWTH & MARKETING */}
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-6 shadow-sm space-y-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-sm font-extrabold text-indigo-900 uppercase tracking-wider flex items-center gap-2 mb-1">
-                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                  Live Sales Booster
-                </h2>
-                <p className="text-xs font-semibold text-indigo-700/70 leading-relaxed max-w-sm">
-                  Show smart "recent purchase" popups on your bio page to build trust and increase conversion rates by up to 3x.
-                </p>
-              </div>
-              
-              {/* Toggle Switch */}
-              <label className="relative inline-flex items-center cursor-pointer mt-1">
-                <input 
-                  type="checkbox" 
-                  className="sr-only peer"
-                  checked={formData.salesBoosterActive}
-                  onChange={(e) => setFormData({ ...formData, salesBoosterActive: e.target.checked })}
-                />
-                <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 shadow-inner"></div>
-              </label>
-            </div>
+            <input type="text" name="amazonTag" value={formData.amazonTag} onChange={handleChange} placeholder="yourbrand-21" className="w-full md:w-64 border border-orange-200 rounded-lg p-2 font-bold text-sm focus:border-orange-500 outline-none" />
           </div>
 
           {/* SAVE BUTTON */}
@@ -557,10 +511,9 @@ function AccountContent() {
             {saving ? "Updating Profile..." : "Save All Changes"}
           </button>
           
-          {/* FAQ SECTION (Minimal & Clean) */}
+          {/* FAQ SECTION */}
           <div className="mt-8 space-y-3 pb-8">
             <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-4">Frequently Asked Questions</h3>
-            
             <details className="bg-white border border-slate-200 rounded-xl p-4 cursor-pointer group shadow-sm">
               <summary className="font-bold text-sm text-slate-700 outline-none list-none flex justify-between items-center">
                 Why can't I change my Username or Email?
@@ -570,7 +523,6 @@ function AccountContent() {
                 Your username is permanently tied to your bio link and tracking IDs. Changing it would break all your previously shared affiliate links across your social media. For security, your email is also locked.
               </p>
             </details>
-
             <details className="bg-white border border-slate-200 rounded-xl p-4 cursor-pointer group shadow-sm">
               <summary className="font-bold text-sm text-slate-700 outline-none list-none flex justify-between items-center">
                 How does the Amazon Associates Tag work?
@@ -595,39 +547,34 @@ function AccountContent() {
               Live Bio Preview
             </h3>
             
-            {/* Phone Frame */}
             <div className="w-[320px] h-[650px] mx-auto bg-slate-900 border-[10px] border-slate-900 rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col">
-              {/* Notch */}
               <div className="absolute top-0 inset-x-0 h-6 bg-slate-900 rounded-b-2xl w-32 mx-auto z-20"></div>
 
-              {/* DYNAMIC THEME ENGINE */}
               <div className={`flex-1 w-full overflow-y-auto overflow-x-hidden hide-scrollbar flex flex-col items-center pt-12 pb-6 px-4 transition-all duration-500 ${activeTheme.bg} ${activeTheme.text}`}>
                 
-                {/* Profile Img */}
                 <div className={`w-20 h-20 rounded-full bg-slate-200 mb-3 border-4 overflow-hidden shadow-lg shrink-0 ${formData.bioTheme === 'minimal' ? 'border-white' : 'border-white/20'}`}>
                   {formData.image && <img src={formData.image} alt="pic" className="w-full h-full object-cover"/>}
                 </div>
 
-                {/* Name & Bio */}
                 <h2 className="font-black text-xl mb-1 text-center tracking-tight">{formData.name || "@" + username}</h2>
                 <p className={`text-xs text-center px-2 mb-6 font-medium break-words w-full ${formData.bioTheme === 'minimal' ? 'text-slate-600' : 'text-white/80'}`}>
                   {formData.bio || "Write a short bio to welcome your followers to your shopping page..."}
                 </p>
 
-                {/* Banners Preview */}
                 {formData.banners.length > 0 && (
                   <div className="w-full h-32 rounded-2xl mb-6 overflow-hidden flex shadow-lg border shrink-0 border-white/10">
-                    <img src={formData.banners[0]} className="w-full h-full object-cover" alt="banner preview"/>
+                    <img src={typeof formData.banners[0] === 'string' ? formData.banners[0] : formData.banners[0].image} className="w-full h-full object-cover" alt="banner preview"/>
                   </div>
                 )}
 
-                {/* Social Links Buttons Preview */}
                 <div className="w-full space-y-3 mb-6 shrink-0">
-                  {formData.socialHandles.map((handle, idx) => (
+                  {formData.socialHandles.map((handleObj, idx) => {
+                    const title = typeof handleObj === 'string' ? (handleObj.includes('instagram') ? 'Instagram' : handleObj.includes('youtube') ? 'YouTube' : 'My Link') : handleObj.title;
+                    return (
                     <div key={idx} className={`w-full py-3.5 rounded-2xl flex items-center justify-center text-sm font-extrabold shadow-sm transition-all ${activeTheme.card}`}>
-                      {handle.includes('instagram') ? 'Instagram' : handle.includes('youtube') ? 'YouTube' : 'My Link'}
+                      {title}
                     </div>
-                  ))}
+                  )})}
                   {formData.socialHandles.length === 0 && (
                     <div className={`w-full py-4 border-2 border-dashed rounded-xl text-center text-xs font-bold opacity-50 ${formData.bioTheme === 'minimal' ? 'border-slate-300 text-slate-500' : 'border-white/30 text-white'}`}>
                       Social Links appear here
@@ -635,7 +582,6 @@ function AccountContent() {
                   )}
                 </div>
 
-                {/* Shopping Products Skeleton Preview */}
                 <div className="w-full space-y-3 shrink-0">
                   <h4 className="font-extrabold text-sm mb-2 opacity-80">🛍️ Top Deals</h4>
                   <div className={`w-full h-24 rounded-2xl ${activeTheme.card}`}></div>
@@ -649,83 +595,70 @@ function AccountContent() {
 
       </div>
 
-      {/* ======================================================== */}
-      {/* 🚨 THE PREMIUM QR CODE MODAL 🚨 */}
-      {/* ======================================================== */}
+      {/* QR CODE MODAL */}
       {showQRModal && (
         <div className="fixed inset-0 flex items-center justify-center p-4 animate-in fade-in duration-300" style={{ zIndex: 2147483647 }}>
           <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" onClick={() => setShowQRModal(false)}></div>
-          
           <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95">
-            
             <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
-              <h2 className="font-black text-slate-800 flex items-center gap-2">
-                <span className="text-indigo-600">📱</span> Share Profile
-              </h2>
+              <h2 className="font-black text-slate-800 flex items-center gap-2"><span className="text-indigo-600">📱</span> Share Profile</h2>
               <button onClick={() => setShowQRModal(false)} className="w-8 h-8 bg-slate-200 hover:bg-red-100 hover:text-red-600 rounded-full flex items-center justify-center font-bold text-slate-600 transition-colors">✕</button>
             </div>
 
-            {/* THE DOWNLOADABLE CARD AREA (Clean & Professional) */}
-            {/* ========================================== */}
             <div className="flex items-center justify-center py-4 bg-slate-50 border-y border-slate-100 overflow-x-auto">
-              
-              {/* FIXED SIZE CARD */}
-              <div 
-                ref={qrCardRef}
-                className="bg-white flex flex-col items-center justify-center shadow-sm relative"
-                style={{ width: "280px", height: "350px", padding: "20px", borderRadius: "24px" }} 
-              >
-                
-                {/* 1. MARKETING BRANDING (TOP) */}
+              <div ref={qrCardRef} className="bg-white flex flex-col items-center justify-center shadow-sm relative" style={{ width: "280px", height: "350px", padding: "20px", borderRadius: "24px" }}>
                 <div className="w-full flex justify-center mb-3">
                   <div className="bg-slate-800 text-white px-3.5 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
                     <svg className="w-3 h-3 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
                     <span className="text-[10px] font-black tracking-widest uppercase">linkfav.com</span>
                   </div>
                 </div>
-
-                {/* 2. THE QR CODE WRAPPER */}
                 <div className="relative flex items-center justify-center w-full bg-white mb-1">
-                  <QRCodeSVG 
-                    value={`https://linkfav.com/${username}`}
-                    size={210} 
-                    bgColor={"#ffffff"}
-                    fgColor={"#0f172a"}
-                    level={"H"} 
-                  />
-                  
-                  {/* 🚨 SINGLE CREATOR IMAGE CENTERED WITH BORDER 🚨 */}
+                  <QRCodeSVG value={`https://linkfav.com/${username}`} size={210} bgColor={"#ffffff"} fgColor={"#0f172a"} level={"H"} />
                   <div className="absolute flex items-center justify-center bg-white rounded-full shadow-sm" style={{ width: "56px", height: "56px" }}>
-                    <img 
-                      src={formData.image || session?.user?.image || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} 
-                      alt="Creator" 
-                      crossOrigin="anonymous" 
-                      className="w-12 h-12 rounded-full border-[2.5px] border-slate-200 bg-slate-100 object-cover" 
-                    />
+                    <img src={formData.image || session?.user?.image || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} alt="Creator" crossOrigin="anonymous" className="w-12 h-12 rounded-full border-[2.5px] border-slate-200 bg-slate-100 object-cover" />
                   </div>
                 </div>
-
-                {/* 3. USERNAME & TAGLINE (Gap Reduced) */}
                 <div className="flex flex-col items-center w-full mt-1">
-                  <p className="font-black text-[19px] text-slate-900 tracking-tight truncate w-full text-center">
-                    @{username}
-                  </p>
-                  <p className="text-[9.5px] font-extrabold text-slate-500 uppercase tracking-widest mt-0.5">
-                    Scan to shop my favs!
-                  </p>
+                  <p className="font-black text-[19px] text-slate-900 tracking-tight truncate w-full text-center">@{username}</p>
+                  <p className="text-[9.5px] font-extrabold text-slate-500 uppercase tracking-widest mt-0.5">Scan to shop my favs!</p>
                 </div>
-
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
               <button onClick={downloadQRCard} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-md shadow-indigo-200">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                Download QR
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Download QR
               </button>
             </div>
+          </div>
+        </div>
+      )}
 
+      {/* THEME FILTER MODAL */}
+      {isThemeModalOpen && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 animate-in fade-in" onClick={() => setIsThemeModalOpen(false)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-black text-sm text-slate-800 flex items-center gap-1.5">🎨 Select Bio Theme</h3>
+              <button onClick={() => setIsThemeModalOpen(false)} className="w-7 h-7 bg-slate-200 rounded-full text-slate-600 hover:bg-slate-800 hover:text-white font-extrabold flex items-center justify-center transition-colors">✕</button>
+            </div>
+            
+            <div className="p-3 overflow-y-auto max-h-[60vh] space-y-2">
+               {Object.entries(THEMES).map(([key, theme]) => (
+                 <button 
+                   key={key} 
+                   onClick={() => { setFormData({ ...formData, bioTheme: key }); setIsThemeModalOpen(false); }} 
+                   className={`w-full text-left p-3.5 rounded-xl transition-all border ${formData.bioTheme === key ? 'bg-blue-50 border-blue-300 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300'}`}
+                 >
+                   <p className="font-black text-sm text-slate-800">{theme.name}</p>
+                   <div className="flex gap-1 mt-1.5 opacity-80">
+                     <span className={`w-3 h-3 rounded-full ${theme.bg.split(' ')[0]}`}></span>
+                     <span className={`w-3 h-3 rounded-full ${theme.tab.split(' ')[0]}`}></span>
+                   </div>
+                 </button>
+               ))}
+            </div>
           </div>
         </div>
       )}
