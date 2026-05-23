@@ -1,19 +1,15 @@
 import { NextResponse } from "next/server";
-import * as cheerio from "cheerio";
 
 export async function POST(req) {
   try {
     const { url } = await req.json();
     if (!url) return NextResponse.json({ success: false, error: "URL missing" });
 
-    // STEP 1: Product ID Extract karna (Ye perfectly kaam kar raha hai)
+    // STEP 1: Product ID nikal kar Clean URL banana (Ye step WAF bypass ke chances badha deta hai)
     let productId = null;
     const match = url.match(/\/p\/([a-zA-Z0-9]+)/i);
-    
-    if (match && match[1]) {
-      productId = match[1];
-    } else {
-      // Agar direct bu02i3 jaisa link ho
+    if (match && match[1]) productId = match[1];
+    else {
       const parts = url.split('/');
       productId = parts[parts.length - 1].split('?')[0]; 
     }
@@ -21,50 +17,68 @@ export async function POST(req) {
     const cleanProductUrl = `https://www.meesho.com/s/p/${productId}`;
     console.log("🧼 Target URL:", cleanProductUrl);
 
-    // STEP 2: The Magic Headers (WhatsApp Spoofing)
-    // Ye headers Cloudflare WAF ko VIP pass dene par majboor kar dete hain
-    const headers = {
-      'User-Agent': 'WhatsApp/2.22.16.75 A', // WAF isko block nahi karta
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.5',
-      'Connection': 'keep-alive'
-    };
+    let title = "";
+    let image = "";
+    let methodUsed = "";
 
-    console.log("🚀 Hitting with WhatsApp Bot Identity...");
+    // ==========================================
+    // 🛡️ THE API DELEGATOR ENGINE
+    // ==========================================
 
-    const response = await fetch(cleanProductUrl, {
-      method: 'GET',
-      headers: headers
-    });
+    // METHOD 1: DUB.CO METATAGS API (Free & Fast)
+    console.log("▶️ Trying Dub.co API...");
+    try {
+      const dubRes = await fetch(`https://api.dub.co/metatags?url=${encodeURIComponent(cleanProductUrl)}`);
+      if (dubRes.ok) {
+        const dubData = await dubRes.json();
+        // Check karenge ki kahin WAF block ka title toh nahi aa gaya
+        if (dubData.title && !dubData.title.toLowerCase().includes("just a moment")) {
+          title = dubData.title;
+          image = dubData.image;
+          methodUsed = "Dub.co API";
+          console.log("✅ Dub.co Success!");
+        }
+      }
+    } catch (e) {
+      console.log("❌ Dub.co Failed");
+    }
 
-    const html = await response.text();
-    const $ = cheerio.load(html);
+    // METHOD 2: MICROLINK API (The Heavyweight Fallback - 100% Free for basic meta)
+    if (!title || !image) {
+      console.log("▶️ Trying Microlink API...");
+      try {
+        const microRes = await fetch(`https://api.microlink.io?url=${encodeURIComponent(cleanProductUrl)}`);
+        if (microRes.ok) {
+          const microData = await microRes.json();
+          if (microData.data && microData.data.title && !microData.data.title.toLowerCase().includes("just a moment")) {
+            title = microData.data.title;
+            // Microlink image ko object mein deta hai
+            image = microData.data.image?.url || microData.data.logo?.url || "";
+            methodUsed = "Microlink API";
+            console.log("✅ Microlink Success!");
+          }
+        }
+      } catch (e) {
+         console.log("❌ Microlink Failed");
+      }
+    }
 
-    // STEP 3: Sirf Meta Tags nikalna (Jo WhatsApp ko chahiye hote hain)
-    let title = $('meta[property="og:title"]').attr('content') || $('title').text() || '';
-    let image = $('meta[property="og:image"]').attr('content') || $('meta[name="twitter:image"]').attr('content') || '';
-
-    // Check for WAF Block
-    const tLower = title.toLowerCase();
-    if (tLower.includes("just a moment") || tLower.includes("access denied") || tLower.includes("security")) {
+    // FAILSAFE
+    if (!title || !image) {
       return NextResponse.json({ 
         success: false, 
-        error: "WhatsApp Spoofing ko bhi WAF ne pakad liya.",
-        debugHTML: title // Check karne ke liye ki WAF ne kya bheja
+        error: "Meesho ka IP block bohot strict hai. Aap product ka Title/Image manually add kar sakte hain.",
+        note: "Data fetch APIs bhi WAF se block ho gayi."
       });
     }
 
-    // Title Cleaning
+    // FINAL CLEANUP
     title = title.replace(/\|?\s*Meesho\s*/i, '').replace(/Buy online.*/i, '').trim();
 
-    if (!title || !image) {
-      return NextResponse.json({ success: false, error: "Bypass ho gaya, par Image/Title data nahi mila." });
-    }
-
-    // SUCCESS
+    // 🚀 SUCCESS!
     return NextResponse.json({ 
       success: true, 
-      method: "Social Crawler (WhatsApp) Bypass",
+      method: `Delegated to ${methodUsed}`,
       data: {
         originalUrl: url,
         cleanUrl: cleanProductUrl,
