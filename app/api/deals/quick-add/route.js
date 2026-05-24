@@ -30,15 +30,24 @@ function cleanProductUrl(rawUrl) {
   }
 }
 
+// 🎯 STORE ROUTER DICTIONARY (Sankmo Configuration)
+// Yahan manual control hai. Agar store idhar hai, toh Sankmo use hoga.
+const sankmoCampaigns = {
+    "Flipkart": "83956760",
+    "Myntra": "16407658",
+    "Ajio": "91411482",
+    "Shopsy": "78454597",
+    "Dot&Key": "80483577" // Aap yahan aur stores add kar sakte hain
+};
+const SANKMO_PUB_ID = "xPH2IO4";
+
 export async function POST(req) {
   try {
-    // 1. Session Check
     const session = await getServerSession();
     if (!session || !session.user) {
       return NextResponse.json({ success: false, message: "Login required!" }, { status: 401 });
     }
 
-    // 2. Parse Incoming Data from Frontend
     const body = await req.json();
     const { action, deal } = body; 
 
@@ -46,15 +55,13 @@ export async function POST(req) {
       return NextResponse.json({ success: false, message: "Invalid product data" }, { status: 400 });
     }
 
-    // 3. Connect to DB
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(process.env.MONGODB_URI);
     }
 
-    // 4. Get Creator's Username & Amazon Tag
     const dbUser = await User.findOne({ email: session.user.email });
     let safeUsername = "creator";
-    let creatorTag = ""; // NAYA: Amazon tag ke liye
+    let creatorTag = ""; 
     if (dbUser) {
       if (dbUser.username) safeUsername = dbUser.username.replace(/[^a-zA-Z0-9]/g, '');
       if (dbUser.amazonTag) creatorTag = dbUser.amazonTag.trim();
@@ -62,14 +69,12 @@ export async function POST(req) {
       safeUsername = session.user.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
     }
 
-    // 🚨 NAYA: Pehle URL saaf karo (Scrubbing)
     const rawLongUrl = deal.expandedUrl || deal.originalUrl;
     const cleanedUrl = cleanProductUrl(rawLongUrl);
 
-    // 5. Check if this link was ALREADY generated
     let existingPerformance = await LinkPerformance.findOne({
       creatorId: safeUsername,
-      originalUrl: cleanedUrl // Ab cleaned URL match hoga
+      originalUrl: cleanedUrl 
     });
 
     let shortCodeToReturn = "";
@@ -80,7 +85,6 @@ export async function POST(req) {
       shortCodeToReturn = existingPerformance.shortCode;
       affiliateUrlToUse = existingPerformance.affiliateUrl;
     } else {
-      // 🚨 FIX 1: Shortcode pehle generate karo!
       shortCodeToReturn = Math.random().toString(36).substring(2, 8);
 
       let isAmazonLink = false;
@@ -91,8 +95,12 @@ export async function POST(req) {
 
       finalStoreName = isAmazonLink ? "Amazon" : finalStoreName;
 
-      // 🚨 FIX 2: Smart Router (Amazon vs Cuelinks) + SubID1 & SubID2
+      // ==========================================
+      // 🚀 THE MASTER ROUTER ENGINE
+      // ==========================================
+      
       if (isAmazonLink && creatorTag) {
+          // ROUTE 1: AMAZON (Direct Associate Tag)
           try {
               const amzUrl = new URL(cleanedUrl);
               amzUrl.searchParams.set('tag', creatorTag);
@@ -100,10 +108,17 @@ export async function POST(req) {
           } catch(e) {
               affiliateUrlToUse = cleanedUrl + (cleanedUrl.includes('?') ? '&' : '?') + `tag=${creatorTag}`;
           }
-      } else {
+      } 
+      else if (sankmoCampaigns[finalStoreName]) {
+          // ROUTE 2: SANKMO (High Conversion Deep-linking)
+          const campId = sankmoCampaigns[finalStoreName];
+          // subid = Creator ID, subid1 = Platform Shortcode (Dono database link karne ke kaam aayenge)
+          affiliateUrlToUse = `https://sankmo.in/track/click?pub_id=${SANKMO_PUB_ID}&camp_id=${campId}&subid=${safeUsername}&subid1=${shortCodeToReturn}&source=quick_add&dl=${encodeURIComponent(cleanedUrl)}`;
+      } 
+      else {
+          // ROUTE 3: CUELINKS (The Ultimate Fallback for other stores)
           const pubId = (process.env.CUELINKS_PUB_ID || "246005").trim();
-          // Yahan apka Master Logic lag gaya!
-          affiliateUrlToUse = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeUsername}&subid2=${shortCodeToReturn}&subid3=manual&url=${encodeURIComponent(cleanedUrl)}`;
+          affiliateUrlToUse = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeUsername}&subid2=${shortCodeToReturn}&subid3=quick_add&url=${encodeURIComponent(cleanedUrl)}`;
       }
 
       // Save to Tracking Database
@@ -111,7 +126,7 @@ export async function POST(req) {
         creatorId: safeUsername,
         shortCode: shortCodeToReturn,
         subId: safeUsername,
-        originalUrl: cleanedUrl, // Saved cleaned url
+        originalUrl: cleanedUrl,
         affiliateUrl: affiliateUrlToUse,
         title: deal.title,
         store: finalStoreName, 
@@ -121,11 +136,10 @@ export async function POST(req) {
       });
     }
 
-    // 6. Action specific logic: "Push to Page" saves to GlobalDeal
     if (action === "push") {
       const existingGlobalDeal = await GlobalDeal.findOne({
         creatorId: session.user.email || session.user.id,
-        originalUrl: deal.originalUrl // UI reference ke liye
+        originalUrl: deal.originalUrl 
       });
 
       if (!existingGlobalDeal) {
@@ -134,11 +148,8 @@ export async function POST(req) {
           source: "creator",
           linkType: "platform",
           originalUrl: deal.originalUrl,
-          
-          // 🚨 THE BIGGEST FIX: Bio page par Click tracker link jayega! (affiliateUrlToUse NAHI jayega)
           expandedUrl: `/go/${shortCodeToReturn}`, 
-          shortCode: shortCodeToReturn, // NAYA
-          
+          shortCode: shortCodeToReturn, 
           store: finalStoreName, 
           title: deal.title,
           image: deal.imageUrl,
@@ -152,7 +163,6 @@ export async function POST(req) {
       }
     }
 
-    // 7. Success Return
     return NextResponse.json({
       success: true,
       shortCode: shortCodeToReturn,
