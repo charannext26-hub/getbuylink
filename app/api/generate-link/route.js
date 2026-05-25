@@ -22,6 +22,16 @@ function cleanProductUrl(rawUrl) {
   }
 }
 
+// 🎯 STORE ROUTER DICTIONARY (Sankmo Configuration)
+const sankmoCampaigns = {
+    "Flipkart": "83956760",
+    "Myntra": "16407658",
+    "Ajio": "91411482",
+    "Shopsy": "78454597",
+    "Dot&Key": "80483577" 
+};
+const SANKMO_PUB_ID = "xPH2IO4";
+
 export async function POST(req) {
   try {
     if (mongoose.connection.readyState === 0) await mongoose.connect(process.env.MONGODB_URI);
@@ -40,12 +50,12 @@ export async function POST(req) {
     // Username ko safe banao
     const safeSubId = creatorUsername ? creatorUsername.replace(/[^a-zA-Z0-9]/g, '') : "unknown";
 
-    // 🚨 AAPKA MASTER PLAN STEP 1: Ab URL ke sath-sath Deal ID bhi check karega! (Backward compatible)
+    // 🚨 MASTER PLAN STEP 1: Deal ID se existing link dhundhna
     let existingLink = await LinkPerformance.findOne({ 
       creatorId: safeSubId,
       $or: [
-        { globalDealId: dealId }, // 👈 NAYA: Pura perfect ID match
-        { originalUrl: targetProductUrl } // Purane links ke liye
+        { globalDealId: dealId }, 
+        { originalUrl: targetProductUrl } 
       ]
     });
 
@@ -73,9 +83,14 @@ export async function POST(req) {
 
     let affiliateUrl = "";
     const newShortCode = Math.random().toString(36).substring(2, 8);
+    const finalStoreName = deal.store || (isAmazonLink ? "Amazon" : "Unknown");
 
-    // SMART ROUTER: Amazon vs Cuelinks
+    // ==========================================
+    // 🚀 THE MASTER ROUTER ENGINE (Sankmo + Cuelinks)
+    // ==========================================
+    
     if (isAmazonLink && creatorTag) {
+        // ROUTE 1: AMAZON
         try {
             const amzUrl = new URL(targetProductUrl);
             amzUrl.searchParams.set('tag', creatorTag); 
@@ -83,7 +98,14 @@ export async function POST(req) {
         } catch(e) {
             affiliateUrl = targetProductUrl + (targetProductUrl.includes('?') ? '&' : '?') + `tag=${creatorTag}`;
         }
-    } else {
+    } 
+    else if (sankmoCampaigns[finalStoreName]) {
+        // ROUTE 2: SANKMO (Deep-linking integration for Telegram auto-post traffic)
+        const campId = sankmoCampaigns[finalStoreName];
+        affiliateUrl = `https://sankmo.in/track/click?pub_id=${SANKMO_PUB_ID}&camp_id=${campId}&subid=${safeSubId}&subid1=${newShortCode}&source=telegram_auto_post&dl=${encodeURIComponent(targetProductUrl)}`;
+    } 
+    else {
+        // ROUTE 3: CUELINKS (Fallback)
         const pubId = (process.env.CUELINKS_PUB_ID || "246005").trim();
         affiliateUrl = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeSubId}&subid2=${newShortCode}&subid3=telegram&url=${encodeURIComponent(targetProductUrl)}`;
     }
@@ -93,13 +115,13 @@ export async function POST(req) {
     // 🚨 MASTER PLAN STEP 2: Save 'globalDealId' in DB
     await LinkPerformance.create({
       creatorId: safeSubId,
-      globalDealId: dealId,  // 👈 NAYA: Ye life-saver field hai! Deal ki ID hamesha ke liye link se jud gayi.
+      globalDealId: dealId,
       shortCode: newShortCode,
       subId: safeSubId,
       originalUrl: targetProductUrl, 
       affiliateUrl: affiliateUrl, 
       title: deal.title,
-      store: deal.store || (isAmazonLink ? "Amazon" : "Unknown"),
+      store: finalStoreName,
       source: finalSource,
       linkType: "platform",
       clicks: 0

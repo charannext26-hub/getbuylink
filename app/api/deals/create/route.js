@@ -3,36 +3,44 @@ import { getServerSession } from "next-auth";
 import mongoose from "mongoose";
 import GlobalDeal from "@/lib/models/GlobalDeal";
 import User from "@/lib/models/User";
-import { generateAffiliateLink } from "@/lib/cuelinksEngine"; 
 import LinkPerformance from "@/lib/models/LinkPerformance";
 
 // 🚨 MASTER TRICK: The URL Cleaner (Bulletproof Version)
 function cleanProductUrl(rawUrl) {
   if (!rawUrl) return rawUrl;
   try {
-    // 1. Kachra text (jaise "Buy here:") hatakar sirf link nikalo
     let urlString = rawUrl.trim();
     const urlMatch = urlString.match(/(https?:\/\/[^\s]+)/);
     
     if (urlMatch) {
         urlString = urlMatch[1];
     } else if (!urlString.startsWith('http')) {
-        urlString = 'https://' + urlString; // Agar http miss ho gaya toh jod do
+        urlString = 'https://' + urlString; 
     }
 
     const urlObj = new URL(urlString);
     const paramsToRemove = [
-      'tag', 'linkCode', 'linkId', 'ref_', 'ascsubtag', // Amazon
-      'affid', 'cmpid', 'affExtParam1', 'affExtParam2', // Flipkart/Myntra
-      'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', // Analytics
-      'subid', 'clickId', 'igshid', 'mibextid' // Social media
+      'tag', 'linkCode', 'linkId', 'ref_', 'ascsubtag', 
+      'affid', 'cmpid', 'affExtParam1', 'affExtParam2', 
+      'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 
+      'subid', 'clickId', 'igshid', 'mibextid' 
     ];
     paramsToRemove.forEach(param => urlObj.searchParams.delete(param));
     return urlObj.toString();
   } catch (e) {
-    return rawUrl; // Fail-safe
+    return rawUrl; 
   }
 }
+
+// 🎯 CASE-INSENSITIVE STORE DICTIONARY (Sankmo Configuration)
+const sankmoCampaigns = {
+    "flipkart": "83956760",
+    "myntra": "16407658",
+    "ajio": "91411482",
+    "shopsy": "78454597",
+    "dot&key": "80483577"
+};
+const SANKMO_PUB_ID = "xPH2IO4";
 
 export async function POST(req) {
   try {
@@ -69,11 +77,9 @@ export async function POST(req) {
     }
 
     let finalOriginalUrl = url;
-    let finalAffiliateUrl = ""; // Ye LinkPerformance (Redirector) ke liye hai
+    let finalAffiliateUrl = ""; 
     let finalStore = store || "Unknown";
     let generatedShortCode = "";
-    
-    // 🚨 NAYA: Ye wo link hai jo Bio page par button dabane par khulega!
     let bioPageUrl = ""; 
 
     if (usePlatformLink === true) {
@@ -82,7 +88,23 @@ export async function POST(req) {
       let cleanedExpandedUrl = expandedUrl ? cleanProductUrl(expandedUrl) : finalOriginalUrl;
       let longUrlForProcessing = (cleanedExpandedUrl.length > finalOriginalUrl.length) ? cleanedExpandedUrl : finalOriginalUrl;
 
-      // 🚨 FIX: Shortcode pehle generate karenge taaki URL mein daal sakein!
+      // 🚨 TEMPORARY MEESHO BLOCK LOGIC RESTORED
+      let isMeeshoLink = false;
+      try {
+          const checkUrl = new URL(longUrlForProcessing);
+          isMeeshoLink = checkUrl.hostname.includes('meesho') || checkUrl.hostname.includes('ltl.sh');
+      } catch(e) {}
+
+      // FinalStore verify karo pehle
+      finalStore = isMeeshoLink ? "Meesho" : (store || "Unknown");
+
+      if (isMeeshoLink || finalStore.toLowerCase() === "meesho") {
+          return NextResponse.json({ 
+              success: false, 
+              message: "Meesho monetization is temporarily paused! Please turn off 'Platform Link' and use your 'Own Link' for Meesho products." 
+          }, { status: 400 });
+      }
+
       generatedShortCode = Math.random().toString(36).substring(2, 8);
 
       let isAmazonLink = false;
@@ -91,8 +113,12 @@ export async function POST(req) {
           isAmazonLink = checkUrl.hostname.includes('amazon') || checkUrl.hostname.includes('amzn');
       } catch(e) {}
 
-      finalStore = isAmazonLink ? "Amazon" : (store || "Unknown");
+      finalStore = isAmazonLink ? "Amazon" : finalStore;
+      const storeKey = finalStore.toLowerCase().trim();
 
+      // ==========================================
+      // 🚀 THE MASTER ROUTER ENGINE (Sankmo + Cuelinks)
+      // ==========================================
       if (isAmazonLink && creatorTag) {
           try {
               const amzUrl = new URL(longUrlForProcessing);
@@ -101,24 +127,27 @@ export async function POST(req) {
           } catch(e) {
               finalAffiliateUrl = longUrlForProcessing + (longUrlForProcessing.includes('?') ? '&' : '?') + `tag=${creatorTag}`;
           }
+      } else if (sankmoCampaigns[storeKey]) {
+          // ROUTE 2: SANKMO
+          const campId = sankmoCampaigns[storeKey];
+          // Notice: 'source=manual' is used here now
+          finalAffiliateUrl = `https://sankmo.in/track/click?pub_id=${SANKMO_PUB_ID}&camp_id=${campId}&subid=${safeUsername}&subid1=${generatedShortCode}&source=manual&dl=${encodeURIComponent(longUrlForProcessing)}`;
       } else {
-          // 🚨 NAYA Cuelinks URL (With subid1 and subid2)
+          // ROUTE 3: CUELINKS (Fallback)
           const pubId = (process.env.CUELINKS_PUB_ID || "246005").trim();
           finalAffiliateUrl = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeUsername}&subid2=${generatedShortCode}&subid3=manual&url=${encodeURIComponent(longUrlForProcessing)}`;
       }
       
-      // 🚨 FIX: Bio page ab exactly is short code route par hi jayega!
       bioPageUrl = `/go/${generatedShortCode}`; 
 
     } else {
-      // 🚫 OWN LINK: NO TOUCHING!
+      // 🚫 OWN LINK: Direct Routing
       finalOriginalUrl = url; 
       finalAffiliateUrl = url; 
-      
-      // 🚨 FIX 2: Bio page ab exactly wahi link kholega jo creator ne paste kiya tha (no expand!)
       bioPageUrl = url; 
     }
 
+    // 🚨 DUPLICATE LINK PROTECTION (Purane location par wapas)
     const existingDeal = await GlobalDeal.findOne({ originalUrl: finalOriginalUrl, creatorId: creatorIdToCheck });
     if (existingDeal) {
         return NextResponse.json({ success: false, message: "Yeh deal pehle hi add ho chuki hai!" }, { status: 400 });
@@ -135,7 +164,7 @@ export async function POST(req) {
       linkType: usePlatformLink ? "platform" : "own",
       batchId: finalBatchId,
       originalUrl: finalOriginalUrl, 
-      expandedUrl: bioPageUrl, // 🚨 THE REAL MAGIC: Ab Bio page ko sirf yahi perfect link dikhega!
+      expandedUrl: bioPageUrl, 
       shortCode: generatedShortCode, 
       store: finalStore,
       title: title,
@@ -156,13 +185,14 @@ export async function POST(req) {
     if (usePlatformLink === true) {
       await LinkPerformance.create({
         creatorId: safeUsername,
+        globalDealId: newDeal._id.toString(), // Sync ID
         shortCode: generatedShortCode,
         subId: safeUsername,
-        affiliateUrl: finalAffiliateUrl, // Yahan asli affiliate link save hoga!
+        affiliateUrl: finalAffiliateUrl, 
         originalUrl: finalOriginalUrl, 
         title: title,
         store: finalStore,
-        source: "manual", 
+        source: "manual", // 👈 THE FIX: "addlink_page" ko wapas "manual" kar diya gaya hai!
         linkType: "platform",
         clicks: 0
       });
@@ -176,6 +206,7 @@ export async function POST(req) {
     }, { status: 201 });
 
   } catch (error) {
+    console.error("Deal Create API Error:", error);
     return NextResponse.json({ success: false, message: "Server error ho gaya!", error: error.message }, { status: 500 });
   }
 }

@@ -113,12 +113,12 @@ export async function POST(req) {
           // ROUTE 2: SANKMO (High Conversion Deep-linking)
           const campId = sankmoCampaigns[finalStoreName];
           // subid = Creator ID, subid1 = Platform Shortcode (Dono database link karne ke kaam aayenge)
-          affiliateUrlToUse = `https://sankmo.in/track/click?pub_id=${SANKMO_PUB_ID}&camp_id=${campId}&subid=${safeUsername}&subid1=${shortCodeToReturn}&source=quick_add&dl=${encodeURIComponent(cleanedUrl)}`;
+          affiliateUrlToUse = `https://sankmo.in/track/click?pub_id=${SANKMO_PUB_ID}&camp_id=${campId}&subid=${safeUsername}&subid1=${shortCodeToReturn}&source=manual&dl=${encodeURIComponent(cleanedUrl)}`;
       } 
       else {
           // ROUTE 3: CUELINKS (The Ultimate Fallback for other stores)
           const pubId = (process.env.CUELINKS_PUB_ID || "246005").trim();
-          affiliateUrlToUse = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeUsername}&subid2=${shortCodeToReturn}&subid3=quick_add&url=${encodeURIComponent(cleanedUrl)}`;
+          affiliateUrlToUse = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeUsername}&subid2=${shortCodeToReturn}&subid3=manual&url=${encodeURIComponent(cleanedUrl)}`;
       }
 
       // Save to Tracking Database

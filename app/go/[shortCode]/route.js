@@ -98,7 +98,7 @@ export async function GET(req, { params }) {
                     <div class="icon">🚀</div>
                 </div>
                 <h3>Opening Shopping App</h3>
-                <p>Leaving Instagram to ensure secure affiliate tracking & best discount prices...</p>
+                <p>Leaving Instagram to best discount prices...</p>
                 
                 <a href="${breakoutIntent}" class="manual-btn">Continue to App</a>
 
