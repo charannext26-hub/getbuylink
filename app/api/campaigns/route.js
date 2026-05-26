@@ -8,8 +8,10 @@ export async function GET() {
       await mongoose.connect(process.env.MONGODB_URI);
     }
 
-    // Seedha Database se fetch karo (0.1 second load time!)
-    const campaigns = await StoreRate.find({}).lean();
+    // 🚨 NAYA LOGIC: .sort({ name: 1 }) lagane se hamesha A to Z sorted aayega!
+    const campaigns = await StoreRate.find({ isHidden: { $ne: true } })
+                                     .sort({ name: 1 }) // 1 means Ascending (A-Z)
+                                     .lean();
 
     return NextResponse.json({ 
         success: true, 

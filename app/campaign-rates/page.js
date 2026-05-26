@@ -207,30 +207,32 @@ export default function CampaignRatesPage() {
             <div className="p-4 md:p-5 overflow-y-auto bg-slate-50 flex-1 hide-scrollbar">
               
               {/* TAB 1: RATES */}
-              {activeDrawerTab === "rates" && (
-                <div>
-                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">Category-wise Commission</h3>
-                  {selectedCampaign.payout_categories && selectedCampaign.payout_categories.length > 0 ? (
-                    <div className="space-y-2">
-                      {selectedCampaign.payout_categories.map((cat, i) => {
-                        const isPercent = (cat.payout_type || "").toLowerCase().includes("%");
-                        return (
-                          <div key={i} className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl hover:shadow-sm">
-                            <span className="font-bold text-slate-700 text-sm flex-1 pr-4">{cat.name}</span>
-                            <span className="text-emerald-600 font-black text-sm whitespace-nowrap bg-emerald-50 px-2 py-1 rounded">
-                              {isPercent ? `${cat.payout}%` : `₹${cat.payout}`}
-                            </span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-slate-500 font-bold bg-white rounded-xl border border-dashed border-slate-200">
-                      Flat Payout: {selectedCampaign.payout} {(selectedCampaign.payout_type || "").toLowerCase().includes("%") ? "%" : "₹"}
-                    </div>
-                  )}
-                </div>
-              )}
+{activeDrawerTab === "rates" && (
+  <div>
+    <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">
+      Commission Details
+    </h3>
+    
+    {/* THE FIX: Changed '?' to '&&' to fix the syntax error */}
+    {selectedCampaign.payout_categories && selectedCampaign.payout_categories.length > 0 && (
+      <div className="space-y-2">
+        {selectedCampaign.payout_categories.map((cat, i) => {
+          const payoutStr = String(cat.payout || "");
+          const hasSymbol = payoutStr.includes("%") || payoutStr.includes("₹") || payoutStr.toLowerCase().includes("rs");
+
+          return (
+            <div key={i} className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-lg">
+              <span className="font-bold text-slate-700 text-sm flex-1 pr-4">{cat.name}</span>
+              <span className="text-emerald-600 font-black text-sm whitespace-nowrap bg-emerald-50 px-2 py-1 rounded">
+                {hasSymbol ? payoutStr : `₹${payoutStr}`}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    )}
+  </div>
+)}
 
               {/* TAB 2: IMPORTANT INFO */}
               {activeDrawerTab === "info" && (
@@ -285,18 +287,37 @@ export default function CampaignRatesPage() {
 
 // REUSABLE STORE CARD COMPONENT
 function StoreCard({ campaign, onClick }) {
-  const pType = (campaign.payout_type || "").toLowerCase();
-  const isPercent = pType.includes('%');
-  const displayPayout = campaign.payout || "Variable";
   
+  // 🧠 THE SMART FORMATTER: Cuelinks aur Manual data dono ko fix karega
+  const getSmartPayout = (camp) => {
+      if (!camp || !camp.payout) return "N/A";
+      
+      const payoutStr = String(camp.payout).trim();
+      const lowerStr = payoutStr.toLowerCase();
+
+      // CASE 1: Agar Manual Form se pehle hi %, ₹ ya Rs daal diya hai
+      if (lowerStr.includes('%') || lowerStr.includes('₹') || lowerStr.includes('rs')) {
+          return payoutStr;
+      }
+
+      // CASE 2: Agar symbol missing hai (Cuelinks Data)
+      const type = String(camp.payout_type || "").toLowerCase();
+      if (type.includes('sale') || type.includes('cps')) {
+          return `${payoutStr}%`; // Sale/CPS ke liye %
+      } else {
+          return `₹${payoutStr}`; // Lead/Install ke liye ₹
+      }
+  };
+
   const isAmazon = (campaign.name || "").toLowerCase().includes("amazon");
 
   return (
-    <div onClick={onClick} className="bg-white rounded-xl p-4 md:p-5 border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all duration-300 flex flex-col items-center text-center cursor-pointer relative overflow-hidden group">
+    <div onClick={onClick} className="bg-white rounded-xl p-4 md:p-5 border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all duration-300 flex flex-col items-center text-center cursor-pointer relative overflow-hidden group h-full">
       
+      {/* 🚀 COMPACT NATIVE TAG */}
       {isAmazon && (
-        <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-black px-2 py-1 rounded-bl-lg tracking-wider uppercase z-10">
-          Native Tag
+        <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] font-bold px-1.5 py-[2px] rounded-bl-md tracking-wide uppercase z-10 shadow-sm">
+          associate tag setup avilable
         </div>
       )}
 
@@ -313,7 +334,7 @@ function StoreCard({ campaign, onClick }) {
       
       <div className="mt-auto w-full">
         <span className="block text-slate-800 font-black text-sm md:text-base">
-          Earn Upto {isPercent ? `${displayPayout}%` : `₹${displayPayout}`}
+          Upto {getSmartPayout(campaign)}
         </span>
       </div>
 

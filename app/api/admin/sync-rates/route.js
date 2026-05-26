@@ -7,29 +7,39 @@ export async function POST(req) {
     const apiKey = process.env.CUELINKS_API_KEY; 
     if (!apiKey) return NextResponse.json({ success: false, message: "API Key missing" });
 
-    // Frontend humein batayega ki konsa page lana hai aur kya purana data clear karna hai
     const { page, clearFirst } = await req.json();
 
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(process.env.MONGODB_URI);
     }
 
-    // Agar pehla page hai, toh purana kachra saaf kar do
+    // 🚨 THE FIX: Sirf wo data delete karo jo manual NAHI hai.
+    // Aapke Sankmo ke manual rates hamesha safe rahenge!
     if (clearFirst) {
-      await StoreRate.deleteMany({});
+      await StoreRate.deleteMany({ isManual: { $ne: true } });
     }
 
-    // SIRF EK PAGE FETCH KARO (0.5 second mein ho jayega, No Timeout!)
     const response = await fetch(`https://www.cuelinks.com/api/v2/campaigns.json?per_page=100&page=${page}`, {
       headers: { "Authorization": `Token token="${apiKey}"` }
     });
 
     if (!response.ok) return NextResponse.json({ success: false, message: "Cuelinks Fetch Failed" });
-    
-    const data = await response.json();
+  
+
+// NAYA SAFE CODE:
+const rawText = await response.text();
+if (!rawText || rawText.trim() === "") {
+    return NextResponse.json({ success: true, message: "No more data from Cuelinks.", hasMoreData: false });
+}
+
+let data;
+try {
+    data = JSON.parse(rawText);
+} catch (e) {
+    return NextResponse.json({ success: false, message: "Cuelinks rate limit hit ya invalid data aaya." }, { status: 400 });
+}
     const campaigns = data.campaigns || [];
 
-    // Filter ONLY Indian & CPS (Sale) Campaigns
     const indianCPS = campaigns.filter(c => {
       const isIndia = c.countries && c.countries.some(country => country.iso === 'IN' || (country.name && country.name.toLowerCase().includes('india')));
       const isCPS = c.payout_type && c.payout_type.toLowerCase().includes('sale');
@@ -37,7 +47,19 @@ export async function POST(req) {
     });
 
     if (indianCPS.length > 0) {
-      const dbReadyData = indianCPS.map(c => {
+      // Pehle database se saare Manual Stores (Sankmo wale) ki list nikal lo
+      const manualStores = await StoreRate.find({ isManual: true }).select('name domain');
+      const manualStoreDomains = manualStores.map(s => s.domain?.toLowerCase());
+
+      const dbReadyData = [];
+
+      indianCPS.forEach(c => {
+         // 🚨 THE BLOCKER: Agar ye store aapne manually Sankmo se set kiya hai (e.g. flipkart.com), 
+         // toh Cuelinks wale is rate ko skip kar do.
+         if (c.domain && manualStoreDomains.includes(c.domain.toLowerCase())) {
+             return; // Skip this one
+         }
+
         let flowText = "";
         if (c.conversion_flow) {
           flowText = typeof c.conversion_flow === 'object' 
@@ -49,8 +71,8 @@ export async function POST(req) {
         const rawInfo = c.important_info_html || c.additional_info_html || "";
         infoText = (typeof rawInfo === 'object' && rawInfo !== null) ? JSON.stringify(rawInfo) : String(rawInfo);
 
-        return {
-          campaignId: c.id?.toString(),
+        dbReadyData.push({
+          campaignId: `CUE_${c.id?.toString()}`, // Tagging it as Cuelinks
           name: c.name,
           domain: c.domain,
           image: c.image,
@@ -61,17 +83,27 @@ export async function POST(req) {
           important_info_html: infoText,
           conversion_flow: flowText,
           cookie_duration: c.cookie_duration?.toString() || "Unknown",
-        };
+          isManual: false
+        });
       });
 
-      // Is chunk ko DB mein add kar do
-      await StoreRate.insertMany(dbReadyData);
+      if (dbReadyData.length > 0) {
+        // Upsert use karenge taaki duplicate IDs na banen
+        const bulkOps = dbReadyData.map(item => ({
+            updateOne: {
+                filter: { campaignId: item.campaignId },
+                update: { $set: item },
+                upsert: true
+            }
+        }));
+        await StoreRate.bulkWrite(bulkOps);
+      }
     }
 
     return NextResponse.json({ 
         success: true, 
-        message: `Page ${page} synced! Added ${indianCPS.length} items.`,
-        hasMoreData: campaigns.length > 0 // Agar page khali hai toh loop rokne ke liye
+        message: `Page ${page} synced! Added/Updated items.`,
+        hasMoreData: campaigns.length > 0 
     });
 
   } catch (error) {
