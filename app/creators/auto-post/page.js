@@ -596,7 +596,7 @@ function AutoPostContent() {
                 </div>
               </div>
 
-              {/* AUTO POST DEALS LIST */}
+              {/* AUTO POST DEALS */}
               <div className="space-y-3">
                 {filteredAutoDeals.length === 0 ? (
                   <div className="text-center p-8 text-slate-400 font-bold border-2 border-dashed rounded-xl bg-slate-50">No active auto-post deals.</div>
