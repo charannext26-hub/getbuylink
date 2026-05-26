@@ -72,7 +72,7 @@ try {
         infoText = (typeof rawInfo === 'object' && rawInfo !== null) ? JSON.stringify(rawInfo) : String(rawInfo);
 
         dbReadyData.push({
-          campaignId: `CUE_${c.id?.toString()}`, // Tagging it as Cuelinks
+          campaignId: `CUE_${c.id?.toString()}`, // Tagging it
           name: c.name,
           domain: c.domain,
           image: c.image,

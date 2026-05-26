@@ -16,7 +16,7 @@ export default function AdminSyncPage() {
 
   const TOTAL_PAGES_TO_SYNC = 150;
 
-  // Pehli baar page load hone par table mein data lana
+  // Pehli baar page
   useEffect(() => { 
       fetchManualStores(); 
   }, []);
@@ -75,7 +75,7 @@ export default function AdminSyncPage() {
                 _id: null, name: "", domain: "", payout: "", payout_type: "Sale", image: "", 
                 cookie_duration: "", payout_categories: "", conversion_flow: "", important_info_html: "", isHidden: false 
             }); 
-            // Table Update
+            // Table Updated
             fetchManualStores();
         } else {
             alert("❌ " + data.message);
@@ -104,7 +104,7 @@ export default function AdminSyncPage() {
           isHidden: store.isHidden || false,
           payout_categories: catString 
       });
-      // Scroll to form (optional UX improvement)
+      // Scroll to (optional UX improvement)
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   };
 
