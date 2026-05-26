@@ -121,7 +121,7 @@ export async function POST(req) {
           affiliateUrlToUse = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeUsername}&subid2=${shortCodeToReturn}&subid3=manual&url=${encodeURIComponent(cleanedUrl)}`;
       }
 
-      // Save to Tracking Database
+      // Save Tracking Database
       await LinkPerformance.create({
         creatorId: safeUsername,
         shortCode: shortCodeToReturn,

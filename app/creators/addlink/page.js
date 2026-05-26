@@ -311,7 +311,7 @@ function AddlinkContent() {
           <p className="text-slate-500 font-bold text-xs md:text-sm mb-0.5">Generate smart links to monetize your audience.</p>
         </div>
 
-        {/* 👇 NAYA: Compact Side-by-Side Monetization Method */}
+        {/* 👇 NAYA: Compact Monetization Method */}
         <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
           <h2 className="text-sm font-extrabold text-slate-800 mb-3 flex items-center gap-1.5">
           How Proceed your Link

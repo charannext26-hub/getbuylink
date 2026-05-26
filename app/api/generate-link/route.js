@@ -64,7 +64,7 @@ export async function POST(req) {
     }
 
     // ==========================================
-    // AGAR NAHI HAI, TOH NAYA BANAO (First Time)
+    // AGAR NAHI HAI, TOH New BANAO (First Time)
     // ==========================================
 
     let creatorTag = "";
