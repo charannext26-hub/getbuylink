@@ -314,7 +314,7 @@ function StoreCard({ campaign, onClick }) {
   return (
     <div onClick={onClick} className="bg-white rounded-xl p-4 md:p-5 border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all duration-300 flex flex-col items-center text-center cursor-pointer relative overflow-hidden group h-full">
       
-      {/* 🚀 COMPACT NATIVE  */}
+      {/* COMPACT NATIVE tag */}
       {isAmazon && (
         <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] font-bold px-1.5 py-[2px] rounded-bl-md tracking-wide uppercase z-10 shadow-sm">
           associate tag setup avilable
