@@ -210,21 +210,32 @@ export default function CampaignRatesPage() {
 {activeDrawerTab === "rates" && (
   <div>
     <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">
-      Commission Details
+      Category-wise Commission
     </h3>
     
-    {/* THE FIX: Changed '?' to '&&' to fix the syntax error */}
     {selectedCampaign.payout_categories && selectedCampaign.payout_categories.length > 0 && (
       <div className="space-y-2">
         {selectedCampaign.payout_categories.map((cat, i) => {
-          const payoutStr = String(cat.payout || "");
-          const hasSymbol = payoutStr.includes("%") || payoutStr.includes("₹") || payoutStr.toLowerCase().includes("rs");
+          
+          // 🧠 DB-BASED FORMATTER (For Categories)
+          const payoutStr = String(cat.payout || "").trim();
+          const lowerStr = payoutStr.toLowerCase();
+          
+          // 1. Manual input check
+          const hasSymbol = lowerStr.includes("%") || lowerStr.includes("₹") || lowerStr.includes("rs");
+          
+          // 2. Category ka apna 'payout_type' check karo (ya fir main campaign ka)
+          const catType = String(cat.payout_type || selectedCampaign.payout_type || "").toLowerCase();
+          const isPercent = catType.includes("(%)") || catType.includes("%");
+          
+          // 3. Final Output
+          const displayPayout = hasSymbol ? payoutStr : (isPercent ? `${payoutStr}%` : `₹${payoutStr}`);
 
           return (
             <div key={i} className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-lg">
               <span className="font-bold text-slate-700 text-sm flex-1 pr-4">{cat.name}</span>
               <span className="text-emerald-600 font-black text-sm whitespace-nowrap bg-emerald-50 px-2 py-1 rounded">
-                {hasSymbol ? payoutStr : `₹${payoutStr}`}
+                {displayPayout}
               </span>
             </div>
           )
@@ -288,24 +299,27 @@ export default function CampaignRatesPage() {
 // REUSABLE STORE CARD COMPONENT
 function StoreCard({ campaign, onClick }) {
   
-  // 🧠 THE SMART FORMATTER: Cuelinks aur Manual data dono ko fix karega
+  // 🧠 DB-BASED SMART FORMATTER (For Store Card)
   const getSmartPayout = (camp) => {
       if (!camp || !camp.payout) return "N/A";
       
       const payoutStr = String(camp.payout).trim();
       const lowerStr = payoutStr.toLowerCase();
 
-      // CASE 1: Agar Manual Form se pehle hi %, ₹ ya Rs daal diya hai
+      // 1. Agar manual form se pehle hi %, ₹ ya rs daala gaya hai
       if (lowerStr.includes('%') || lowerStr.includes('₹') || lowerStr.includes('rs')) {
           return payoutStr;
       }
 
-      // CASE 2: Agar symbol missing hai (Cuelinks Data)
+      // 2. Agar Cuelinks ka data hai, toh DB ka 'payout_type' dekho
       const type = String(camp.payout_type || "").toLowerCase();
-      if (type.includes('sale') || type.includes('cps')) {
-          return `${payoutStr}%`; // Sale/CPS ke liye %
+      
+      // Agar type mein '(%)' ya '%' likha hai, toh percentage hai
+      if (type.includes('(%)') || type.includes('%')) {
+          return `${payoutStr}%`; 
       } else {
-          return `₹${payoutStr}`; // Lead/Install ke liye ₹
+          // Warna flat amount (₹) hai
+          return `₹${payoutStr}`; 
       }
   };
 
