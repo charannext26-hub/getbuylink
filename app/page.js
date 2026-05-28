@@ -1,6 +1,28 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { getServerSession } from "next-auth/next";
+import { redirect } from "next/navigation";
+// Dhyan dein: Apne authOptions ka sahi path lagayein agar alag jagah hai toh
+// import { authOptions } from "./api/auth/[...nextauth]/route"; 
+
+export default async function LandingPage() {
+  // 1. Check if the user is already logged in
+  const session = await getServerSession(); 
+
+  // 2. Agar user logged in hai, toh seedha dashboard par bhej do
+  if (session) {
+    redirect("/creators");
+  }
+
+  // 3. Agar logged in nahi hai, toh apna normal Landing Page dikhao
+  return (
+    <div className="min-h-screen bg-slate-50">
+       {/* Aapka Landing Page ka pura UI yahan rahega */}
+       <h1>Welcome to FavyLink</h1>
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const [username, setUsername] = useState("");
