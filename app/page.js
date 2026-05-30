@@ -175,7 +175,7 @@ function LandingContent() {
                 Make your <span className="text-blue-600">Favourite Link</span> Smart & Professional.
               </h1>
               <p className="text-slate-600 text-base sm:text-lg font-medium mb-10 max-w-2xl mx-auto">
-                Join <span className="font-bold text-blue-600">FavyLink</span> to showcase your affiliate products in a premium storefront and earn effortless commissions.
+                Turn your standard bio link into a beautiful, zero-coding storefront. <span className="font-bold text-blue-600">Auto-Sync Deals</span> from 500+ brands and multiply your earnings while you sleep with smart, easy conversions.
               </p>
             </RevealOnScroll>
 
@@ -219,9 +219,9 @@ function LandingContent() {
         {/* ========================================== */}
         <section id="storefront" className="py-20 px-4 max-w-7xl mx-auto">
           <RevealOnScroll>
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-black text-slate-900 mb-3">A Stunning Storefront.</h2>
-              <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">Zero Coding Required.</p>
+            <div className="text-center mb-16">
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 mb-4">A Stunning Storefront.<br/>Zero Coding Required.</h2>
+              <p className="text-slate-500 font-medium">Customize your page in seconds. Seamless shopping directly from your bio.</p>
             </div>
           </RevealOnScroll>
 
@@ -248,14 +248,18 @@ function LandingContent() {
         </section>
 
         {/* ========================================== */}
-        {/* 4. ZERO EFFORT INCOME (Auto Post) */}
+        {/* 4. ZERO EFFORT INCOME (Clean Image) */}
         {/* ========================================== */}
-        <section id="auto-post" className="py-20 bg-[#0f172a] px-4">
+        <section id="auto-post" className="py-20 bg-slate-900 px-4">
            <div className="max-w-4xl mx-auto text-center">
              <RevealOnScroll>
-               <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">Zero-Effort Income.<br/>Meet Auto-Post Deals.</h2>
-               
-               <div className="w-full aspect-video bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl relative mb-12 mt-10">
+               <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">Zero-Effort Income.</h2>
+               <p className="text-slate-400 font-medium text-sm sm:text-base mb-10">
+                 Our system fetches the hottest affiliate deals and posts them directly to your storefront. 
+                 Setup your niche and watch your earnings grow while you sleep.
+               </p>
+               {/* Clean Image Area */}
+               <div className="w-full aspect-video bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl relative mb-12">
                   <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000" className="w-full h-full object-cover opacity-80" />
                </div>
              </RevealOnScroll>
@@ -305,27 +309,48 @@ function LandingContent() {
 
 
         {/* ========================================== */}
-        {/* 6. PARTNERS MARQUEE */}
+        {/* 6. AFFILIATE PARTNERS (2-Way Marquee) */}
         {/* ========================================== */}
-        <section className="py-16 overflow-hidden bg-white">
-           <div className="max-w-7xl mx-auto px-4 text-center mb-10">
-              <RevealOnScroll>
-                <h2 className="text-2xl font-black text-slate-900 mb-2">Built-in Affiliate Network.</h2>
-                <p className="text-slate-500 font-bold text-xs uppercase tracking-widest">MONETIZE DIRECTLY WITH 500+ BRANDS</p>
-              </RevealOnScroll>
-           </div>
-           <div className="flex flex-col gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-              <div className="animate-marquee flex items-center gap-12 sm:gap-24">
-                 {[1,2,3,4,5,6,1,2,3,4,5,6].map((i, idx) => (
-                   <img key={`L-${idx}`} src={`https://logo.clearbit.com/${['amazon.com','flipkart.com','myntra.com','ajio.com','shopsy.in','nike.com'][i-1]}`} className="h-10 sm:h-14 w-auto object-contain" alt="Brand Logo" onError={(e) => e.target.style.display='none'} />
-                 ))}
-              </div>
-              <div className="animate-marquee-rev flex items-center gap-12 sm:gap-24">
-                 {[1,2,3,4,5,6,1,2,3,4,5,6].map((i, idx) => (
-                   <img key={`R-${idx}`} src={`https://logo.clearbit.com/${['zara.com','adidas.com','apple.com','samsung.com','puma.com','hm.com'][i-1]}`} className="h-10 sm:h-14 w-auto object-contain" alt="Brand Logo" onError={(e) => e.target.style.display='none'} />
-                 ))}
-              </div>
-           </div>
+        <section id="partners" className="py-16 overflow-hidden bg-white">
+          <RevealOnScroll>
+            <div className="max-w-7xl mx-auto px-4 text-center mb-10">
+              <h2 className="text-3xl font-black text-slate-900 mb-4">We Don't Just Build Your Page.<br className="sm:hidden"/> We Monetize It.</h2>
+              <p className="text-slate-500 font-medium">Partnered with top global brands to give you the highest commissions in the market.</p>
+            </div>
+          </RevealOnScroll>
+
+          {/* Marquee CSS Animation (Add this if not already present) */}
+          <style dangerouslySetInnerHTML={{__html: `
+            @keyframes marqueeLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+            @keyframes marqueeRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+            .animate-marquee-left { display: flex; width: 200%; animation: marqueeLeft 25s linear infinite; }
+            .animate-marquee-right { display: flex; width: 200%; animation: marqueeRight 25s linear infinite; }
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+          `}} />
+
+          {/* Row 1: Left to Right */}
+          <div className="relative w-full overflow-hidden mb-6">
+            <div className="animate-marquee-left flex items-center gap-6 px-3">
+              {[1,2,3,4,5,6,7,8].map((i) => (
+                <div key={`L-${i}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  {/* DEMO IMAGE - Replace src later */}
+                  <img src={`https://logo.clearbit.com/amazon.com`} alt="Brand" className="w-12 sm:w-16 h-auto opacity-70 grayscale hover:grayscale-0 transition-all" onError={(e) => e.target.style.display='none'} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2: Right to Left */}
+          <div className="relative w-full overflow-hidden">
+            <div className="animate-marquee-right flex items-center gap-6 px-3">
+              {[1,2,3,4,5,6,7,8].map((i) => (
+                <div key={`R-${i}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  {/* DEMO IMAGE - Replace src later */}
+                  <img src={`https://logo.clearbit.com/myntra.com`} alt="Brand" className="w-12 sm:w-16 h-auto opacity-70 grayscale hover:grayscale-0 transition-all" onError={(e) => e.target.style.display='none'} />
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* ========================================== */}
@@ -336,11 +361,12 @@ function LandingContent() {
              <RevealOnScroll>
                <div className="text-center mb-12">
                  <h2 className="text-3xl font-black text-slate-900">Everything You Need to Grow.</h2>
+                 <p className="text-slate-500 font-medium">A powerful control center built for professional creators.</p>
                </div>
              </RevealOnScroll>
-             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
-                  { t: "Link Generator", d: "Generate multiple links at once.", img: "https://cdn-icons-png.flaticon.com/128/10332/10332309.png" },
+                  { t: "Link Generator", d: "Generate direct links instantly. Supports multiple link creations at once to save your time.", img: "https://cdn-icons-png.flaticon.com/128/10332/10332309.png" },
                   { t: "Reliable Tracking", d: "Secured click & order tracking.", img: "https://cdn-icons-png.flaticon.com/128/3121/3121538.png" },
                   { t: "Deep Analytics", d: "Track AOV & real-time clicks.", img: "https://cdn-icons-png.flaticon.com/128/2422/2422801.png" },
                   { t: "Fast Payouts", d: "Withdraw via UPI or Bank.", img: "https://cdn-icons-png.flaticon.com/128/10453/10453676.png" }
