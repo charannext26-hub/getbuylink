@@ -1,444 +1,586 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
+// --- Custom Component for Scroll "Fade Up" Animation ---
+function RevealOnScroll({ children, delay = 0 }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`transition-all duration-700 ease-out ${
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
 function LandingContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [username, setUsername] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
 
   // Auto-redirect if logged in
   useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/creators");
-    }
+    if (status === "authenticated") router.push("/creators");
   }, [status, router]);
 
-  // Smooth Scroll
+  // Tab Slider Logic (Auto-play)
+  const tabs = [
+    { 
+      id: "01", title: "Services", 
+      bgImg: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=400&auto=format&fit=crop", // Demo Insta BG
+      fgImg: "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?q=80&w=400&auto=format&fit=crop", // Demo FavyLink UI
+      text: "Turn followers into customers instantly. Let them choose and buy directly from your bio."
+    },
+    { 
+      id: "02", title: "Creators", 
+      bgImg: "https://images.unsplash.com/photo-1616469829581-73993eb86b02?q=80&w=400&auto=format&fit=crop", 
+      fgImg: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=400&auto=format&fit=crop", 
+      text: "Showcase your portfolio, latest videos, and top affiliate products in one premium hub."
+    },
+    { 
+      id: "03", title: "Store", 
+      bgImg: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=400&auto=format&fit=crop", 
+      fgImg: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=400&auto=format&fit=crop", 
+      text: "Automate your sales. Curated deals fetch automatically and boost your daily conversions."
+    }
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveTab((prev) => (prev + 1) % tabs.length);
+    }, 4000); // Changes every 4 seconds
+    return () => clearInterval(interval);
+  }, [tabs.length]);
+
   const scrollToSection = (id) => {
     setIsMenuOpen(false);
     const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    if (element) element.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   if (status === "loading" || status === "authenticated") {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans overflow-hidden selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-[#f8fafc] font-sans overflow-x-hidden selection:bg-blue-500 selection:text-white pb-20">
       
-      {/* CSS for Smooth Marquee Animation */}
+      {/* Skeleton Animation CSS */}
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+        @keyframes skeleton-run {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
         }
-        .animate-marquee {
-          display: flex;
-          width: 200%;
-          animation: marquee 20s linear infinite;
-        }
-        .animate-marquee:hover {
-          animation-play-state: paused;
+        .skeleton-bar::after {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);
+          animation: skeleton-run 2s infinite linear;
         }
       `}} />
 
       {/* ========================================== */}
-      {/* 1. PREMIUM FIXED NAVBAR */}
+      {/* 1. COMPACT GLASS BLUE NAVBAR (Mobile First) */}
       {/* ========================================== */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/50 z-50 transition-all duration-300 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => scrollToSection("home")}>
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl flex items-center justify-center text-white font-black text-sm tracking-tighter shadow-lg shadow-indigo-600/20 group-hover:scale-105 transition-transform">
+      <nav className="fixed top-0 w-full bg-blue-900/40 backdrop-blur-lg border-b border-blue-500/20 z-50 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          
+          {/* Logo & Name */}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollToSection("home")}>
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-lg flex items-center justify-center text-white font-black text-xs shadow-md">
               FL
             </div>
-            <span className="font-extrabold text-2xl tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">FavyLink</span>
+            <span className="font-extrabold text-xl tracking-tight text-white">FavyLink</span>
           </div>
 
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Link href="/login" className="text-sm font-black text-slate-500 hover:text-slate-900 transition-colors hidden sm:block">
-              Log in
-            </Link>
-            <Link href="/register" className="bg-slate-900 hover:bg-indigo-600 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all shadow-md shadow-slate-900/10 hover:shadow-indigo-600/30">
-              Sign Up Free
+          {/* Right Side: Login & Menu */}
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all backdrop-blur-sm">
+              Log in / Sign up
             </Link>
             
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 -mr-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1.5 text-white hover:bg-white/10 rounded-lg transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isMenuOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />}
+                {isMenuOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
               </svg>
             </button>
           </div>
         </div>
       </nav>
 
-      {/* FULLSCREEN MENU OVERLAY */}
-      <div className={`fixed inset-0 bg-slate-900/95 backdrop-blur-2xl z-40 transition-all duration-500 flex flex-col justify-center items-center gap-8 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <button onClick={() => scrollToSection("home")} className="text-4xl font-black text-white hover:text-indigo-400 transition-colors">Home</button>
-        <button onClick={() => scrollToSection("problem-solution")} className="text-4xl font-black text-white hover:text-emerald-400 transition-colors">Why Us?</button>
-        <button onClick={() => scrollToSection("storefront")} className="text-4xl font-black text-white hover:text-indigo-400 transition-colors">Premium Store</button>
-        <button onClick={() => scrollToSection("auto-post")} className="text-4xl font-black text-white hover:text-emerald-400 transition-colors">Auto-Post</button>
-        <button onClick={() => scrollToSection("tech-edge")} className="text-4xl font-black text-white hover:text-indigo-400 transition-colors">Smart Redirect</button>
-        <div className="mt-8 flex gap-4">
-          <Link href="/login" className="bg-white/10 text-white px-10 py-4 rounded-2xl font-bold border border-white/20 hover:bg-white/20 transition-colors">Log In</Link>
-        </div>
+      {/* MENU OVERLAY */}
+      <div className={`fixed inset-0 bg-blue-950/95 backdrop-blur-2xl z-40 transition-all duration-500 flex flex-col justify-center items-center gap-6 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        {['Home', 'Storefront', 'Auto-Post', 'Partners', 'Testimonials', 'Pricing', 'FAQ'].map((item) => (
+          <button key={item} onClick={() => scrollToSection(item.toLowerCase().replace(' ', '-'))} className="text-2xl sm:text-3xl font-black text-white hover:text-cyan-400 transition-colors">
+            {item}
+          </button>
+        ))}
       </div>
 
-      <div className="pt-20">
+      <div className="pt-16">
         
         {/* ========================================== */}
-        {/* 2. HERO SECTION (The Hook) */}
+        {/* 2. HERO SECTION & INTERACTIVE TAB SLIDER */}
         {/* ========================================== */}
-        <section id="home" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 lg:pt-24 lg:pb-32 flex flex-col lg:flex-row items-center gap-16 relative z-10">
-          <div className="flex-1 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 mb-8">
-              <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-xs font-black text-emerald-700 tracking-widest uppercase">Built-in Affiliate Program</span>
+        <section id="home" className="bg-gradient-to-b from-blue-900 to-blue-950 pt-12 pb-24 px-4 overflow-hidden rounded-b-[2.5rem] shadow-2xl">
+          <div className="max-w-5xl mx-auto text-center">
+            
+            <RevealOnScroll>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-6">
+                Make your <span className="text-cyan-400">Favourite Link</span> a Premium Storefront.
+              </h1>
+              <p className="text-blue-200 text-lg sm:text-xl font-medium mb-12 max-w-3xl mx-auto">
+                Turn your standard bio link into a beautiful, zero-coding storefront. Auto-sync deals from 500+ brands and multiply your earnings while you sleep with smart, easy conversions.
+              </p>
+            </RevealOnScroll>
+
+            {/* TABBED MOCKUP SLIDER (Taplink Style) */}
+            <RevealOnScroll delay={200}>
+              <div className="w-full max-w-4xl mx-auto mt-8">
+                {/* Tabs */}
+                <div className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden border-b border-blue-500/30 mb-8">
+                  {tabs.map((tab, index) => (
+                    <button 
+                      key={tab.id}
+                      onClick={() => setActiveTab(index)}
+                      className={`flex-1 min-w-[120px] text-left pb-4 px-4 transition-all duration-300 border-b-2 ${activeTab === index ? 'border-cyan-400 opacity-100' : 'border-transparent opacity-50 hover:opacity-80'}`}
+                    >
+                      <span className="block text-cyan-400 font-black text-sm mb-1">{tab.id}</span>
+                      <span className="block text-white font-bold text-base sm:text-lg">{tab.title}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Animated Image Section */}
+                <div className="relative h-[500px] sm:h-[600px] w-full flex justify-center items-end pb-8">
+                  {tabs.map((tab, index) => (
+                    <div 
+                      key={`img-${tab.id}`} 
+                      className={`absolute inset-0 w-full h-full flex justify-center items-end transition-all duration-700 ease-in-out ${activeTab === index ? 'opacity-100 translate-y-0 z-10' : 'opacity-0 translate-y-12 z-0 pointer-events-none'}`}
+                    >
+                      {/* Background (Instagram Mockup) */}
+                      <div className="absolute top-0 w-[240px] sm:w-[280px] h-[400px] sm:h-[480px] bg-slate-200 rounded-[2rem] shadow-xl overflow-hidden -ml-20 sm:-ml-40 mt-10 opacity-70 transform scale-90">
+                        <img src={tab.bgImg} alt="Instagram Layout" className="w-full h-full object-cover" />
+                      </div>
+                      
+                      {/* Foreground (FavyLink Premium Page) */}
+                      <div className="relative w-[260px] sm:w-[320px] h-[480px] sm:h-[560px] bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border-8 border-white ml-20 sm:ml-40 z-20">
+                        <img src={tab.fgImg} alt="FavyLink Layout" className="w-full h-full object-cover" />
+                        <div className="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-black/80 to-transparent"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Changing Text */}
+                <div className="h-20 mt-6 relative overflow-hidden">
+                   {tabs.map((tab, index) => (
+                      <p key={`text-${tab.id}`} className={`absolute w-full text-blue-200 text-sm sm:text-lg font-medium transition-all duration-500 ${activeTab === index ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                        {tab.text}
+                      </p>
+                   ))}
+                </div>
+
+              </div>
+            </RevealOnScroll>
+          </div>
+        </section>
+
+        {/* ========================================== */}
+        {/* 3. A STUNNING STOREFRONT */}
+        {/* ========================================== */}
+        <section id="storefront" className="py-24 px-4 max-w-7xl mx-auto">
+          <RevealOnScroll>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4">A Stunning Storefront.<br/>Zero Coding Required.</h2>
+              <p className="text-slate-500 font-medium">Customize your page in seconds. Seamless shopping directly from your bio.</p>
             </div>
+          </RevealOnScroll>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-slate-900 leading-[1.05] tracking-tight mb-6">
-              Your Link in Bio.<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-emerald-500">
-                Smarter. Premium.<br/>And Profitable.
-              </span>
-            </h1>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { title: "Auto-Sliding Banners", desc: "Showcase fresh deals automatically at the top of your page.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /> },
+              { title: "Theater Mode Videos", desc: "Embed YouTube/Reels. Product links show right under the video.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+              { title: "Rich Product Cards", desc: "Add sale timers, coupons, and bold 'Shop Now' buttons.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /> },
+              { title: "Premium Themes", desc: "One-click background themes. No complex settings, just drop-downs.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /> }
+            ].map((feature, i) => (
+              <RevealOnScroll key={i} delay={i * 100}>
+                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-shadow h-full">
+                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">{feature.icon}</svg>
+                  </div>
+                  <h3 className="font-bold text-slate-900 mb-2">{feature.title}</h3>
+                  <p className="text-sm text-slate-500">{feature.desc}</p>
+                </div>
+              </RevealOnScroll>
+            ))}
+          </div>
+        </section>
 
-            <p className="text-xl text-slate-500 font-medium mb-12 max-w-2xl leading-relaxed mx-auto lg:mx-0">
-              Turn your standard bio link into a beautiful, zero-coding storefront. We auto-sync deals from <strong className="text-slate-800">500+ premium brands</strong> to multiply your earnings while you sleep.
-            </p>
+        {/* ========================================== */}
+        {/* 4. ZERO EFFORT INCOME (Auto Post) */}
+        {/* ========================================== */}
+        <section id="auto-post" className="py-24 bg-slate-900 px-4">
+          <div className="max-w-7xl mx-auto text-center">
+            <RevealOnScroll>
+              <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">Zero-Effort Income.<br/>Meet Auto-Post Deals.</h2>
+              
+              {/* LARGE DEMO IMAGE PLACEHOLDER */}
+              <div className="w-full max-w-4xl mx-auto h-[250px] sm:h-[400px] bg-slate-800 rounded-3xl mt-10 mb-16 border border-slate-700 flex items-center justify-center overflow-hidden relative shadow-2xl">
+                {/* Replace src with your actual large PNG link later */}
+                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop" alt="Auto Post Dashboard" className="w-full h-full object-cover opacity-60" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
+                <div className="absolute bottom-6 left-6 text-left">
+                   <p className="text-cyan-400 font-black text-sm tracking-widest uppercase">Automated Workflow</p>
+                   <p className="text-white font-bold text-xl">Deals fetch & post while you sleep.</p>
+                </div>
+              </div>
+            </RevealOnScroll>
 
-            <div className="w-full max-w-lg bg-white p-2.5 rounded-2xl shadow-2xl shadow-indigo-900/10 border border-slate-200 flex items-center transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/20 mb-8 mx-auto lg:mx-0 hover:-translate-y-1 duration-300">
-              <div className="pl-4 pr-1 text-slate-400 font-bold text-lg hidden sm:block">favylink.com/</div>
+            <div className="grid sm:grid-cols-3 gap-8">
+              {[
+                { step: "1", title: "Set Your Niche", desc: "Select Fashion, Tech, Beauty in your dashboard." },
+                { step: "2", title: "We Curate Deals", desc: "We fetch hot deals and auto-generate links." },
+                { step: "3", title: "Auto-Published", desc: "Deals appear on your page. You earn on autopilot." }
+              ].map((item, i) => (
+                <RevealOnScroll key={i} delay={i * 100}>
+                  <div className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700">
+                    <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-lg mb-4 mx-auto">{item.step}</div>
+                    <h3 className="text-white font-bold mb-2">{item.title}</h3>
+                    <p className="text-slate-400 text-sm">{item.desc}</p>
+                  </div>
+                </RevealOnScroll>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================== */}
+        {/* 5. CLAIM PREMIUM LINK BAR (Modern Skeleton) */}
+        {/* ========================================== */}
+        <section className="py-12 px-4 max-w-4xl mx-auto -mt-10 relative z-20">
+          <RevealOnScroll>
+            <div className="skeleton-bar relative bg-white p-2 rounded-2xl shadow-2xl border border-slate-200 flex items-center overflow-hidden">
+              <div className="pl-4 pr-1 text-slate-400 font-bold text-sm sm:text-lg hidden sm:block relative z-10">favylink.com/</div>
+              <div className="pl-3 pr-1 text-slate-400 font-bold text-sm sm:text-lg sm:hidden relative z-10">fl.com/</div>
               <input 
                 type="text" 
                 placeholder="yourname" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                className="flex-1 bg-transparent outline-none font-bold text-lg text-slate-900 w-full min-w-0"
+                className="flex-1 bg-transparent outline-none font-bold text-sm sm:text-lg text-slate-900 w-full min-w-0 relative z-10"
               />
-              <Link 
-                href={`/register?username=${username}`}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl font-black text-sm sm:text-base whitespace-nowrap transition-transform active:scale-95 shadow-lg shadow-indigo-600/30 ml-2"
-              >
-                Claim Link
-              </Link>
+              <button className="bg-slate-900 text-white px-4 sm:px-8 py-3 rounded-xl font-black text-xs sm:text-sm whitespace-nowrap relative z-10 hover:bg-blue-600 transition-colors">
+                Claim Branded Link
+              </button>
             </div>
-            
-            <div className="flex items-center gap-4 text-sm font-bold text-slate-500 justify-center lg:justify-start">
-              <div className="flex -space-x-2">
-                <img className="w-8 h-8 rounded-full border-2 border-white bg-slate-200" src="https://i.pravatar.cc/100?img=1" alt="user" />
-                <img className="w-8 h-8 rounded-full border-2 border-white bg-slate-200" src="https://i.pravatar.cc/100?img=5" alt="user" />
-                <img className="w-8 h-8 rounded-full border-2 border-white bg-slate-200" src="https://i.pravatar.cc/100?img=9" alt="user" />
-              </div>
-              <p>Join 10,000+ top creators</p>
-            </div>
-          </div>
-
-          <div className="flex-1 w-full flex justify-center lg:justify-end relative">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] bg-gradient-to-tr from-indigo-300/40 via-emerald-200/40 to-purple-200/40 blur-3xl rounded-full z-0"></div>
-            
-            <div className="relative w-[320px] h-[640px] bg-slate-900 border-[12px] border-slate-900 rounded-[3rem] shadow-2xl z-10 overflow-hidden transform lg:-rotate-3 hover:rotate-0 transition-all duration-700 hover:scale-105">
-              <div className="absolute top-0 inset-x-0 h-7 bg-slate-900 rounded-b-3xl w-36 mx-auto z-20"></div>
-              <div className="w-full h-full bg-[#0a0a0a] pt-14 pb-6 px-5 flex flex-col relative overflow-y-auto [&::-webkit-scrollbar]:hidden">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-16 h-16 rounded-full border-[3px] border-emerald-500 p-0.5">
-                    <img src="https://i.pravatar.cc/150?img=47" className="w-full h-full rounded-full object-cover" />
-                  </div>
-                  <div>
-                    <h3 className="text-white font-black text-lg leading-tight">Priya Styles <span className="text-blue-400">✓</span></h3>
-                    <p className="text-white/50 text-xs font-bold">Fashion & Tech Deals</p>
-                  </div>
-                </div>
-
-                <div className="w-full h-24 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl mb-6 flex items-center justify-center text-white font-black shadow-lg shadow-purple-900/50 relative overflow-hidden">
-                   <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
-                   Mega Sale Live Now!
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white/10 rounded-2xl p-3 border border-white/5">
-                    <div className="w-full aspect-square bg-white/5 rounded-xl mb-3 flex items-center justify-center text-3xl">👗</div>
-                    <div className="bg-indigo-600 text-white text-[10px] font-black px-2 py-1 rounded max-w-fit mb-1">MYNTRA</div>
-                    <p className="text-white text-xs font-bold truncate">Zara Red Dress</p>
-                    <button className="w-full mt-2 bg-emerald-500 text-slate-900 text-xs font-black py-1.5 rounded-lg">Shop Now</button>
-                  </div>
-                  <div className="bg-white/10 rounded-2xl p-3 border border-white/5">
-                    <div className="w-full aspect-square bg-white/5 rounded-xl mb-3 flex items-center justify-center text-3xl">📱</div>
-                    <div className="bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded max-w-fit mb-1">AMAZON</div>
-                    <p className="text-white text-xs font-bold truncate">iPhone 15 Pro</p>
-                    <button className="w-full mt-2 bg-emerald-500 text-slate-900 text-xs font-black py-1.5 rounded-lg">Shop Now</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          </RevealOnScroll>
         </section>
 
+      </div>
+      {/* ========================================== */}
+        {/* 6. AFFILIATE PARTNERS (2-Way Marquee) */}
         {/* ========================================== */}
-        {/* 3. BRANDS MARQUEE (The Trust Builder) */}
-        {/* ========================================== */}
-        <section className="py-10 bg-white border-y border-slate-200 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 text-center mb-6">
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Monetize directly with 500+ Trusted Brands</p>
+        <section id="partners" className="py-16 overflow-hidden bg-white">
+          <RevealOnScroll>
+            <div className="max-w-7xl mx-auto px-4 text-center mb-10">
+              <h2 className="text-3xl font-black text-slate-900 mb-4">We Don't Just Build Your Page.<br className="sm:hidden"/> We Monetize It.</h2>
+              <p className="text-slate-500 font-medium">Partnered with top global brands to give you the highest commissions in the market.</p>
+            </div>
+          </RevealOnScroll>
+
+          {/* Marquee CSS Animation (Add this if not already present) */}
+          <style dangerouslySetInnerHTML={{__html: `
+            @keyframes marqueeLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+            @keyframes marqueeRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+            .animate-marquee-left { display: flex; width: 200%; animation: marqueeLeft 25s linear infinite; }
+            .animate-marquee-right { display: flex; width: 200%; animation: marqueeRight 25s linear infinite; }
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+          `}} />
+
+          {/* Row 1: Left to Right */}
+          <div className="relative w-full overflow-hidden mb-6">
+            <div className="animate-marquee-left flex items-center gap-6 px-3">
+              {[1,2,3,4,5,6,7,8].map((i) => (
+                <div key={`L-${i}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  {/* DEMO IMAGE - Replace src later */}
+                  <img src={`https://logo.clearbit.com/amazon.com`} alt="Brand" className="w-12 sm:w-16 h-auto opacity-70 grayscale hover:grayscale-0 transition-all" onError={(e) => e.target.style.display='none'} />
+                </div>
+              ))}
+            </div>
           </div>
-          {/* Sliding Marquee Container */}
+
+          {/* Row 2: Right to Left */}
           <div className="relative w-full overflow-hidden">
-            <div className="animate-marquee flex items-center justify-around gap-12 px-6">
-              {/* NOTE: Replace the src with your actual logo URLs */}
-              <div className="flex items-center gap-16 md:gap-32 w-1/2 justify-around opacity-60 grayscale hover:grayscale-0 transition-all duration-300">
-                <h3 className="text-3xl font-black text-slate-800">AMAZON</h3>
-                <h3 className="text-3xl font-black text-blue-600">FLIPKART</h3>
-                <h3 className="text-3xl font-black text-pink-600">MYNTRA</h3>
-                <h3 className="text-3xl font-black text-emerald-600">AJIO</h3>
-                <h3 className="text-3xl font-black text-orange-500">SHOPSY</h3>
-              </div>
-              {/* Duplicate for infinite loop illusion */}
-              <div className="flex items-center gap-16 md:gap-32 w-1/2 justify-around opacity-60 grayscale hover:grayscale-0 transition-all duration-300">
-                <h3 className="text-3xl font-black text-slate-800">AMAZON</h3>
-                <h3 className="text-3xl font-black text-blue-600">FLIPKART</h3>
-                <h3 className="text-3xl font-black text-pink-600">MYNTRA</h3>
-                <h3 className="text-3xl font-black text-emerald-600">AJIO</h3>
-                <h3 className="text-3xl font-black text-orange-500">SHOPSY</h3>
-              </div>
+            <div className="animate-marquee-right flex items-center gap-6 px-3">
+              {[1,2,3,4,5,6,7,8].map((i) => (
+                <div key={`R-${i}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  {/* DEMO IMAGE - Replace src later */}
+                  <img src={`https://logo.clearbit.com/myntra.com`} alt="Brand" className="w-12 sm:w-16 h-auto opacity-70 grayscale hover:grayscale-0 transition-all" onError={(e) => e.target.style.display='none'} />
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
         {/* ========================================== */}
-        {/* 4. PROBLEM VS SOLUTION (The Reality Check) */}
+        {/* 7. EVERYTHING YOU NEED TO GROW */}
         {/* ========================================== */}
-        <section id="problem-solution" className="py-24 bg-slate-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-24 bg-[#f8fafc] px-4 max-w-7xl mx-auto">
+          <RevealOnScroll>
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-black text-slate-900 mb-4">Old Bio Links are Dead.</h2>
-              <p className="text-xl text-slate-500 font-medium">Stop sending your followers to a boring list of static buttons.</p>
+              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4">Everything You Need to Grow.</h2>
+              <p className="text-slate-500 font-medium">A powerful control center built for professional creators.</p>
             </div>
+          </RevealOnScroll>
 
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              {/* The Old Way */}
-              <div className="bg-white p-8 rounded-3xl border border-slate-200 flex flex-col items-center opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
-                <div className="text-slate-400 font-black tracking-widest uppercase text-sm mb-8">The Boring Way</div>
-                <div className="w-64 bg-slate-50 border-8 border-slate-200 rounded-[2.5rem] p-6 shadow-sm flex flex-col gap-4">
-                  <div className="w-16 h-16 bg-slate-200 rounded-full mx-auto mb-2"></div>
-                  <div className="w-full h-12 bg-slate-200 rounded-xl"></div>
-                  <div className="w-full h-12 bg-slate-200 rounded-xl"></div>
-                  <div className="w-full h-12 bg-slate-200 rounded-xl"></div>
+          <div className="grid sm:grid-cols-3 gap-6">
+            <RevealOnScroll delay={100}>
+              <div className="bg-white p-8 rounded-3xl border border-slate-200 hover:border-blue-300 transition-colors h-full shadow-sm hover:shadow-lg">
+                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                 </div>
-                <p className="mt-8 text-slate-500 font-bold text-center">Static, Non-monetized, Boring.</p>
+                <h3 className="font-black text-slate-900 text-xl mb-2">Smart Link Generator</h3>
+                <p className="text-slate-500 font-medium text-sm">Generate direct links instantly. Supports multiple link creations at once to save your time.</p>
               </div>
+            </RevealOnScroll>
 
-              {/* The FavyLink Way */}
-              <div className="bg-indigo-50 p-8 rounded-3xl border border-indigo-100 flex flex-col items-center shadow-2xl shadow-indigo-900/5 relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-emerald-500 text-white font-black text-[10px] px-4 py-1.5 rounded-bl-xl uppercase tracking-wider shadow-lg">Premium</div>
-                <div className="text-indigo-600 font-black tracking-widest uppercase text-sm mb-8">The FavyLink Way</div>
-                <div className="w-64 bg-slate-900 border-8 border-slate-800 rounded-[2.5rem] p-6 shadow-2xl flex flex-col gap-3">
-                  <div className="w-16 h-16 bg-gradient-to-tr from-pink-500 to-orange-400 rounded-full mx-auto mb-2 p-1"><div className="w-full h-full bg-slate-800 rounded-full"></div></div>
-                  <div className="w-full h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl relative flex items-center justify-center"><span className="text-white font-bold text-xs">Auto Banners</span></div>
-                  <div className="flex gap-2">
-                    <div className="w-1/2 h-20 bg-slate-800 rounded-xl border border-slate-700 flex items-center justify-center text-xs text-slate-400">Product</div>
-                    <div className="w-1/2 h-20 bg-slate-800 rounded-xl border border-slate-700 flex items-center justify-center text-xs text-slate-400">Video</div>
-                  </div>
+            <RevealOnScroll delay={200}>
+              <div className="bg-white p-8 rounded-3xl border border-slate-200 hover:border-cyan-400 transition-colors h-full shadow-sm hover:shadow-lg">
+                <div className="w-12 h-12 bg-cyan-50 text-cyan-600 rounded-xl flex items-center justify-center mb-6">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                 </div>
-                <p className="mt-8 text-indigo-900 font-bold text-center">Rich Storefront, Theater Videos & Custom Themes.</p>
+                <h3 className="font-black text-slate-900 text-xl mb-2">Detailed Analytics</h3>
+                <p className="text-slate-500 font-medium text-sm">Transparent data. Track your clicks, confirmed orders, and estimated earnings in real-time.</p>
               </div>
-            </div>
+            </RevealOnScroll>
+
+            <RevealOnScroll delay={300}>
+              <div className="bg-white p-8 rounded-3xl border border-slate-200 hover:border-blue-400 transition-colors h-full shadow-sm hover:shadow-lg">
+                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <h3 className="font-black text-slate-900 text-xl mb-2">Easy Payouts</h3>
+                <p className="text-slate-500 font-medium text-sm">Withdraw your earnings directly to your Bank Account (NEFT) or UPI effortlessly.</p>
+              </div>
+            </RevealOnScroll>
           </div>
         </section>
 
         {/* ========================================== */}
-        {/* 5. THE PREMIUM STOREFRONT (Wow Factor) */}
+        {/* 8. SMART REDIRECT (Escape Browser) */}
         {/* ========================================== */}
-        <section id="storefront" className="py-24 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6">A Stunning Storefront.<br/>Zero Coding Required.</h2>
-              <p className="text-lg text-slate-500 font-medium">Customize your page in seconds. Give your followers a seamless shopping experience directly from your bio.</p>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-               <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200">
-                  <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-2xl mb-4">🖼️</div>
-                  <h3 className="font-bold text-slate-900 mb-2">Auto-Sliding Banners</h3>
-                  <p className="text-sm text-slate-500">Showcase fresh deals and brand banners automatically at the top of your page.</p>
-               </div>
-               <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200">
-                  <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-2xl mb-4">🎬</div>
-                  <h3 className="font-bold text-slate-900 mb-2">Theater Mode Videos</h3>
-                  <p className="text-sm text-slate-500">Embed YouTube/Insta Reels. Display tagged shoppable products right under the video.</p>
-               </div>
-               <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200">
-                  <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-2xl mb-4">🏷️</div>
-                  <h3 className="font-bold text-slate-900 mb-2">Rich Product Cards</h3>
-                  <p className="text-sm text-slate-500">Add sale timers, coupons, and bold 'Shop Now' buttons to drive urgent sales.</p>
-               </div>
-               <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200">
-                  <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center text-2xl mb-4">🎨</div>
-                  <h3 className="font-bold text-slate-900 mb-2">Premium Themes</h3>
-                  <p className="text-sm text-slate-500">One-click theme application. No complex settings, just drop-downs and text boxes.</p>
-               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================== */}
-        {/* 6. AUTO-POST DEALS (The Game Changer USP) */}
-        {/* ========================================== */}
-        <section id="auto-post" className="py-32 bg-slate-900 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 blur-[120px] rounded-full"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/20 blur-[120px] rounded-full"></div>
-          </div>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-            <div className="inline-block bg-white/10 border border-white/20 text-emerald-400 font-black text-sm px-4 py-2 rounded-full mb-6 shadow-lg">
-              Our Main USP
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black text-white mb-6">Zero-Effort Income.<br/>Meet Auto-Post Deals.</h2>
-            <p className="text-xl text-slate-400 font-medium max-w-3xl mx-auto mb-20">
-              Stop manually hunting for deals. We push high-converting offers from our built-in affiliate network directly to your page based on your category preference.
-            </p>
-
-            <div className="grid md:grid-cols-3 gap-8 relative">
-              <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-gradient-to-r from-slate-800 via-indigo-500 to-slate-800 -translate-y-1/2 z-0"></div>
-
-              <div className="bg-[#111827] p-8 rounded-3xl border border-slate-700 relative z-10 shadow-2xl">
-                <div className="w-16 h-16 bg-slate-800 border border-slate-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6">⚙️</div>
-                <h3 className="text-white font-bold text-xl mb-2">1. Set Your Niche</h3>
-                <p className="text-slate-400 text-sm">Select Fashion, Tech, Beauty, etc., in your dashboard settings.</p>
-              </div>
-
-              <div className="bg-indigo-900 p-8 rounded-3xl border border-indigo-500 relative z-10 shadow-2xl shadow-indigo-900/50 transform md:-translate-y-4">
-                <div className="w-16 h-16 bg-indigo-600 border border-indigo-400 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6 animate-pulse">🤖</div>
-                <h3 className="text-white font-bold text-xl mb-2">2. FavyLink Curates</h3>
-                <p className="text-indigo-200 text-sm">We find the hottest deals and auto-generate your affiliate links.</p>
-              </div>
-
-              <div className="bg-[#111827] p-8 rounded-3xl border border-slate-700 relative z-10 shadow-2xl">
-                <div className="w-16 h-16 bg-emerald-900 border border-emerald-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6 text-emerald-400">💸</div>
-                <h3 className="text-white font-bold text-xl mb-2">3. Auto-Published</h3>
-                <p className="text-slate-400 text-sm">Deals appear on your page. When followers shop, you get paid. Effortless.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================== */}
-        {/* 7. THE TECH EDGE (Smart Redirection) */}
-        {/* ========================================== */}
-        <section id="tech-edge" className="py-24 bg-indigo-50 border-b border-indigo-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row items-center gap-16">
+        <section className="py-24 bg-blue-50/50 border-y border-blue-100">
+          <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
+            <RevealOnScroll>
               <div className="flex-1">
-                <div className="text-indigo-600 font-black tracking-widest uppercase text-sm mb-4">Sales Booster Tech</div>
-                <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-6">No Redirection Annoyance.</h2>
-                <p className="text-lg text-slate-600 font-medium mb-8">
-                  Instagram's in-app browser kills conversions. We use <strong className="text-slate-900">smart breakout logic</strong>. When a user clicks, we force open their native Chrome/Safari or directly open the Shopping App (Myntra/Amazon).
+                <div className="inline-block bg-blue-100 text-blue-700 font-black text-xs px-3 py-1 rounded-full mb-4">Sales Booster</div>
+                <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4">Escape the Instagram Browser Trap.</h2>
+                <p className="text-slate-600 font-medium mb-6">
+                  In-app browsers kill conversions. We use <strong className="text-slate-900">smart breakout technology</strong>. When followers click, we force open their native Chrome/Safari or directly open the Shopping App (Myntra/Amazon).
                 </p>
-                <ul className="space-y-4">
-                  <li className="flex items-center gap-3 font-bold text-slate-700">
-                    <span className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs">✓</span> Flawless User Experience
-                  </li>
-                  <li className="flex items-center gap-3 font-bold text-slate-700">
-                    <span className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs">✓</span> Prevents Login Drops
-                  </li>
-                  <li className="flex items-center gap-3 font-bold text-slate-700">
-                    <span className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs">✓</span> Massively Higher Conversion Rates
-                  </li>
+                <ul className="space-y-3 mb-8 sm:mb-0">
+                  {['Flawless User Experience', 'Prevents Login Drops', 'Higher Conversion Rates'].map((li, i) => (
+                    <li key={i} className="flex items-center gap-2 font-bold text-slate-700 text-sm">
+                      <div className="w-5 h-5 bg-cyan-400 rounded-full flex items-center justify-center text-white"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg></div>
+                      {li}
+                    </li>
+                  ))}
                 </ul>
               </div>
+            </RevealOnScroll>
 
-              <div className="flex-1 w-full bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
-                 <div className="flex flex-col gap-6">
-                    <div className="flex items-center justify-between p-4 bg-rose-50 border border-rose-100 rounded-2xl opacity-60">
-                       <span className="font-bold text-rose-800">Standard Link: Stuck in Insta Browser</span>
-                       <span className="text-2xl">📉</span>
+            <RevealOnScroll delay={200}>
+              <div className="flex-1 w-full bg-white p-6 sm:p-8 rounded-[2.5rem] shadow-xl border border-slate-200">
+                 <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                       <span className="font-bold text-slate-500 text-sm">Standard Link: Stuck in Insta</span>
+                       <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" /></svg>
                     </div>
-                    <div className="flex justify-center -my-3 z-10"><span className="bg-white px-2 text-slate-400 font-black text-xs uppercase">VS</span></div>
-                    <div className="flex items-center justify-between p-6 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/30 transform scale-105">
+                    <div className="flex justify-center -my-3 z-10"><span className="bg-white px-3 text-slate-300 font-black text-xs uppercase">VS</span></div>
+                    <div className="flex items-center justify-between p-6 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl shadow-lg shadow-blue-500/30 transform scale-105">
                        <div>
-                         <span className="font-black text-white block text-lg">FavyLink: Native Chrome / App</span>
-                         <span className="text-indigo-200 text-xs font-bold">Direct Redirection</span>
+                         <span className="font-black text-white block">FavyLink: Native App</span>
+                         <span className="text-blue-100 text-xs font-bold">Direct Redirection</span>
                        </div>
-                       <span className="text-3xl animate-bounce">🚀</span>
+                       <svg className="w-8 h-8 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
                     </div>
                  </div>
               </div>
-            </div>
+            </RevealOnScroll>
           </div>
         </section>
 
         {/* ========================================== */}
-        {/* 8. DASHBOARD FEATURES (Control Center) */}
+        {/* 9. TESTIMONIALS (Trustpilot Style Scroll) */}
         {/* ========================================== */}
-        <section className="py-24 bg-white border-b border-slate-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl font-black text-slate-900 mb-6">Everything You Need to Grow.</h2>
-            <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto mb-16">
-              A powerful control center built for professional creators.
-            </p>
-
-            <div className="grid md:grid-cols-3 gap-8 text-left">
-              <div className="bg-slate-50 p-8 rounded-3xl border border-slate-200 hover:border-indigo-300 transition-colors">
-                <div className="text-4xl mb-4">🔗</div>
-                <h3 className="font-black text-slate-900 text-xl mb-2">Easy Link Generator</h3>
-                <p className="text-slate-500 font-medium text-sm">Generate or post direct links instantly. Uses Amazon Auto-Tag and supports multiple link generations at once.</p>
-              </div>
-              <div className="bg-slate-50 p-8 rounded-3xl border border-slate-200 hover:border-indigo-300 transition-colors">
-                <div className="text-4xl mb-4">📈</div>
-                <h3 className="font-black text-slate-900 text-xl mb-2">Transparent Analytics</h3>
-                <p className="text-slate-500 font-medium text-sm">Detailed conversion data. Know exactly what's selling, track your AOV, and view estimated earnings in real-time.</p>
-              </div>
-              <div className="bg-slate-50 p-8 rounded-3xl border border-slate-200 hover:border-emerald-400 transition-colors">
-                <div className="text-4xl mb-4">💰</div>
-                <h3 className="font-black text-slate-900 text-xl mb-2">Transparent Payouts</h3>
-                <p className="text-slate-500 font-medium text-sm">Easy withdrawals directly to your Bank Account (NEFT) or UPI. Track your confirmed commissions effortlessly.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================== */}
-        {/* 9. FINAL CTA (Footer) */}
-        {/* ========================================== */}
-        <section className="py-32 bg-slate-900 text-center">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-6xl font-black text-white mb-6">Ready for Effortless Profit?</h2>
-            <p className="text-xl text-slate-400 font-medium mb-12">Setup takes less than 2 minutes. Free forever.</p>
+        <section id="testimonials" className="py-24 bg-white overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row gap-12 items-center">
             
-            <div className="w-full max-w-lg bg-white/10 p-2.5 rounded-2xl border border-white/20 flex items-center mx-auto focus-within:border-emerald-500 transition-all">
-              <div className="pl-4 pr-1 text-slate-400 font-bold text-lg hidden sm:block">favylink.com/</div>
-              <input 
-                type="text" 
-                placeholder="yourname" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                className="flex-1 bg-transparent outline-none font-bold text-lg text-white w-full min-w-0 placeholder:text-slate-500"
-              />
-              <Link 
-                href={`/register?username=${username}`}
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-8 py-4 rounded-xl font-black text-sm sm:text-base whitespace-nowrap transition-transform active:scale-95 shadow-lg shadow-emerald-500/20 ml-2"
-              >
-                Claim Link Free
+            <RevealOnScroll>
+              <div className="w-full md:w-1/3 text-center md:text-left">
+                <div className="flex justify-center md:justify-start items-center gap-1 mb-4">
+                  {[1,2,3,4,5].map(star => <svg key={star} className="w-6 h-6 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>)}
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 mb-4">Loved by Top Creators.</h2>
+                <p className="text-slate-500 font-medium">Join thousands of creators who switched to FavyLink for better conversions.</p>
+              </div>
+            </RevealOnScroll>
+
+            {/* Horizontal Scroll Cards (Modern Stack) */}
+            <div className="w-full md:w-2/3 flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-6 pb-8 pt-4 px-4 -mx-4 md:mx-0">
+              {[
+                { name: "Rahul Tech", role: "Tech Reviewer", img: "https://i.pravatar.cc/150?img=11", text: "The auto-post feature is magic. I just set my niche and my earnings went up by 40% without doing extra work." },
+                { name: "Neha Styles", role: "Fashion Blogger", img: "https://i.pravatar.cc/150?img=5", text: "Finally, a bio link that actually looks like a premium store. My followers love the sliding banners!" },
+                { name: "Fit with Amit", role: "Fitness Coach", img: "https://i.pravatar.cc/150?img=12", text: "The app redirection saved my conversions. People were getting stuck in Insta browser before, not anymore." }
+              ].map((review, i) => (
+                <div key={i} className="min-w-[280px] sm:min-w-[320px] bg-slate-50 p-6 rounded-3xl border border-slate-200 snap-center shadow-sm hover:-translate-y-2 transition-transform duration-300">
+                  <div className="flex items-center gap-3 mb-4">
+                    <img src={review.img} className="w-12 h-12 rounded-full object-cover" alt={review.name} />
+                    <div>
+                      <h4 className="font-bold text-slate-900">{review.name}</h4>
+                      <p className="text-xs text-slate-500 font-bold">{review.role}</p>
+                    </div>
+                  </div>
+                  <p className="text-slate-600 text-sm leading-relaxed">"{review.text}"</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================== */}
+        {/* 10. FREE PLAN SECTION */}
+        {/* ========================================== */}
+        <section id="pricing" className="py-20 px-4">
+          <RevealOnScroll>
+            <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-600 to-cyan-500 rounded-[3rem] p-8 sm:p-12 text-center text-white shadow-2xl shadow-blue-500/30">
+              <span className="bg-white/20 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest mb-6 inline-block">100% Free Forever</span>
+              <h2 className="text-4xl sm:text-5xl font-black mb-6">Start Monetizing Today.</h2>
+              <p className="text-blue-100 font-medium max-w-2xl mx-auto mb-10">We believe creators shouldn't pay to earn. Get all premium storefront features and affiliate tools completely free.</p>
+              <Link href="/register" className="inline-block bg-white text-blue-600 px-8 py-4 rounded-xl font-black text-lg shadow-lg hover:scale-105 transition-transform">
+                Start For Free
               </Link>
             </div>
+          </RevealOnScroll>
+        </section>
+
+        {/* ========================================== */}
+        {/* 11. FAQ ACCORDION */}
+        {/* ========================================== */}
+        <section id="faq" className="py-24 bg-slate-50 px-4">
+          <div className="max-w-3xl mx-auto">
+            <RevealOnScroll>
+              <h2 className="text-3xl font-black text-slate-900 text-center mb-12">Frequently Asked Questions</h2>
+            </RevealOnScroll>
+            
+            <div className="space-y-4">
+              {[
+                { q: "Is FavyLink really free?", a: "Yes, it is 100% free to use. You get access to the premium storefront and all tools without any subscription fees." },
+                { q: "How do I get paid?", a: "You can withdraw your confirmed affiliate earnings directly to your Bank Account via NEFT or through UPI. It's fast and transparent." },
+                { q: "Can I add my own custom links?", a: "Absolutely! FavyLink gives you complete freedom to add your own custom links alongside the auto-generated affiliate products." }
+              ].map((faq, i) => (
+                <RevealOnScroll key={i} delay={i * 100}>
+                  <details className="group bg-white rounded-2xl border border-slate-200 shadow-sm [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+                    <summary className="flex items-center justify-between p-6 font-bold text-slate-900">
+                      {faq.q}
+                      <span className="transition group-open:rotate-180">
+                        <svg fill="none" height="24" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                      </span>
+                    </summary>
+                    <p className="text-slate-500 px-6 pb-6 text-sm">{faq.a}</p>
+                  </details>
+                </RevealOnScroll>
+              ))}
+            </div>
           </div>
         </section>
 
-      </div>
+        {/* ========================================== */}
+        {/* 12. PREMIUM BLACK FOOTER */}
+        {/* ========================================== */}
+        <footer className="bg-[#0a0a0a] pt-20 pb-10 px-4 rounded-t-[3rem] text-white">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+              
+              {/* Brand Col */}
+              <div className="lg:col-span-2">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-lg flex items-center justify-center font-black text-xs">FL</div>
+                  <span className="font-extrabold text-2xl tracking-tight">FavyLink</span>
+                </div>
+                <p className="text-slate-400 text-sm max-w-sm mb-8 leading-relaxed">
+                  The ultimate hub for professional creators. Build a premium storefront, automate your affiliate deals, and multiply your earnings effortlessly.
+                </p>
+                {/* Social Icons (SVGs) */}
+                <div className="flex gap-4">
+                  <a href="#" className="w-10 h-10 bg-white/5 hover:bg-cyan-500 rounded-full flex items-center justify-center transition-colors">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                  </a>
+                  <a href="#" className="w-10 h-10 bg-white/5 hover:bg-cyan-500 rounded-full flex items-center justify-center transition-colors">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                  </a>
+                </div>
+              </div>
+
+              {/* Links Col */}
+              <div>
+                <h4 className="font-bold mb-6 text-white">Legal</h4>
+                <ul className="space-y-3 text-sm text-slate-400">
+                  <li><a href="#" className="hover:text-cyan-400 transition-colors">Privacy Policy</a></li>
+                  <li><a href="#" className="hover:text-cyan-400 transition-colors">Terms & Conditions</a></li>
+                  <li><a href="#" className="hover:text-cyan-400 transition-colors">Refund Policy</a></li>
+                </ul>
+              </div>
+
+              {/* Contact Col */}
+              <div>
+                <h4 className="font-bold mb-6 text-white">Get in Touch</h4>
+                <p className="text-sm text-slate-400 mb-4">Have questions? We're here to help you grow.</p>
+                <a href="mailto:support@favylink.com" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  Send Email
+                </a>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-medium">
+              <p>© {new Date().getFullYear()} FavyLink. All rights reserved.</p>
+              <p>Designed for Professional Creators.</p>
+            </div>
+          </div>
+        </footer>
     </div>
   );
 }
 
-// 2. Parent Component jo SessionProvider add karega
 export default function LandingPageWithProvider() {
   return (
     <SessionProvider>
