@@ -269,14 +269,14 @@ function LandingContent() {
         <section id="auto-post" className="py-20 bg-slate-900 px-4">
            <div className="max-w-4xl mx-auto text-center">
              <RevealOnScroll>
-               <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">Zero-Effort Income.<br/>Meet Auto-Post Deals.</h2>
+               <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">Zero-Effort Income.<br/>Meet Auto-Post</h2>
                <p className="text-slate-400 font-medium text-sm sm:text-base mb-10">
                  Our system fetches the hottest affiliate deals and posts them directly to your storefront. 
                  Setup your niche and watch your earnings grow while you sleep.
                </p>
                {/* Clean Image Area */}
                <div className="w-full aspect-video bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl relative mb-12">
-                  <img src="https://cdn.prod.website-files.com/666285153da630124c201ec0/66bc1719faf12d395160239f_Asset%20489-p-1080.png" className="w-full h-full object-cover opacity-80" />
+                  <img src="https://cdn.prod.website-files.com/666285153da630124c201ec0/6668ba66da158049b3d28ed5_1-03-p-500.webp" className="w-full h-full object-cover opacity-80" />
                </div>
              </RevealOnScroll>
 
@@ -303,7 +303,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 6. AFFILIATE PARTNERS (2-Way Marquee) */}
         {/* ========================================== */}
-        <section id="partners" className="py-15 overflow-hidden bg-white">
+        <section id="partners" className="py-16 overflow-hidden bg-white">
           <RevealOnScroll>
             <div className="max-w-7xl mx-auto px-4 text-center mb-10">
               <h2 className="text-3xl font-black text-slate-900 mb-4">We Don't Just Build Your Page.<br className="sm:hidden"/> We Monetize It.</h2>
@@ -322,17 +322,18 @@ function LandingContent() {
 
           {/* Row 1: Left to Right */}
           <div className="relative w-full overflow-hidden mb-6">
-            <div className="animate-marquee-left flex items-center gap-6 px-3">
+            <div className="animate-marquee-left flex items-center gap-4 sm:gap-6 px-3">
               {[
-                "https://tse2.mm.bing.net/th/id/OIP.RBwyz73YnN1imNa0526epgHaEK?pid=Api&P=0&h=180",
-                "https://static.vecteezy.com/system/resources/previews/018/779/928/original/3d-illustration-of-amazon-logo-free-png.png",
+                "https://sankmo.in/assets/images/sankmo-influencer-mobile.png",
+                "https://logo.clearbit.com/flipkart.com",
                 "https://logo.clearbit.com/myntra.com",
                 "https://logo.clearbit.com/ajio.com",
                 "https://logo.clearbit.com/shopsy.in",
                 "https://logo.clearbit.com/nike.com"
               ].map((imgLink, index) => (
-                <div key={`L-${index}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-4">
-                  <img src={imgLink} alt="Brand Partner" className="w-full h-full object-contain transition-all opacity-70 grayscale hover:grayscale-0" />
+                <div key={`L-${index}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-white border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-2 sm:p-4">
+                  {/* FIX: Removed grayscale & opacity. Added mix-blend-multiply for clean look */}
+                  <img src={imgLink} alt="Brand Partner" className="w-full h-full object-contain mix-blend-multiply" />
                 </div>
               ))}
             </div>
@@ -340,17 +341,18 @@ function LandingContent() {
 
           {/* Row 2: Right to Left */}
           <div className="relative w-full overflow-hidden">
-            <div className="animate-marquee-right flex items-center gap-6 px-3">
+            <div className="animate-marquee-right flex items-center gap-4 sm:gap-6 px-3">
               {[
-                "https://static.vecteezy.com/system/resources/previews/018/779/928/original/3d-illustration-of-amazon-logo-free-png.png",
-                "https://tse2.mm.bing.net/th/id/OIP.RBwyz73YnN1imNa0526epgHaEK?pid=Api&P=0&h=180",
+                "https://cdn.prod.website-files.com/666285153da630124c201ec0/66bc1719faf12d395160239f_Asset%20489-p-1080.png",
+                "https://logo.clearbit.com/adidas.com",
                 "https://logo.clearbit.com/apple.com",
                 "https://logo.clearbit.com/samsung.com",
                 "https://logo.clearbit.com/puma.com",
                 "https://logo.clearbit.com/hm.com"
               ].map((imgLink, index) => (
-                <div key={`R-${index}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-4">
-                  <img src={imgLink} alt="Brand Partner" className="w-full h-full object-contain transition-all opacity-70 grayscale hover:grayscale-0" />
+                <div key={`R-${index}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-white border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-2 sm:p-4">
+                  {/* FIX: Removed grayscale & opacity */}
+                  <img src={imgLink} alt="Brand Partner" className="w-full h-full object-contain mix-blend-multiply" />
                 </div>
               ))}
             </div>
@@ -358,11 +360,10 @@ function LandingContent() {
         </section>
 
         {/* ========================================== */}
-        {/* NEW: EARN WITH EASY STEPS */}
+        {/* NEW: EARN WITH EASY STEPS (Fixed for Mobile) */}
         {/* ========================================== */}
-        <section className="py-20 px-4 bg-slate-50 relative overflow-hidden">
+        <section className="py-20 px-2 sm:px-4 bg-slate-50 relative overflow-hidden">
           
-          {/* Custom Zoom-Out Animation specifically for these icons */}
           <style dangerouslySetInnerHTML={{__html: `
             @keyframes popZoomOut {
               0% { transform: scale(1.3); opacity: 0; }
@@ -375,51 +376,50 @@ function LandingContent() {
 
           <div className="max-w-7xl mx-auto">
             <RevealOnScroll>
-              <div className="text-center mb-16 sm:mb-20">
-                <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-3">Earn with Easy Steps</h2>
-                <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">Monetize your audience in 3 clicks</p>
+              <div className="text-center mb-12 sm:mb-20">
+                <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-2">Earn with Easy Steps</h2>
+                <p className="text-slate-500 font-bold text-xs sm:text-sm uppercase tracking-widest">Monetize your audience in 3 clicks</p>
               </div>
             </RevealOnScroll>
 
-            <div className="relative max-w-5xl mx-auto">
-              {/* Connecting Chain Line (Vertical on Mobile, Horizontal on Desktop) */}
-              <div className="absolute left-[50%] md:left-[10%] md:right-[10%] top-0 md:top-[3.5rem] w-1 md:w-auto h-full md:h-1 bg-blue-100 -translate-x-1/2 md:translate-x-0 z-0 rounded-full"></div>
+            <div className="relative max-w-4xl mx-auto px-2">
+              {/* Connecting Chain Line (Horizontal for both Mobile & Desktop) */}
+              <div className="absolute top-[2rem] sm:top-[3.5rem] left-[15%] right-[15%] h-1 bg-blue-200 z-0 rounded-full"></div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-6 relative z-10">
+              {/* FIX: grid-cols-3 forces them side-by-side even on mobile */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-6 relative z-10">
                 
                 {/* Step 1 */}
                 <RevealOnScroll delay={100}>
                   <div className="flex flex-col items-center text-center group">
-                    <div className="w-28 h-28 bg-white rounded-full border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-6 animate-pop-zoom shadow-blue-500/10">
-                      {/* Demo Icon 1 */}
-                      <img src="https://cdn-icons-png.flaticon.com/128/1350/1350116.png" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" alt="Explore Deals" />
+                    {/* FIX: overflow-hidden & object-cover removes gap */}
+                    <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative">
+                      <img src="https://sankmo.in/assets/images/sankmo-influencer-mobile.png" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Explore Deals" />
                     </div>
-                    <h3 className="font-black text-slate-900 text-lg mb-2">1. Explore Deals</h3>
-                    <p className="text-slate-500 text-sm font-medium px-4">Find deals from top retailers like Ajio, Flipkart, Myntra, and more.</p>
+                    <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">1. Explore Deals</h3>
+                    <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Find deals from top retailers like Ajio, Flipkart, Myntra.</p>
                   </div>
                 </RevealOnScroll>
 
                 {/* Step 2 */}
                 <RevealOnScroll delay={300}>
                   <div className="flex flex-col items-center text-center group">
-                    <div className="w-28 h-28 bg-white rounded-full border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-6 animate-pop-zoom shadow-blue-500/10" style={{ animationDelay: '200ms' }}>
-                      {/* Demo Icon 2 */}
-                      <img src="https://cdn-icons-png.flaticon.com/128/3386/3386083.png" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" alt="Fetch Details" />
+                    <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative" style={{ animationDelay: '200ms' }}>
+                      <img src="YOUR_REAL_IMAGE_LINK_HERE" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Fetch Details" />
                     </div>
-                    <h3 className="font-black text-slate-900 text-lg mb-2">2. Fetch details & make link</h3>
-                    <p className="text-slate-500 text-sm font-medium px-4">Fetch product details from our AddLink page, or convert any normal link to an earning link.</p>
+                    <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">2. Fetch & Make Link</h3>
+                    <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Convert normal links into earning links instantly.</p>
                   </div>
                 </RevealOnScroll>
 
                 {/* Step 3 */}
                 <RevealOnScroll delay={500}>
                   <div className="flex flex-col items-center text-center group">
-                    <div className="w-28 h-28 bg-white rounded-full border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-6 animate-pop-zoom shadow-blue-500/10" style={{ animationDelay: '400ms' }}>
-                      {/* Demo Icon 3 */}
-                      <img src="https://cdn-icons-png.flaticon.com/128/3135/3135715.png" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" alt="Publish" />
+                    <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative" style={{ animationDelay: '400ms' }}>
+                      <img src="YOUR_REAL_IMAGE_LINK_HERE" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Publish" />
                     </div>
-                    <h3 className="font-black text-slate-900 text-lg mb-2">3. Publish to page & earn</h3>
-                    <p className="text-slate-500 text-sm font-medium px-4">Generate direct links in one click. Post to your bio page or easily share them with your audience.</p>
+                    <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">3. Publish & Earn</h3>
+                    <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Post to your bio page or share with your audience.</p>
                   </div>
                 </RevealOnScroll>
 
