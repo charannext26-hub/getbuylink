@@ -89,16 +89,8 @@ function LandingContent() {
     if (element) element.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  if (status === "loading" || status === "authenticated") {
-    return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-white font-sans overflow-x-hidden selection:bg-blue-500 selection:text-white pb-20">
+    <div className="min-h-screen bg-white font-sans overflow-x-hidden selection:bg-blue-500 selection:text-white">
       
       {/* --- Custom Trendy Styles --- */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -172,7 +164,7 @@ function LandingContent() {
           <div className="max-w-5xl mx-auto text-center">
             <RevealOnScroll>
               <h1 className="text-4xl sm:text-6xl font-black text-slate-900 leading-tight mb-5">
-                Make your <span className="text-blue-600">Favourite Link</span> Smart & Professional.
+                Make your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600">Favourite Link</span> Smart & Professional.
               </h1>
               <p className="text-slate-600 text-base sm:text-lg font-medium mb-10 max-w-2xl mx-auto">
                 Turn your standard bio link into a beautiful, zero-coding storefront. <span className="font-bold text-blue-600">Auto-Sync Deals</span> from 500+ brands and multiply your earnings while you sleep with smart, easy conversions.
@@ -181,7 +173,7 @@ function LandingContent() {
 
             {/* TAB SLIDER */}
             <div className="mt-8 max-w-4xl mx-auto">
-              <div className="flex justify-center border-b border-slate-200 mb-8 overflow-x-auto hide-scrollbar">
+              <div className="flex justify-start sm:justify-center border-b border-slate-200 mb-6 overflow-x-auto hide-scrollbar px-2">
                 {tabs.map((tab, index) => (
                   <button key={tab.id} onClick={() => setActiveTab(index)} className={`px-5 pb-3 text-xs font-bold transition-all whitespace-nowrap border-b-2 ${activeTab === index ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}>
                     {tab.id} {tab.title}
@@ -288,22 +280,22 @@ function LandingContent() {
         {/* ========================================== */}
         <section className="py-12 px-4 max-w-4xl mx-auto -mt-10 relative z-20">
            <RevealOnScroll>
-             <div className="skeleton-bar relative bg-white p-2 rounded-2xl shadow-2xl border border-blue-100 flex items-center overflow-hidden">
-                <div className="pl-4 pr-1 text-slate-400 font-bold text-xs sm:text-base hidden sm:block z-10">favylink.com/</div>
-                <input 
-                  type="text" 
-                  placeholder="yourname" 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="flex-1 bg-transparent outline-none font-bold text-sm sm:text-base text-slate-900 px-2 min-w-0 z-10"
-                />
-                <button 
-                  onClick={() => router.push(`/register?username=${username}`)}
-                  className="bg-slate-900 text-white px-5 sm:px-8 py-3 rounded-xl font-black text-[10px] sm:text-xs whitespace-nowrap z-10 hover:bg-blue-600 transition-colors"
-                >
-                  Claim Branded Link
-                </button>
-             </div>
+             <div className="skeleton-bar relative bg-white p-1.5 sm:p-2 rounded-2xl shadow-2xl border border-blue-100 flex items-center overflow-hidden">
+   <div className="pl-3 pr-1 text-slate-400 font-bold text-[11px] sm:text-base z-10 whitespace-nowrap flex-shrink-0">favylink.com/</div>
+   <input 
+     type="text" 
+     placeholder="yourname" 
+     value={username}
+     onChange={(e) => setUsername(e.target.value)}
+     className="flex-1 bg-transparent outline-none font-bold text-xs sm:text-base text-slate-900 px-1 min-w-0 z-10"
+   />
+   <button 
+     onClick={() => router.push(`/register?username=${username}`)}
+     className="bg-blue-600 text-white px-4 sm:px-8 py-2.5 sm:py-3 rounded-xl font-black text-[10px] sm:text-xs whitespace-nowrap z-10 hover:bg-blue-700 flex-shrink-0 ml-1"
+   >
+     Claim Link
+   </button>
+</div>
            </RevealOnScroll>
         </section>
 
@@ -513,44 +505,64 @@ function LandingContent() {
         </section>
 
         {/* ========================================== */}
-        {/* 12. PREMIUM FOOTER */}
+        {/* 12. PREMIUM BLACK FOOTER */}
         {/* ========================================== */}
-        <footer className="bg-slate-950 pt-20 pb-6 px-4 rounded-t-[3rem]">
-           <div className="max-w-7xl mx-auto text-white">
-             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-               <div className="lg:col-span-2">
-                 <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-md bg-blue-600 flex items-center justify-center p-1 overflow-hidden">
-                       <img src="/icon-192x192.png" className="w-full h-full object-contain" alt="FL" />
-                    </div>
-                    <span className="font-extrabold text-2xl">Favy<span className="text-blue-500">Link</span></span>
-                 </div>
-                 <p className="text-slate-400 text-sm max-w-sm mb-6 leading-relaxed">Built for creators who want to monetize their audience professionally with an all-in-one storefront and automated affiliate deals.</p>
-               </div>
-               <div>
-                  <h4 className="font-black mb-4 text-lg">Company</h4>
-                  <ul className="text-slate-400 text-sm space-y-3 font-bold">
-                    <li><Link href="#" className="hover:text-blue-400 transition-colors">Terms of Service</Link></li>
-                    <li><Link href="#" className="hover:text-blue-400 transition-colors">Privacy Policy</Link></li>
-                    <li><Link href="#" className="hover:text-blue-400 transition-colors">Refund Policy</Link></li>
-                  </ul>
-               </div>
-               <div>
-                  <h4 className="font-black mb-4 text-lg">Support</h4>
-                  <p className="text-sm text-slate-400 mb-4">Need help? We are here for you.</p>
-                  <a href="mailto:support@favylink.com" className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-blue-600/20">
-                    Send Email
-                  </a>
-               </div>
-             </div>
-             <div className="border-t border-slate-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                <p>© {new Date().getFullYear()} FAVYLINK. ALL RIGHTS RESERVED.</p>
-                <div className="flex gap-4">
-                   <a href="#" className="hover:text-white transition-colors">Instagram</a>
-                   <a href="#" className="hover:text-white transition-colors">X (Twitter)</a>
+        <footer className="bg-[#0a0a0a] pt-20 pb-10 px-4 rounded-t-[3rem] text-white mt-auto">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+              
+              {/* Brand Col */}
+              <div className="lg:col-span-2">
+                <div className="flex items-center gap-2 mb-6">
+                  {/* UPDATE: Image Icon added */}
+                  <div className="w-8 h-8 rounded-md bg-blue-600 flex items-center justify-center p-1 overflow-hidden">
+                    <img src="/icon-192x192.png" className="w-full h-full object-contain" alt="FL" />
+                  </div>
+                  {/* UPDATE: Link text is now blue */}
+                  <span className="font-extrabold text-2xl tracking-tight">
+                    Favy<span className="text-blue-500">Link</span>
+                  </span>
                 </div>
-             </div>
-           </div>
+                <p className="text-slate-400 text-sm max-w-sm mb-8 leading-relaxed">
+                  The ultimate hub for professional creators. Build a premium storefront, automate your affiliate deals, and multiply your earnings effortlessly.
+                </p>
+                {/* Social Icons (SVGs) */}
+                <div className="flex gap-4">
+                  <a href="#" className="w-10 h-10 bg-white/5 hover:bg-cyan-500 rounded-full flex items-center justify-center transition-colors">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                  </a>
+                  <a href="#" className="w-10 h-10 bg-white/5 hover:bg-cyan-500 rounded-full flex items-center justify-center transition-colors">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                  </a>
+                </div>
+              </div>
+
+              {/* Links Col */}
+              <div>
+                <h4 className="font-bold mb-6 text-white">Legal</h4>
+                <ul className="space-y-3 text-sm text-slate-400">
+                  <li><a href="#" className="hover:text-cyan-400 transition-colors">Privacy Policy</a></li>
+                  <li><a href="#" className="hover:text-cyan-400 transition-colors">Terms & Conditions</a></li>
+                  <li><a href="#" className="hover:text-cyan-400 transition-colors">Refund Policy</a></li>
+                </ul>
+              </div>
+
+              {/* Contact Col */}
+              <div>
+                <h4 className="font-bold mb-6 text-white">Get in Touch</h4>
+                <p className="text-sm text-slate-400 mb-4">Have questions? We're here to help you grow.</p>
+                <a href="mailto:support@favylink.com" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  Send Email
+                </a>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-medium">
+              <p>© {new Date().getFullYear()} FavyLink. All rights reserved.</p>
+              <p>Designed for Professional Creators.</p>
+            </div>
+          </div>
         </footer>
         </div>
     </div>
