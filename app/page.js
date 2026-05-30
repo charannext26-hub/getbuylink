@@ -164,7 +164,7 @@ function LandingContent() {
           <div className="max-w-5xl mx-auto text-center">
             <RevealOnScroll>
               <h1 className="text-4xl sm:text-6xl font-black text-slate-900 leading-tight mb-5">
-                Make your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600">Favourite Link</span> Smart & Professional.
+                Make your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600">Favourite Link</span> Professional & Profitable.
               </h1>
               <p className="text-slate-600 text-base sm:text-lg font-medium mb-10 max-w-2xl mx-auto">
                 Turn your standard bio link into a beautiful, zero-coding storefront. <span className="font-bold text-blue-600">Auto-Sync Deals</span> from 500+ brands and multiply your earnings while you sleep with smart, easy conversions.
@@ -274,10 +274,10 @@ function LandingContent() {
                  Our system fetches the hottest affiliate deals and posts them directly to your storefront. 
                  Setup your niche and watch your earnings grow while you sleep.
                </p>
-               {/* Clean Image Area */}
-               <div className="w-full flex justify-center relative mb-12 mt-8">
-                  {/* FIX: Removed box background/border. Added drop-shadow for 3D effect */}
-                  <img src="https://cdn.prod.website-files.com/666285153da630124c201ec0/6668ba66da158049b3d28ed5_1-03-p-500.webp" className="w-full max-w-3xl h-auto object-contain drop-shadow-2xl" alt="Auto Post Workflow" />
+               {/* Clean Image Area - Compact Size */}
+               <div className="w-full flex justify-center relative my-4 sm:my-8">
+                  {/* FIX: Removed extra margins. Added max-h for compact size */}
+                  <img src="https://cdn.prod.website-files.com/666285153da630124c201ec0/6668ba66da158049b3d28ed5_1-03-p-500.webp" className="w-full max-w-2xl h-auto max-h-[250px] sm:max-h-[350px] object-contain drop-shadow-2xl" alt="Auto Post Workflow" />
                </div>
              </RevealOnScroll>
 
@@ -465,7 +465,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 8. INSTAGRAM BREAKOUT (Clean Image Space) */}
         {/* ========================================== */}
-        <section id="redirection" className="py-15 px-4 bg-white border-y border-slate-100">
+        <section id="redirection" className="py-13 px-4 bg-white border-y border-slate-100">
            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12">
               <div className="flex-1">
                  <RevealOnScroll>
@@ -486,11 +486,11 @@ function LandingContent() {
                  </ul>
               </div>
               <RevealOnScroll delay={200} className="flex-1 w-full">
-                {/* FIX: Removed background box, shadow, and border. Made it perfectly fit a tall mobile PNG */}
-                <div className="w-full flex items-center justify-center mt-10 md:mt-0">
+                {/* FIX: Removed fixed heights. Added max-h to make it compact and remove top/bottom gaps */}
+                <div className="w-full flex items-center justify-center mt-6 md:mt-0">
                    <img 
-                     src="https://sankmo.in/assets/images/sankmo-influencer-mobile.png" 
-                     className="w-auto h-[400px] sm:h-[500px] lg:h-[550px] object-contain drop-shadow-2xl" 
+                     src="https://cdn.prod.website-files.com/666285153da630124c201ec0/6668bcbd672bf1109ddbb93f_1-04%20(1)-p-800.webp" 
+                     className="w-full max-w-sm h-auto max-h-[300px] sm:max-h-[400px] object-contain drop-shadow-2xl" 
                      alt="App Redirection" 
                    />
                 </div>
@@ -501,7 +501,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 9. TESTIMONIALS (Restored horizontal scroll) */}
         {/* ========================================== */}
-        <section id="testimonials" className="py-15 bg-[#f8fafc] overflow-hidden">
+        <section id="testimonials" className="py-13 bg-[#f8fafc] overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row gap-12 items-center">
             
             <RevealOnScroll>
@@ -538,7 +538,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 10. FREE PLAN SECTION (Restored Blue Box) */}
         {/* ========================================== */}
-        <section id="pricing" className="py-15 px-4 bg-white">
+        <section id="pricing" className="py-11 px-4 bg-white">
           <RevealOnScroll>
             <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-600 to-cyan-400 rounded-[3rem] p-8 sm:p-14 text-center text-white shadow-2xl shadow-blue-500/30 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
