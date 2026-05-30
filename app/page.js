@@ -160,7 +160,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 2. HERO & FLIP-TAB SLIDER */}
         {/* ========================================== */}
-        <section id="home" className="bg-[#f1f5f9] pt-10 pb-20 px-4 rounded-b-[2rem]">
+        <section id="home" className="bg-[#f1f5f9] pt-8 pb-10 px-4 rounded-b-[2rem]">
           <div className="max-w-5xl mx-auto text-center">
             <RevealOnScroll>
               <h1 className="text-4xl sm:text-6xl font-black text-slate-900 leading-tight mb-5">
@@ -209,7 +209,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 3. STUNNING STOREFRONT (Horizontal Compact) */}
         {/* ========================================== */}
-        <section id="storefront" className="py-20 px-4 max-w-7xl mx-auto">
+        <section id="storefront" className="py-17 px-4 max-w-7xl mx-auto">
           <RevealOnScroll>
             <div className="text-center mb-16">
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 mb-4">A Stunning Storefront.<br/>Zero Coding Required.</h2>
@@ -240,42 +240,6 @@ function LandingContent() {
         </section>
 
         {/* ========================================== */}
-        {/* 4. ZERO EFFORT INCOME (Clean Image) */}
-        {/* ========================================== */}
-        <section id="auto-post" className="py-20 bg-slate-900 px-4">
-           <div className="max-w-4xl mx-auto text-center">
-             <RevealOnScroll>
-               <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">Zero-Effort Income.</h2>
-               <p className="text-slate-400 font-medium text-sm sm:text-base mb-10">
-                 Our system fetches the hottest affiliate deals and posts them directly to your storefront. 
-                 Setup your niche and watch your earnings grow while you sleep.
-               </p>
-               {/* Clean Image Area */}
-               <div className="w-full aspect-video bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl relative mb-12">
-                  <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000" className="w-full h-full object-cover opacity-80" />
-               </div>
-             </RevealOnScroll>
-
-             {/* Restored Texts for Auto-Post Steps */}
-             <div className="grid sm:grid-cols-3 gap-6">
-                {[
-                  { title: "Set Your Niche", desc: "Select Fashion, Tech, Beauty in your dashboard." },
-                  { title: "We Curate Deals", desc: "We fetch hot deals and auto-generate links." },
-                  { title: "Auto-Published", desc: "Deals appear on your page. You earn on autopilot." }
-                ].map((step, i) => (
-                   <RevealOnScroll key={i} delay={i * 100}>
-                     <div className="bg-slate-800/40 border border-slate-700 p-6 rounded-2xl h-full flex flex-col items-center text-center">
-                        <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-lg mb-4">{i+1}</div>
-                        <h3 className="text-white font-bold text-lg mb-2">{step.title}</h3>
-                        <p className="text-slate-400 text-sm">{step.desc}</p>
-                     </div>
-                   </RevealOnScroll>
-                ))}
-             </div>
-           </div>
-        </section>
-
-        {/* ========================================== */}
         {/* 5. CLAIM BRANDED LINK BAR (Fixed) */}
         {/* ========================================== */}
         <section className="py-12 px-4 max-w-4xl mx-auto -mt-10 relative z-20">
@@ -299,11 +263,47 @@ function LandingContent() {
            </RevealOnScroll>
         </section>
 
+        {/* ========================================== */}
+        {/* 4. ZERO EFFORT INCOME (Clean Image) */}
+        {/* ========================================== */}
+        <section id="auto-post" className="py-20 bg-slate-900 px-4">
+           <div className="max-w-4xl mx-auto text-center">
+             <RevealOnScroll>
+               <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">Zero-Effort Income.<br/>Meet Auto-Post Deals.</h2>
+               <p className="text-slate-400 font-medium text-sm sm:text-base mb-10">
+                 Our system fetches the hottest affiliate deals and posts them directly to your storefront. 
+                 Setup your niche and watch your earnings grow while you sleep.
+               </p>
+               {/* Clean Image Area */}
+               <div className="w-full aspect-video bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl relative mb-12">
+                  <img src="https://cdn.prod.website-files.com/666285153da630124c201ec0/66bc1719faf12d395160239f_Asset%20489-p-1080.png" className="w-full h-full object-cover opacity-80" />
+               </div>
+             </RevealOnScroll>
+
+             {/* Restored Texts for Auto-Post Steps */}
+             <div className="grid sm:grid-cols-3 gap-6">
+                {[
+                  { title: "Set Your Niche", desc: "Select Fashion, Tech, Beauty in your dashboard." },
+                  { title: "We Curate Deals", desc: "We fetch hot deals and auto-generate links." },
+                  { title: "Auto-Published", desc: "Deals appear on your page. You earn on autopilot." }
+                ].map((step, i) => (
+                   <RevealOnScroll key={i} delay={i * 100}>
+                     <div className="bg-slate-800/40 border border-slate-700 p-6 rounded-2xl h-full flex flex-col items-center text-center">
+                        <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-lg mb-4">{i+1}</div>
+                        <h3 className="text-white font-bold text-lg mb-2">{step.title}</h3>
+                        <p className="text-slate-400 text-sm">{step.desc}</p>
+                     </div>
+                   </RevealOnScroll>
+                ))}
+             </div>
+           </div>
+        </section>
+
 
         {/* ========================================== */}
         {/* 6. AFFILIATE PARTNERS (2-Way Marquee) */}
         {/* ========================================== */}
-        <section id="partners" className="py-16 overflow-hidden bg-white">
+        <section id="partners" className="py-15 overflow-hidden bg-white">
           <RevealOnScroll>
             <div className="max-w-7xl mx-auto px-4 text-center mb-10">
               <h2 className="text-3xl font-black text-slate-900 mb-4">We Don't Just Build Your Page.<br className="sm:hidden"/> We Monetize It.</h2>
@@ -323,10 +323,16 @@ function LandingContent() {
           {/* Row 1: Left to Right */}
           <div className="relative w-full overflow-hidden mb-6">
             <div className="animate-marquee-left flex items-center gap-6 px-3">
-              {[1,2,3,4,5,6,7,8].map((i) => (
-                <div key={`L-${i}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                  {/* DEMO IMAGE - Replace src later */}
-                  <img src={`https://logo.clearbit.com/amazon.com`} alt="Brand" className="w-12 sm:w-16 h-auto opacity-70 grayscale hover:grayscale-0 transition-all" onError={(e) => e.target.style.display='none'} />
+              {[
+                "https://tse2.mm.bing.net/th/id/OIP.RBwyz73YnN1imNa0526epgHaEK?pid=Api&P=0&h=180",
+                "https://static.vecteezy.com/system/resources/previews/018/779/928/original/3d-illustration-of-amazon-logo-free-png.png",
+                "https://logo.clearbit.com/myntra.com",
+                "https://logo.clearbit.com/ajio.com",
+                "https://logo.clearbit.com/shopsy.in",
+                "https://logo.clearbit.com/nike.com"
+              ].map((imgLink, index) => (
+                <div key={`L-${index}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-4">
+                  <img src={imgLink} alt="Brand Partner" className="w-full h-full object-contain transition-all opacity-70 grayscale hover:grayscale-0" />
                 </div>
               ))}
             </div>
@@ -335,10 +341,16 @@ function LandingContent() {
           {/* Row 2: Right to Left */}
           <div className="relative w-full overflow-hidden">
             <div className="animate-marquee-right flex items-center gap-6 px-3">
-              {[1,2,3,4,5,6,7,8].map((i) => (
-                <div key={`R-${i}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                  {/* DEMO IMAGE - Replace src later */}
-                  <img src={`https://logo.clearbit.com/myntra.com`} alt="Brand" className="w-12 sm:w-16 h-auto opacity-70 grayscale hover:grayscale-0 transition-all" onError={(e) => e.target.style.display='none'} />
+              {[
+                "https://static.vecteezy.com/system/resources/previews/018/779/928/original/3d-illustration-of-amazon-logo-free-png.png",
+                "https://tse2.mm.bing.net/th/id/OIP.RBwyz73YnN1imNa0526epgHaEK?pid=Api&P=0&h=180",
+                "https://logo.clearbit.com/apple.com",
+                "https://logo.clearbit.com/samsung.com",
+                "https://logo.clearbit.com/puma.com",
+                "https://logo.clearbit.com/hm.com"
+              ].map((imgLink, index) => (
+                <div key={`R-${index}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-4">
+                  <img src={imgLink} alt="Brand Partner" className="w-full h-full object-contain transition-all opacity-70 grayscale hover:grayscale-0" />
                 </div>
               ))}
             </div>
@@ -346,9 +358,80 @@ function LandingContent() {
         </section>
 
         {/* ========================================== */}
+        {/* NEW: EARN WITH EASY STEPS */}
+        {/* ========================================== */}
+        <section className="py-20 px-4 bg-slate-50 relative overflow-hidden">
+          
+          {/* Custom Zoom-Out Animation specifically for these icons */}
+          <style dangerouslySetInnerHTML={{__html: `
+            @keyframes popZoomOut {
+              0% { transform: scale(1.3); opacity: 0; }
+              100% { transform: scale(1); opacity: 1; }
+            }
+            .animate-pop-zoom {
+              animation: popZoomOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+          `}} />
+
+          <div className="max-w-7xl mx-auto">
+            <RevealOnScroll>
+              <div className="text-center mb-16 sm:mb-20">
+                <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-3">Earn with Easy Steps</h2>
+                <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">Monetize your audience in 3 clicks</p>
+              </div>
+            </RevealOnScroll>
+
+            <div className="relative max-w-5xl mx-auto">
+              {/* Connecting Chain Line (Vertical on Mobile, Horizontal on Desktop) */}
+              <div className="absolute left-[50%] md:left-[10%] md:right-[10%] top-0 md:top-[3.5rem] w-1 md:w-auto h-full md:h-1 bg-blue-100 -translate-x-1/2 md:translate-x-0 z-0 rounded-full"></div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-6 relative z-10">
+                
+                {/* Step 1 */}
+                <RevealOnScroll delay={100}>
+                  <div className="flex flex-col items-center text-center group">
+                    <div className="w-28 h-28 bg-white rounded-full border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-6 animate-pop-zoom shadow-blue-500/10">
+                      {/* Demo Icon 1 */}
+                      <img src="https://cdn-icons-png.flaticon.com/128/1350/1350116.png" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" alt="Explore Deals" />
+                    </div>
+                    <h3 className="font-black text-slate-900 text-lg mb-2">1. Explore Deals</h3>
+                    <p className="text-slate-500 text-sm font-medium px-4">Find deals from top retailers like Ajio, Flipkart, Myntra, and more.</p>
+                  </div>
+                </RevealOnScroll>
+
+                {/* Step 2 */}
+                <RevealOnScroll delay={300}>
+                  <div className="flex flex-col items-center text-center group">
+                    <div className="w-28 h-28 bg-white rounded-full border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-6 animate-pop-zoom shadow-blue-500/10" style={{ animationDelay: '200ms' }}>
+                      {/* Demo Icon 2 */}
+                      <img src="https://cdn-icons-png.flaticon.com/128/3386/3386083.png" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" alt="Fetch Details" />
+                    </div>
+                    <h3 className="font-black text-slate-900 text-lg mb-2">2. Fetch details & make link</h3>
+                    <p className="text-slate-500 text-sm font-medium px-4">Fetch product details from our AddLink page, or convert any normal link to an earning link.</p>
+                  </div>
+                </RevealOnScroll>
+
+                {/* Step 3 */}
+                <RevealOnScroll delay={500}>
+                  <div className="flex flex-col items-center text-center group">
+                    <div className="w-28 h-28 bg-white rounded-full border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-6 animate-pop-zoom shadow-blue-500/10" style={{ animationDelay: '400ms' }}>
+                      {/* Demo Icon 3 */}
+                      <img src="https://cdn-icons-png.flaticon.com/128/3135/3135715.png" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" alt="Publish" />
+                    </div>
+                    <h3 className="font-black text-slate-900 text-lg mb-2">3. Publish to page & earn</h3>
+                    <p className="text-slate-500 text-sm font-medium px-4">Generate direct links in one click. Post to your bio page or easily share them with your audience.</p>
+                  </div>
+                </RevealOnScroll>
+
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================== */}
         {/* 7. EVERYTHING TO GROW (Horizontal Compact) */}
         {/* ========================================== */}
-        <section id="dashboard" className="py-24 px-4 bg-[#f8fafc]">
+        <section id="dashboard" className="py-20 px-4 bg-[#f8fafc]">
            <div className="max-w-7xl mx-auto">
              <RevealOnScroll>
                <div className="text-center mb-12">
@@ -381,7 +464,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 8. INSTAGRAM BREAKOUT (Clean Image Space) */}
         {/* ========================================== */}
-        <section id="redirection" className="py-24 px-4 bg-white border-y border-slate-100">
+        <section id="redirection" className="py-20 px-4 bg-white border-y border-slate-100">
            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12">
               <div className="flex-1">
                  <RevealOnScroll>
@@ -404,7 +487,7 @@ function LandingContent() {
               <RevealOnScroll delay={200}>
                 <div className="flex-1 w-full h-[350px] sm:h-[450px] bg-slate-100 rounded-3xl border border-slate-200 flex items-center justify-center overflow-hidden shadow-xl">
                    {/* Clean Image Area for Breakout Illustration */}
-                   <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=1000" className="w-full h-full object-cover" alt="App Redirection" />
+                   <img src="https://sankmo.in/assets/images/sankmo-influencer-mobile.png" className="w-full h-full object-cover" alt="App Redirection" />
                 </div>
               </RevealOnScroll>
            </div>
@@ -413,7 +496,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 9. TESTIMONIALS (Restored horizontal scroll) */}
         {/* ========================================== */}
-        <section id="testimonials" className="py-24 bg-[#f8fafc] overflow-hidden">
+        <section id="testimonials" className="py-20 bg-[#f8fafc] overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row gap-12 items-center">
             
             <RevealOnScroll>
@@ -450,7 +533,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 10. FREE PLAN SECTION (Restored Blue Box) */}
         {/* ========================================== */}
-        <section id="pricing" className="py-24 px-4 bg-white">
+        <section id="pricing" className="py-20 px-4 bg-white">
           <RevealOnScroll>
             <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-600 to-cyan-400 rounded-[3rem] p-8 sm:p-14 text-center text-white shadow-2xl shadow-blue-500/30 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
@@ -474,7 +557,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 11. FAQ ACCORDION */}
         {/* ========================================== */}
-        <section id="faq" className="py-24 bg-[#f8fafc] px-4">
+        <section id="faq" className="py-20 bg-[#f8fafc] px-4">
            <div className="max-w-3xl mx-auto">
              <RevealOnScroll>
                <div className="text-center mb-10">
@@ -507,7 +590,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 12. PREMIUM BLACK FOOTER */}
         {/* ========================================== */}
-        <footer className="bg-[#0a0a0a] pt-20 pb-10 px-4 rounded-t-[3rem] text-white mt-auto">
+        <footer className="bg-[#0a0a0a] pt-18 pb-8 px-4 rounded-t-[3rem] text-white mt-auto">
           <div className="max-w-7xl mx-auto">
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
               
