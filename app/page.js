@@ -266,7 +266,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 4. ZERO EFFORT INCOME (Clean Image) */}
         {/* ========================================== */}
-        <section id="auto-post" className="py-20 bg-slate-900 px-4">
+        <section id="auto-post" className="py-17 bg-slate-900 px-4">
            <div className="max-w-4xl mx-auto text-center">
              <RevealOnScroll>
                <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">Zero-Effort Income.<br/>Meet Auto-Post</h2>
@@ -275,8 +275,9 @@ function LandingContent() {
                  Setup your niche and watch your earnings grow while you sleep.
                </p>
                {/* Clean Image Area */}
-               <div className="w-full aspect-video bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl relative mb-12">
-                  <img src="https://cdn.prod.website-files.com/666285153da630124c201ec0/6668ba66da158049b3d28ed5_1-03-p-500.webp" className="w-full h-full object-cover opacity-80" />
+               <div className="w-full flex justify-center relative mb-12 mt-8">
+                  {/* FIX: Removed box background/border. Added drop-shadow for 3D effect */}
+                  <img src="https://cdn.prod.website-files.com/666285153da630124c201ec0/6668ba66da158049b3d28ed5_1-03-p-500.webp" className="w-full max-w-3xl h-auto object-contain drop-shadow-2xl" alt="Auto Post Workflow" />
                </div>
              </RevealOnScroll>
 
@@ -303,7 +304,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 6. AFFILIATE PARTNERS (2-Way Marquee) */}
         {/* ========================================== */}
-        <section id="partners" className="py-16 overflow-hidden bg-white">
+        <section id="partners" className="py-14 overflow-hidden bg-white">
           <RevealOnScroll>
             <div className="max-w-7xl mx-auto px-4 text-center mb-10">
               <h2 className="text-3xl font-black text-slate-900 mb-4">We Don't Just Build Your Page.<br className="sm:hidden"/> We Monetize It.</h2>
@@ -362,7 +363,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* NEW: EARN WITH EASY STEPS (Fixed for Mobile) */}
         {/* ========================================== */}
-        <section className="py-20 px-2 sm:px-4 bg-slate-50 relative overflow-hidden">
+        <section className="py-15 px-2 sm:px-4 bg-slate-50 relative overflow-hidden">
           
           <style dangerouslySetInnerHTML={{__html: `
             @keyframes popZoomOut {
@@ -431,7 +432,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 7. EVERYTHING TO GROW (Horizontal Compact) */}
         {/* ========================================== */}
-        <section id="dashboard" className="py-20 px-4 bg-[#f8fafc]">
+        <section id="dashboard" className="py-15 px-4 bg-[#f8fafc]">
            <div className="max-w-7xl mx-auto">
              <RevealOnScroll>
                <div className="text-center mb-12">
@@ -464,7 +465,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 8. INSTAGRAM BREAKOUT (Clean Image Space) */}
         {/* ========================================== */}
-        <section id="redirection" className="py-20 px-4 bg-white border-y border-slate-100">
+        <section id="redirection" className="py-15 px-4 bg-white border-y border-slate-100">
            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12">
               <div className="flex-1">
                  <RevealOnScroll>
@@ -484,10 +485,14 @@ function LandingContent() {
                    ))}
                  </ul>
               </div>
-              <RevealOnScroll delay={200}>
-                <div className="flex-1 w-full h-[350px] sm:h-[450px] bg-slate-100 rounded-3xl border border-slate-200 flex items-center justify-center overflow-hidden shadow-xl">
-                   {/* Clean Image Area for Breakout Illustration */}
-                   <img src="https://sankmo.in/assets/images/sankmo-influencer-mobile.png" className="w-full h-full object-cover" alt="App Redirection" />
+              <RevealOnScroll delay={200} className="flex-1 w-full">
+                {/* FIX: Removed background box, shadow, and border. Made it perfectly fit a tall mobile PNG */}
+                <div className="w-full flex items-center justify-center mt-10 md:mt-0">
+                   <img 
+                     src="https://sankmo.in/assets/images/sankmo-influencer-mobile.png" 
+                     className="w-auto h-[400px] sm:h-[500px] lg:h-[550px] object-contain drop-shadow-2xl" 
+                     alt="App Redirection" 
+                   />
                 </div>
               </RevealOnScroll>
            </div>
@@ -496,7 +501,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 9. TESTIMONIALS (Restored horizontal scroll) */}
         {/* ========================================== */}
-        <section id="testimonials" className="py-20 bg-[#f8fafc] overflow-hidden">
+        <section id="testimonials" className="py-15 bg-[#f8fafc] overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row gap-12 items-center">
             
             <RevealOnScroll>
@@ -533,7 +538,7 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 10. FREE PLAN SECTION (Restored Blue Box) */}
         {/* ========================================== */}
-        <section id="pricing" className="py-20 px-4 bg-white">
+        <section id="pricing" className="py-15 px-4 bg-white">
           <RevealOnScroll>
             <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-600 to-cyan-400 rounded-[3rem] p-8 sm:p-14 text-center text-white shadow-2xl shadow-blue-500/30 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
@@ -544,11 +549,12 @@ function LandingContent() {
                 <h2 className="text-4xl sm:text-6xl font-black mb-6 leading-tight">Start Monetizing Today.</h2>
                 <p className="text-blue-50 font-medium text-sm sm:text-lg max-w-2xl mx-auto mb-10">We believe creators shouldn't pay to earn. Get all premium storefront features and affiliate tools completely free.</p>
                 <button 
-                  onClick={() => router.push('/register')}
-                  className="inline-block bg-white text-blue-600 px-10 py-4 rounded-2xl font-black text-sm sm:text-base shadow-xl hover:scale-105 transition-transform"
-                >
-                  Start For Free
-                </button>
+  suppressHydrationWarning
+  onClick={() => router.push('/register')}
+  className="inline-block bg-white text-blue-600 px-10 py-4 rounded-2xl font-black text-sm sm:text-base shadow-xl hover:scale-105 transition-transform"
+>
+  Start For Free
+</button>
               </div>
             </div>
           </RevealOnScroll>
