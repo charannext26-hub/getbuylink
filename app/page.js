@@ -52,19 +52,19 @@ function LandingContent() {
   const tabs = [
     { 
       id: "01", title: "Instagram Bio", 
-      bgImg: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=600",
-      fgImg: "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?q=80&w=600",
+      bgImg: "https://cdn.postimage.me/2026/05/31/Screenshot_2026-05-31-17-23-45-09.jpg",
+      fgImg: "https://cdn.postimage.me/2026/05/31/IMG_20260531_114639.jpg",
       text: "Convert your followers into buyers by placing your premium FavyLink in your bio."
     },
     { 
       id: "02", title: "Smart Store", 
-      bgImg: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=600", 
-      fgImg: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=600", 
+      bgImg: "https://cdn.postimage.me/2026/05/31/IMG_20260531_114639.jpg", 
+      fgImg: "https://cdn.postimage.me/2026/05/31/IMG_20260531_172224.jpg", 
       text: "A fully automated storefront that organizes your products professionally."
     },
     { 
       id: "03", title: "Auto-Deals", 
-      bgImg: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=600", 
+      bgImg: "https://cdn.postimage.me/2026/05/31/IMG_20260531_172224.jpg", 
       fgImg: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600", 
       text: "Our AI fetches the best deals and posts them directly to your link on autopilot."
     },
@@ -126,7 +126,7 @@ function LandingContent() {
           
           <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => scrollToSection("home")}>
              <div className="w-7 h-7 rounded-md bg-blue-600 flex items-center justify-center p-1 overflow-hidden">
-                <img src="/icon-192x192.png" alt="FL" className="w-full h-full object-contain" />
+                <img src="https://i.postimg.cc/tCRHySXw/icon-512-ony-icon.png" alt="FL" className="w-full h-full object-contain" />
              </div>
              <span className="font-extrabold text-lg tracking-tight text-slate-900">
                Favy<span className="text-blue-600">Link</span>
@@ -160,22 +160,37 @@ function LandingContent() {
         {/* ========================================== */}
         {/* 2. HERO & FLIP-TAB SLIDER */}
         {/* ========================================== */}
-        <section id="home" className="bg-[#f1f5f9] pt-8 pb-10 px-4 rounded-b-[2rem]">
-          <div className="max-w-5xl mx-auto text-center">
+        <section id="home" className="relative bg-blue-50 pt-8 pb-10 px-4 rounded-b-[2rem] overflow-hidden">
+          
+          {/* NEW: Background Image Layer */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            {/* Image with zoom (scale-105), blur, and slight transparency */}
+            <img 
+              src="https://cdn.postimage.me/2026/05/31/blnhrgx6c2efywxepcmo.webp" 
+              alt="Creator Background" 
+              className="w-full h-full object-cover opacity-40 blur-[3px] scale-105" 
+            />
+            {/* Gradient Overlay to protect text readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-blue-50/80 to-[#f1f5f9]/95"></div>
+          </div>
+
+          {/* Main Content (z-10 keeps it above the background) */}
+          <div className="max-w-5xl mx-auto text-center relative z-10">
             <RevealOnScroll>
               <h1 className="text-4xl sm:text-6xl font-black text-slate-900 leading-tight mb-5">
                 Make your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600">Favourite Link</span> Professional & Profitable.
               </h1>
-              <p className="text-slate-600 text-base sm:text-lg font-medium mb-10 max-w-2xl mx-auto">
-                Turn your standard bio link into a beautiful, zero-coding storefront. <span className="font-bold text-blue-600">Auto-Sync Deals</span> from 500+ brands and multiply your earnings while you sleep with smart, easy conversions.
+              <p className="text-slate-700 text-base sm:text-lg font-bold mb-10 max-w-2xl mx-auto">
+                Turn your standard bio link into a beautiful, zero-coding storefront. <span className="font-black text-blue-600">Auto-Sync Deals</span> from 500+ brands and multiply your earnings while you sleep with smart, easy conversions.
               </p>
             </RevealOnScroll>
 
             {/* TAB SLIDER */}
-            <div className="mt-8 max-w-4xl mx-auto">
-              <div className="flex justify-start sm:justify-center border-b border-slate-200 mb-6 overflow-x-auto hide-scrollbar px-2">
+            <div className="mt-4 max-w-4xl mx-auto">
+              {/* FIX: Reduced mb-6 to mb-2 to close the gap between tabs and images */}
+              <div className="flex justify-start sm:justify-center border-b border-slate-300 mb-2 overflow-x-auto hide-scrollbar px-2">
                 {tabs.map((tab, index) => (
-                  <button key={tab.id} onClick={() => setActiveTab(index)} className={`px-5 pb-3 text-xs font-bold transition-all whitespace-nowrap border-b-2 ${activeTab === index ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}>
+                  <button key={tab.id} onClick={() => setActiveTab(index)} className={`px-5 pb-3 text-xs font-bold transition-all whitespace-nowrap border-b-2 ${activeTab === index ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}`}>
                     {tab.id} {tab.title}
                   </button>
                 ))}
@@ -195,9 +210,9 @@ function LandingContent() {
                 ))}
               </div>
 
-              <div className="h-16 mt-6">
+              <div className="h-16 mt-2">
                  {tabs.map((tab, index) => (
-                    <p key={`t-${index}`} className={`text-slate-500 font-bold text-sm sm:text-base ${activeTab === index ? 'text-slide-animate block' : 'hidden'}`}>
+                    <p key={`t-${index}`} className={`text-slate-600 font-bold text-sm sm:text-base ${activeTab === index ? 'text-slide-animate block' : 'hidden'}`}>
                       {tab.text}
                     </p>
                  ))}
@@ -605,7 +620,7 @@ function LandingContent() {
                 <div className="flex items-center gap-2 mb-6">
                   {/* UPDATE: Image Icon added */}
                   <div className="w-8 h-8 rounded-md bg-blue-600 flex items-center justify-center p-1 overflow-hidden">
-                    <img src="/icon-192x192.png" className="w-full h-full object-contain" alt="FL" />
+                    <img src="https://i.postimg.cc/tCRHySXw/icon-512-ony-icon.png" className="w-full h-full object-contain" alt="FL" />
                   </div>
                   {/* UPDATE: Link text is now blue */}
                   <span className="font-extrabold text-2xl tracking-tight">
