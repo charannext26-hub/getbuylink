@@ -655,9 +655,9 @@ function LandingContent() {
               <div>
                 <h4 className="font-bold mb-6 text-white">Legal</h4>
                 <ul className="space-y-3 text-sm text-slate-400">
-                  <li><a href="#" className="hover:text-cyan-400 transition-colors">Privacy Policy</a></li>
-                  <li><a href="#" className="hover:text-cyan-400 transition-colors">Terms & Conditions</a></li>
-                  <li><a href="#" className="hover:text-cyan-400 transition-colors">Refund Policy</a></li>
+                  <li><a href="/privacy-policy" className="hover:text-cyan-400 transition-colors">Privacy Policy</a></li>
+                  <li><a href="/terms" className="hover:text-cyan-400 transition-colors">Terms & Conditions</a></li>
+                  <li><a href="/disclosure" className="hover:text-cyan-400 transition-colors">Disclosure</a></li>
                 </ul>
               </div>
 

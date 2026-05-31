@@ -210,7 +210,7 @@ export default function CampaignRatesPage() {
 {activeDrawerTab === "rates" && (
   <div>
     <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">
-      Category-wise Commission
+      Commission Details
     </h3>
     
     {selectedCampaign.payout_categories && selectedCampaign.payout_categories.length > 0 && (
