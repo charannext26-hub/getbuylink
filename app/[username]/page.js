@@ -851,7 +851,7 @@ function LiveTimer({ targetDate }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <span 
-                    className="text-[10px] font-black text-red-600 tracking-widest"
+                    className="text-[8px] font-black text-red-600 tracking-widest"
                     style={{ 
                         // 👇 MAGIC STROKE: White outline + Black shadow. Background koi bhi ho, ye hamesha clear dikhega!
                         textShadow: "1px 1px 0px rgba(255,255,255,0.9), -1px -1px 0px rgba(255,255,255,0.9), 1px -1px 0px rgba(255,255,255,0.9), -1px 1px 0px rgba(255,255,255,0.9), 0px 3px 4px rgba(0,0,0,0.5)" 
