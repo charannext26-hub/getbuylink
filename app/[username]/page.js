@@ -808,31 +808,57 @@ export default function CreatorBioPage({ params }) {
 // ----------------- UNIVERSAL PRODUCT CARD -----------------
 
 function LiveTimer({ targetDate }) {
-    const [timeLeft, setTimeLeft] = useState("");
+    const [timeLeft, setTimeLeft] = useState(null);
 
     useEffect(() => {
         if (!targetDate) return;
+        
         const calculateTime = () => {
             const diff = new Date(targetDate) - new Date();
-            if (diff <= 0) return "Ended";
+            // NAYA LOGIC: Agar time khatam ho gaya, toh sidha null return karo taaki component gayab ho jaye
+            if (diff <= 0) return null; 
+            
             const d = Math.floor(diff / (1000 * 60 * 60 * 24));
             const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
             const m = Math.floor((diff / 1000 / 60) % 60);
+            
             if (d > 0) return `Ends in ${d}d ${h}h`;
             return `Ends in ${h}h ${m}m`;
         };
-        setTimeLeft(calculateTime());
-        const timer = setInterval(() => setTimeLeft(calculateTime()), 60000); 
+
+        const initialTime = calculateTime();
+        setTimeLeft(initialTime);
+
+        // Agar pehle se hi time khatam hai, toh aage timer chalane ki zaroorat nahi
+        if (initialTime === null) return;
+
+        const timer = setInterval(() => {
+            const newTime = calculateTime();
+            setTimeLeft(newTime);
+            // Agar chalte-chalte time khatam ho jaye, toh interval ko rok do
+            if (newTime === null) clearInterval(timer);
+        }, 60000); 
+
         return () => clearInterval(timer);
     }, [targetDate]);
 
-    if (!timeLeft || timeLeft === "Ended") return null;
+    // Agar timeLeft null hai (yani time khatam), toh component kuch bhi render nahi karega (gayab ho jayega)
+    if (!timeLeft) return null;
 
     return (
-        <span className="text-[9px] font-extrabold text-orange-700 flex items-center gap-1 bg-orange-100 px-2 py-1.5 rounded border border-orange-300 w-fit mb-2 shadow-sm">
-            <svg className="w-3 h-3 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            {timeLeft}
-        </span>
+        <div className="w-full flex items-center justify-center gap-1 mb-1.5 animate-pulse opacity-90">
+            <svg className="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span 
+                className="text-[10px] font-medium text-red-500 tracking-wide"
+                style={{ 
+                    textShadow: "0.5px 0.5px 0 rgba(255,255,255,0.7), -0.5px -0.5px 0 rgba(255,255,255,0.7), 0.5px -0.5px 0 rgba(255,255,255,0.7), -0.5px 0.5px 0 rgba(255,255,255,0.7)" 
+                }}
+            >
+                {timeLeft}
+            </span>
+        </div>
     );
 }
 
@@ -841,7 +867,6 @@ function GridProductCard({ deal, onClick, themeCardClass, onToast, showTimeAgo }
         <div className={`border shadow-sm rounded-2xl p-2 flex flex-col hover:scale-[1.02] transition-transform cursor-pointer group ${themeCardClass}`} onClick={onClick}>
             
             <div className="w-full aspect-square bg-white rounded-xl mb-2 relative p-1 overflow-hidden shadow-inner border border-black/5 dark:border-white/50">
-                {/* 👇 NAYA: loading="lazy" aur decoding="async" add kiya makkhan scroll ke liye */}
                 <img src={deal.image} loading="lazy" decoding="async" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" alt="Product" />
                 
                 {deal.discountPercent && <span className="absolute top-0 left-0 bg-rose-500 text-white text-[10px] font-black px-2 py-1 rounded-br-xl z-10 shadow-md">{deal.discountPercent}</span>}
@@ -860,6 +885,9 @@ function GridProductCard({ deal, onClick, themeCardClass, onToast, showTimeAgo }
             
             <p className="text-[11px] font-extrabold line-clamp-2 leading-tight flex-1 mb-2 opacity-90 px-1 drop-shadow-sm">{deal.title}</p>
             
+            {/* 👇 NAYA: Yahan 'targetDate' ki jagah DB ka exact naam 'saleEndTime' pass kiya hai */}
+            {deal.saleEndTime && <LiveTimer targetDate={deal.saleEndTime} />}
+
             {deal.couponCode && (
                 <div className="flex items-center justify-between bg-emerald-50/80 border border-emerald-500/40 border-dashed rounded px-1.5 py-1 mb-2 mx-1 shadow-sm">
                     <span className="text-[10px] font-black text-emerald-700 tracking-wider truncate">{deal.couponCode}</span>
@@ -868,6 +896,8 @@ function GridProductCard({ deal, onClick, themeCardClass, onToast, showTimeAgo }
                             e.stopPropagation(); 
                             navigator.clipboard.writeText(deal.couponCode); 
                             if(onToast) onToast("Coupon copied!");
+                            
+                            if(onClick) onClick(); 
                         }} 
                         className="text-emerald-600 hover:text-emerald-800 text-[10px] font-bold flex items-center gap-0.5 active:scale-95 transition-all ml-2 flex-shrink-0"
                     >
