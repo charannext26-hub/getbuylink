@@ -55,7 +55,7 @@ export async function POST(req) {
 
     // Verification Link generate karna
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-    const verifyUrl = `${baseUrl}/api/auth/verify?token=${verifyToken}&email=${email}`;
+    const verifyUrl = `${baseUrl}/api/verify?token=${verifyToken}&email=${email}`;
 
     // Email ka Design
     const mailOptions = {
