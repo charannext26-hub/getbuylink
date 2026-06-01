@@ -14,7 +14,7 @@ export async function GET(req) {
     const token = searchParams.get("token");
     const email = searchParams.get("email");
 
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXTAUTH_URL || "http://favylink.com";
 
     if (!token || !email) {
       return NextResponse.redirect(`${baseUrl}/login?error=InvalidLink`);
@@ -45,7 +45,7 @@ export async function GET(req) {
 
   } catch (error) {
     console.error("Verification Error:", error);
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXTAUTH_URL || "http://favylink.com";
     return NextResponse.redirect(`${baseUrl}/login?error=ServerError`);
   }
 }
