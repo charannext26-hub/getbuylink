@@ -807,6 +807,7 @@ export default function CreatorBioPage({ params }) {
 
 // ----------------- UNIVERSAL PRODUCT CARD -----------------
 
+// ----------------- LIVE TIMER COMPONENT -----------------
 function LiveTimer({ targetDate }) {
     const [timeLeft, setTimeLeft] = useState(null);
 
@@ -815,49 +816,50 @@ function LiveTimer({ targetDate }) {
         
         const calculateTime = () => {
             const diff = new Date(targetDate) - new Date();
-            // NAYA LOGIC: Agar time khatam ho gaya, toh sidha null return karo taaki component gayab ho jaye
             if (diff <= 0) return null; 
             
             const d = Math.floor(diff / (1000 * 60 * 60 * 24));
             const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
             const m = Math.floor((diff / 1000 / 60) % 60);
             
-            if (d > 0) return `Ends in ${d}d ${h}h`;
-            return `Ends in ${h}h ${m}m`;
+            // 👇 NAYA LOGIC: 'Offer Ends in' text aur Minutes (m) add kiya
+            if (d > 0) return `Offer Ends in ${d}d ${h}h ${m}m`;
+            return `Offer Ends in ${h}h ${m}m`;
         };
 
         const initialTime = calculateTime();
         setTimeLeft(initialTime);
 
-        // Agar pehle se hi time khatam hai, toh aage timer chalane ki zaroorat nahi
         if (initialTime === null) return;
 
         const timer = setInterval(() => {
             const newTime = calculateTime();
             setTimeLeft(newTime);
-            // Agar chalte-chalte time khatam ho jaye, toh interval ko rok do
             if (newTime === null) clearInterval(timer);
         }, 60000); 
 
         return () => clearInterval(timer);
     }, [targetDate]);
 
-    // Agar timeLeft null hai (yani time khatam), toh component kuch bhi render nahi karega (gayab ho jayega)
     if (!timeLeft) return null;
 
     return (
-        <div className="w-full flex items-center justify-center gap-1 mb-1.5 animate-pulse opacity-90">
-            <svg className="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span 
-                className="text-[10px] font-medium text-red-500 tracking-wide"
-                style={{ 
-                    textShadow: "0.5px 0.5px 0 rgba(255,255,255,0.7), -0.5px -0.5px 0 rgba(255,255,255,0.7), 0.5px -0.5px 0 rgba(255,255,255,0.7), -0.5px 0.5px 0 rgba(255,255,255,0.7)" 
-                }}
-            >
-                {timeLeft}
-            </span>
+        // 👇 NAYA DESIGN: Full width match karne ke liye px-1 aur justify-center
+        <div className="w-full flex items-center justify-center px-1 mb-1.5 animate-pulse">
+            <div className="flex items-center justify-center gap-1 w-full">
+                <svg className="w-3.5 h-3.5 text-red-600 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span 
+                    className="text-[10px] font-black text-red-600 tracking-widest"
+                    style={{ 
+                        // 👇 MAGIC STROKE: White outline + Black shadow. Background koi bhi ho, ye hamesha clear dikhega!
+                        textShadow: "1px 1px 0px rgba(255,255,255,0.9), -1px -1px 0px rgba(255,255,255,0.9), 1px -1px 0px rgba(255,255,255,0.9), -1px 1px 0px rgba(255,255,255,0.9), 0px 3px 4px rgba(0,0,0,0.5)" 
+                    }}
+                >
+                    {timeLeft}
+                </span>
+            </div>
         </div>
     );
 }
