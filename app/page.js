@@ -293,7 +293,7 @@ function LandingContent() {
                {/* Clean Image Area - Compact Size */}
                <div className="w-full flex justify-center relative my-4 sm:my-8">
                   {/* FIX: Removed extra margins. Added max-h for compact size */}
-                  <img src="https://cdn.corenexis.com/files/c/7568391720.png" className="w-full max-w-2xl h-auto max-h-[250px] sm:max-h-[350px] object-contain drop-shadow-2xl" alt="Auto Post Workflow" />
+                  <img src="https://cdn.corenexis.com/files/c/2214164720.png" className="w-full max-w-2xl h-auto max-h-[250px] sm:max-h-[350px] object-contain drop-shadow-2xl" alt="Auto Post Workflow" />
                </div>
              </RevealOnScroll>
 
@@ -411,7 +411,7 @@ function LandingContent() {
                   <div className="flex flex-col items-center text-center group">
                     {/* FIX: overflow-hidden & object-cover removes gap */}
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative">
-                      <img src="https://i.postimg.cc/nczCmf6k/20260602-232614.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Explore Deals" />
+                      <img src="https://cdn1.iconfinder.com/data/icons/web-design-and-development-50/64/110-512.png" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Explore Deals" />
                     </div>
                     <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">1. Explore Deals</h3>
                     <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Find deals from top retailers like Ajio, Flipkart, Myntra.</p>
