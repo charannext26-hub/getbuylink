@@ -234,12 +234,12 @@ function LandingContent() {
 
           <div className="grid md:grid-cols-2 gap-4">
             {[
-              { title: "Rich Product Cards", desc: "Sale timers & direct buttons.", img: "https://cdn-icons-png.flaticon.com/128/1162/1162456.png" },
-              { title: "Auto-Sliding Banners", desc: "Top deals rotate automatically.", img: "https://cdn-icons-png.flaticon.com/128/1041/1041888.png" },
-              { title: "Theater Mode Reels", desc: "Embed Instagram/YouTube videos.", img: "https://cdn-icons-png.flaticon.com/128/3159/3159066.png" },
-              { title: "Category Collections", desc: "Organize products by niche.", img: "https://cdn-icons-png.flaticon.com/128/2906/2906206.png" },
+              { title: "Rich Product Cards", desc: "Sale timers & direct buttons.", img: "https://cdn.corenexis.com/files/c/6443468720.png" },
+              { title: "Auto-Sliding Banners", desc: "Top deals rotate automatically.", img: "https://cdn.corenexis.com/files/c/4344623720.png" },
+              { title: "Theater Mode Reels", desc: "Embed Instagram/YouTube videos.", img: "https://cdn.corenexis.com/files/c/3359638720.png" },
+              { title: "Category Collections", desc: "Organize products by niche.", img: "https://cdn.corenexis.com/files/c/7898679720.png" },
         
-              { title: "Premium Themes", desc: "Change looks with one click.", img: "https://cdn-icons-png.flaticon.com/128/679/679904.png" }
+              { title: "Premium Themes", desc: "Change looks with one click.", img: "https://cdn.corenexis.com/files/c/5256529720.png" }
             ].map((f, i) => (
               <RevealOnScroll key={i} delay={i * 50}>
                 <div className="bg-[#f8fafc] border border-slate-100 p-4 rounded-2xl flex items-center gap-4 hover:shadow-md transition-all">
@@ -293,7 +293,7 @@ function LandingContent() {
                {/* Clean Image Area - Compact Size */}
                <div className="w-full flex justify-center relative my-4 sm:my-8">
                   {/* FIX: Removed extra margins. Added max-h for compact size */}
-                  <img src="https://cdn.prod.website-files.com/666285153da630124c201ec0/6668ba66da158049b3d28ed5_1-03-p-500.webp" className="w-full max-w-2xl h-auto max-h-[250px] sm:max-h-[350px] object-contain drop-shadow-2xl" alt="Auto Post Workflow" />
+                  <img src="https://cdn.corenexis.com/files/c/7568391720.png" className="w-full max-w-2xl h-auto max-h-[250px] sm:max-h-[350px] object-contain drop-shadow-2xl" alt="Auto Post Workflow" />
                </div>
              </RevealOnScroll>
 
@@ -411,7 +411,7 @@ function LandingContent() {
                   <div className="flex flex-col items-center text-center group">
                     {/* FIX: overflow-hidden & object-cover removes gap */}
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative">
-                      <img src="https://sankmo.in/assets/images/sankmo-influencer-mobile.png" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Explore Deals" />
+                      <img src="https://i.postimg.cc/nczCmf6k/20260602-232614.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Explore Deals" />
                     </div>
                     <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">1. Explore Deals</h3>
                     <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Find deals from top retailers like Ajio, Flipkart, Myntra.</p>
@@ -422,7 +422,7 @@ function LandingContent() {
                 <RevealOnScroll delay={300}>
                   <div className="flex flex-col items-center text-center group">
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative" style={{ animationDelay: '200ms' }}>
-                      <img src="YOUR_REAL_IMAGE_LINK_HERE" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Fetch Details" />
+                      <img src="https://i.postimg.cc/FKtRwd7z/20260602-233456.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Fetch Details" />
                     </div>
                     <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">2. Fetch & Make Link</h3>
                     <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Convert normal links into earning links instantly.</p>
@@ -433,7 +433,7 @@ function LandingContent() {
                 <RevealOnScroll delay={500}>
                   <div className="flex flex-col items-center text-center group">
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative" style={{ animationDelay: '400ms' }}>
-                      <img src="YOUR_REAL_IMAGE_LINK_HERE" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Publish" />
+                      <img src="https://i.postimg.cc/vHcZBLnZ/20260602-233626.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Publish" />
                     </div>
                     <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">3. Publish & Earn</h3>
                     <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Post to your bio page or share with your audience.</p>
