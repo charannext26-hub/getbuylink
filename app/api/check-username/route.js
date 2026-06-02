@@ -11,7 +11,7 @@ export async function GET(req) {
       return NextResponse.json({ available: false });
     }
 
-    const blacklist = ["admin", "api", "login", "dashboard", "creators", "settings", "about", "privacy"];
+    const blacklist = ["admin", "api", "login", "signup", "campaign", "campaigns", "terms", "term", "disclosure", "username", "support", "deal", "offer", "cron", "dashboard", "creators", "creator", "influencer", "settings", "about", "privacypolicy", "privacy", "home", "search", "explore"];
     if (blacklist.includes(username.toLowerCase())) {
       return NextResponse.json({ available: false });
     }
