@@ -293,7 +293,7 @@ function LandingContent() {
                {/* Clean Image Area - Compact Size */}
                <div className="w-full flex justify-center relative my-4 sm:my-8">
                   {/* FIX: Removed extra margins. Added max-h for compact size */}
-                  <img src="https://cdn.corenexis.com/files/c/2214164720.png" className="w-full max-w-2xl h-auto max-h-[250px] sm:max-h-[350px] object-contain drop-shadow-2xl" alt="Auto Post Workflow" />
+                  <img src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNmExZmYwZTRjMzg4ODE5MThiMzVmMDJjMGZkMDkxMWM6ZmlsZV8wMDAwMDAwMDVhNjQ3MjBiOWMwM2I0OTdjMGM3ODRiOCIsInRzIjoiMjA2MDciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6ImIzYTAyM2IzYTRkYjdmNGEzNzljM2I4Mjg2NjFlYmI5MjNhODA5Yjg0MzUyMDNjZWJhMjcwZDcwYWQxZjZjNDQiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" className="w-full max-w-2xl h-auto max-h-[250px] sm:max-h-[350px] object-contain drop-shadow-2xl" alt="Auto Post Workflow" />
                </div>
              </RevealOnScroll>
 
