@@ -287,14 +287,14 @@ function LandingContent() {
              <RevealOnScroll>
                <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">Zero-Effort Income.<br/>Meet Auto-Post</h2>
                <p className="text-slate-400 font-medium text-sm sm:text-base mb-10">
-                 Our system fetches the hottest affiliate deals and posts them directly to your storefront. 
+                 Our system fetches the hottest deals and posts them directly to your storefront. 
                  Setup your niche and watch your earnings grow while you sleep.
                </p>
                
                {/* Premium Glowing Blob Image Area */}
                <div className="w-full flex justify-center relative my-8 sm:my-12 px-2">
                  <img 
-                   src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNmEyMDE2MTczYWY4ODE5MTk0Y2FjNWZiZWQ3YzM1MGE6ZmlsZV8wMDAwMDAwMGNlMzQ3MjA4YmRhZWRiMjc2NmM4NGNiMCIsInRzIjoiMjA2MDciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjBjYzUxMGNjNjRkMWNkYTljYTgxODAwZmE3ODUxN2YxYmI5N2Y1M2VkNTZkNzZmZmZlYjc0ZTNjNmM2MDRjYmYiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" 
+                   src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNmEyMDMyOGFkZGI4ODE5MTgzZDUwZjQ0Mzk4YmNiZDU6ZmlsZV8wMDAwMDAwMGRhYTg3MWZhYjhmODljZmRlYWI5ZDY5MiIsInRzIjoiMjA2MDciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjdjNDk2OWE0YmY2OTU1MWU1NGI4MDYwYjI5N2NiZjJlZTUwOTgwYTk1NTllMWY2NzAyODRmODA0NTdmM2Q5YWYiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" 
                    className="w-full max-w-3xl h-auto object-cover animate-ai-glow transition-all duration-700 hover:scale-[1.02] border border-slate-700/50" 
                    alt="Auto Post Workflow"
                  />
