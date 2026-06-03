@@ -280,7 +280,7 @@ function LandingContent() {
         </section>
 
         {/* ========================================== */}
-        {/* 4. ZERO EFFORT INCOME (Clean Image) */}
+        {/* 4. ZERO EFFORT INCOME (Premium Glowing Blob) */}
         {/* ========================================== */}
         <section id="auto-post" className="py-17 bg-slate-900 px-4">
            <div className="max-w-4xl mx-auto text-center">
@@ -290,22 +290,14 @@ function LandingContent() {
                  Our system fetches the hottest affiliate deals and posts them directly to your storefront. 
                  Setup your niche and watch your earnings grow while you sleep.
                </p>
-               {/* Clean Image Area - Compact Size */}
-               <div className="w-full flex justify-center relative my-4 sm:my-8">
-                  {/* FIX: Removed extra margins. Added max-h for compact size */}
-                  
-                  {/* 👇 NAYA MAGIC FADE WALA IMG TAG 👇 */}
-                  <img 
-                    src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNmExZmYwZTRjMzg4ODE5MThiMzVmMDJjMGZkMDkxMWM6ZmlsZV8wMDAwMDAwMDVhNjQ3MjBiOWMwM2I0OTdjMGM3ODRiOCIsInRzIjoiMjA2MDciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6ImIzYTAyM2IzYTRkYjdmNGEzNzljM2I4Mjg2NjFlYmI5MjNhODA5Yjg0MzUyMDNjZWJhMjcwZDcwYWQxZjZjNDQiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" 
-                    className="w-full max-w-2xl h-auto max-h-[250px] sm:max-h-[350px] object-contain drop-shadow-2xl" 
-                    alt="Auto Post Workflow"
-                    style={{ 
-                      WebkitMaskImage: 'radial-gradient(ellipse at center, black 50%, transparent 80%)', 
-                      maskImage: 'radial-gradient(ellipse at center, black 50%, transparent 80%)' 
-                    }} 
-                  />
-                  {/* 👆 YAHAN TAK 👆 */}
-
+               
+               {/* Premium Glowing Blob Image Area */}
+               <div className="w-full flex justify-center relative my-8 sm:my-12 px-2">
+                 <img 
+                   src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNmEyMDE2MTczYWY4ODE5MTk0Y2FjNWZiZWQ3YzM1MGE6ZmlsZV8wMDAwMDAwMGNlMzQ3MjA4YmRhZWRiMjc2NmM4NGNiMCIsInRzIjoiMjA2MDciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjBjYzUxMGNjNjRkMWNkYTljYTgxODAwZmE3ODUxN2YxYmI5N2Y1M2VkNTZkNzZmZmZlYjc0ZTNjNmM2MDRjYmYiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" 
+                   className="w-full max-w-3xl h-auto object-cover animate-ai-glow transition-all duration-700 hover:scale-[1.02] border border-slate-700/50" 
+                   alt="Auto Post Workflow"
+                 />
                </div>
              </RevealOnScroll>
 

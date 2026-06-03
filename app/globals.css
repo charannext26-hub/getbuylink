@@ -24,3 +24,29 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Custom AI Blob Glow Animation */
+@keyframes aiRunningGlow {
+  0% { 
+    box-shadow: -20px -20px 40px -10px rgba(59, 130, 246, 0.7), 20px 20px 40px -10px rgba(16, 185, 129, 0.2); 
+  }
+  25% { 
+    box-shadow: 20px -20px 40px -10px rgba(59, 130, 246, 0.8), -20px 20px 40px -10px rgba(16, 185, 129, 0.4); 
+  }
+  50% { 
+    box-shadow: 20px 20px 40px -10px rgba(59, 130, 246, 0.3), -20px -20px 40px -10px rgba(16, 185, 129, 0.8); 
+  }
+  75% { 
+    box-shadow: -20px 20px 40px -10px rgba(59, 130, 246, 0.5), 20px -20px 40px -10px rgba(16, 185, 129, 0.6); 
+  }
+  100% { 
+    box-shadow: -20px -20px 40px -10px rgba(59, 130, 246, 0.7), 20px 20px 40px -10px rgba(16, 185, 129, 0.2); 
+  }
+}
+
+.animate-ai-glow {
+  /* ease-in-out timing function creates that "fast then slow" floating feel */
+  animation: aiRunningGlow 5s ease-in-out infinite;
+  /* Premium blob shape */
+  border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+}
