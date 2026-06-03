@@ -294,12 +294,15 @@ function LandingContent() {
                <div className="w-full flex justify-center relative my-4 sm:my-8">
                   {/* FIX: Removed extra margins. Added max-h for compact size */}
                   
-                  {/* 👇 NAYA WAVY BLOB WALA IMG TAG 👇 */}
+                  {/* 👇 NAYA MAGIC FADE WALA IMG TAG 👇 */}
                   <img 
                     src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNmExZmYwZTRjMzg4ODE5MThiMzVmMDJjMGZkMDkxMWM6ZmlsZV8wMDAwMDAwMDVhNjQ3MjBiOWMwM2I0OTdjMGM3ODRiOCIsInRzIjoiMjA2MDciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6ImIzYTAyM2IzYTRkYjdmNGEzNzljM2I4Mjg2NjFlYmI5MjNhODA5Yjg0MzUyMDNjZWJhMjcwZDcwYWQxZjZjNDQiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" 
-                    className="w-full max-w-2xl h-auto max-h-[250px] sm:max-h-[350px] object-cover shadow-2xl shadow-blue-500/20 border-2 border-slate-700/50" 
+                    className="w-full max-w-2xl h-auto max-h-[250px] sm:max-h-[350px] object-contain drop-shadow-2xl" 
                     alt="Auto Post Workflow"
-                    style={{ borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%' }} 
+                    style={{ 
+                      WebkitMaskImage: 'radial-gradient(ellipse at center, black 50%, transparent 80%)', 
+                      maskImage: 'radial-gradient(ellipse at center, black 50%, transparent 80%)' 
+                    }} 
                   />
                   {/* 👆 YAHAN TAK 👆 */}
 
