@@ -322,7 +322,7 @@ function LandingContent() {
 
 
         {/* ========================================== */}
-        {/* 6. AFFILIATE PARTNERS (2-Way Marquee) */}
+        {/* 6. AFFILIATE PARTNERS (Seamless 2-Way Marquee) */}
         {/* ========================================== */}
         <section id="partners" className="py-14 overflow-hidden bg-white">
           <RevealOnScroll>
@@ -332,19 +332,30 @@ function LandingContent() {
             </div>
           </RevealOnScroll>
 
-          {/* Marquee CSS Animation (Add this if not already present) */}
+          {/* Seamless Marquee CSS Animation */}
           <style dangerouslySetInnerHTML={{__html: `
+            /* Fix: 100% se transform hone par seamlessly loop karega jab content double hoga */
             @keyframes marqueeLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
             @keyframes marqueeRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
-            .animate-marquee-left { display: flex; width: 200%; animation: marqueeLeft 25s linear infinite; }
-            .animate-marquee-right { display: flex; width: 200%; animation: marqueeRight 25s linear infinite; }
+            
+            /* Width fit-content aur flex use kiya hai taaki smooth chale */
+            .animate-marquee-left { display: flex; width: max-content; animation: marqueeLeft 50s linear infinite; }
+            .animate-marquee-right { display: flex; width: max-content; animation: marqueeRight 50s linear infinite; }
             .hide-scrollbar::-webkit-scrollbar { display: none; }
           `}} />
 
           {/* Row 1: Left to Right */}
-          <div className="relative w-full overflow-hidden mb-6">
-            <div className="animate-marquee-left flex items-center gap-4 sm:gap-6 px-3">
+          <div className="relative w-full overflow-hidden mb-6 flex">
+            <div className="animate-marquee-left gap-4 sm:gap-6 px-3">
+              {/* FIX: Array ko [...array, ...array] karke double kiya taaki seamless flow bane */}
               {[
+                "https://cdn.corenexis.com/files/c/7196464720.png",
+                "https://www.dotandkey.com/cdn/shop/files/Vector_5.svg?v=1720438003&width=450",
+                "https://www.freepnglogos.com/uploads/logo-myntra-png/myntra-com-brand-logo-transparent-png-6.png",
+                "https://pluspng.com/img-png/logo-flipkart-png-flipkart-logo-5000.png",
+                "https://www.milton.in/cdn/shop/files/Milton_Logo.png?v=1699503904",
+                "https://startuparticle.com/wp-content/uploads/2024/11/Wow-Skin-Science-logo.png",
+                // Duplicating the exact same list below for seamless looping
                 "https://cdn.corenexis.com/files/c/7196464720.png",
                 "https://www.dotandkey.com/cdn/shop/files/Vector_5.svg?v=1720438003&width=450",
                 "https://www.freepnglogos.com/uploads/logo-myntra-png/myntra-com-brand-logo-transparent-png-6.png",
@@ -352,8 +363,7 @@ function LandingContent() {
                 "https://www.milton.in/cdn/shop/files/Milton_Logo.png?v=1699503904",
                 "https://startuparticle.com/wp-content/uploads/2024/11/Wow-Skin-Science-logo.png"
               ].map((imgLink, index) => (
-                <div key={`L-${index}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-white border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-2 sm:p-4">
-                  {/* FIX: Removed grayscale & opacity. Added mix-blend-multiply for clean look */}
+                <div key={`L-${index}`} className="w-21 h-21 sm:w-32 sm:h-32 flex-shrink-0 bg-white border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-2 sm:p-4">
                   <img src={imgLink} alt="Brand Partner" className="w-full h-full object-contain mix-blend-multiply" />
                 </div>
               ))}
@@ -361,18 +371,25 @@ function LandingContent() {
           </div>
 
           {/* Row 2: Right to Left */}
-          <div className="relative w-full overflow-hidden">
-            <div className="animate-marquee-right flex items-center gap-4 sm:gap-6 px-3">
+          <div className="relative w-full overflow-hidden flex">
+            <div className="animate-marquee-right gap-4 sm:gap-6 px-3">
+              {/* FIX: Array ko double kiya seamless loop ke liye */}
               {[
-                "https://logores.yrucd.com/wp-content/uploads/2022/07/Ajio_logo_PNG3.png!a",
+                "https://logores.yrucd.com/wp-content/uploads/2022/07/Ajio_logo_PNG3.png",
+                "https://latestlogo.com/wp-content/uploads/2024/01/tata-cliq-logo.png",
+                "https://www.pngmart.com/files/8/Amazon-PNG-Transparent-Image.png",
+                "https://ecommerceserviceprovider.in/wp-content/uploads/2023/04/Shopsy_logo-e1681199170611.png",
+                "https://agarolifestyle.com/cdn/shop/files/240-x-84-Agaro-logo_320x@3x.png?v=1683098753",
+                "https://vectorseek.com/wp-content/uploads/2023/09/Firstcry-Logo-Vector.svg-.png",
+                // Duplicating the exact same list below for seamless looping
+                "https://logores.yrucd.com/wp-content/uploads/2022/07/Ajio_logo_PNG3.png",
                 "https://latestlogo.com/wp-content/uploads/2024/01/tata-cliq-logo.png",
                 "https://www.pngmart.com/files/8/Amazon-PNG-Transparent-Image.png",
                 "https://ecommerceserviceprovider.in/wp-content/uploads/2023/04/Shopsy_logo-e1681199170611.png",
                 "https://agarolifestyle.com/cdn/shop/files/240-x-84-Agaro-logo_320x@3x.png?v=1683098753",
                 "https://vectorseek.com/wp-content/uploads/2023/09/Firstcry-Logo-Vector.svg-.png"
               ].map((imgLink, index) => (
-                <div key={`R-${index}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-white border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-2 sm:p-4">
-                  {/* FIX: Removed grayscale & opacity */}
+                <div key={`R-${index}`} className="w-21 h-21 sm:w-32 sm:h-32 flex-shrink-0 bg-white border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-2 sm:p-4">
                   <img src={imgLink} alt="Brand Partner" className="w-full h-full object-contain mix-blend-multiply" />
                 </div>
               ))}
