@@ -415,7 +415,7 @@ function LandingContent() {
                   <div className="flex flex-col items-center text-center group">
                     {/* FIX: overflow-hidden & object-cover removes gap */}
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative">
-                      <img src="https://cdn1.iconfinder.com/data/icons/web-design-and-development-50/64/110-512.png" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Explore Deals" />
+                      <img src="https://cdn.corenexis.com/files/c/8775713720.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Explore Deals" />
                     </div>
                     <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">1. Explore Deals</h3>
                     <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Find deals from top retailers like Ajio, Flipkart, Myntra.</p>
@@ -426,7 +426,7 @@ function LandingContent() {
                 <RevealOnScroll delay={300}>
                   <div className="flex flex-col items-center text-center group">
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative" style={{ animationDelay: '200ms' }}>
-                      <img src="https://i.postimg.cc/FKtRwd7z/20260602-233456.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Fetch Details" />
+                      <img src="https://cdn.corenexis.com/files/c/8676211720.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Fetch Details" />
                     </div>
                     <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">2. Fetch & Make Link</h3>
                     <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Convert normal links into earning links instantly.</p>
@@ -437,7 +437,7 @@ function LandingContent() {
                 <RevealOnScroll delay={500}>
                   <div className="flex flex-col items-center text-center group">
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative" style={{ animationDelay: '400ms' }}>
-                      <img src="https://i.postimg.cc/vHcZBLnZ/20260602-233626.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Publish" />
+                      <img src="https://cdn.corenexis.com/files/c/2332815720.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Publish" />
                     </div>
                     <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">3. Publish & Earn</h3>
                     <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Post to your bio page or share with your audience.</p>
