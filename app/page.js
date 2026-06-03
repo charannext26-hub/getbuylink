@@ -345,12 +345,12 @@ function LandingContent() {
           <div className="relative w-full overflow-hidden mb-6">
             <div className="animate-marquee-left flex items-center gap-4 sm:gap-6 px-3">
               {[
-                "https://sankmo.in/assets/images/sankmo-influencer-mobile.png",
-                "https://logo.clearbit.com/flipkart.com",
-                "https://logo.clearbit.com/myntra.com",
-                "https://logo.clearbit.com/ajio.com",
-                "https://logo.clearbit.com/shopsy.in",
-                "https://logo.clearbit.com/nike.com"
+                "https://cdn.corenexis.com/files/c/7196464720.png",
+                "https://www.dotandkey.com/cdn/shop/files/Vector_5.svg?v=1720438003&width=450",
+                "https://www.freepnglogos.com/uploads/logo-myntra-png/myntra-com-brand-logo-transparent-png-6.png",
+                "https://pluspng.com/img-png/logo-flipkart-png-flipkart-logo-5000.png",
+                "https://www.milton.in/cdn/shop/files/Milton_Logo.png?v=1699503904",
+                "https://startuparticle.com/wp-content/uploads/2024/11/Wow-Skin-Science-logo.png"
               ].map((imgLink, index) => (
                 <div key={`L-${index}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-white border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-2 sm:p-4">
                   {/* FIX: Removed grayscale & opacity. Added mix-blend-multiply for clean look */}
@@ -364,12 +364,12 @@ function LandingContent() {
           <div className="relative w-full overflow-hidden">
             <div className="animate-marquee-right flex items-center gap-4 sm:gap-6 px-3">
               {[
-                "https://cdn.prod.website-files.com/666285153da630124c201ec0/66bc1719faf12d395160239f_Asset%20489-p-1080.png",
-                "https://logo.clearbit.com/adidas.com",
-                "https://logo.clearbit.com/apple.com",
-                "https://logo.clearbit.com/samsung.com",
-                "https://logo.clearbit.com/puma.com",
-                "https://logo.clearbit.com/hm.com"
+                "https://logores.yrucd.com/wp-content/uploads/2022/07/Ajio_logo_PNG3.png!a",
+                "https://latestlogo.com/wp-content/uploads/2024/01/tata-cliq-logo.png",
+                "https://www.pngmart.com/files/8/Amazon-PNG-Transparent-Image.png",
+                "https://ecommerceserviceprovider.in/wp-content/uploads/2023/04/Shopsy_logo-e1681199170611.png",
+                "https://agarolifestyle.com/cdn/shop/files/240-x-84-Agaro-logo_320x@3x.png?v=1683098753",
+                "https://vectorseek.com/wp-content/uploads/2023/09/Firstcry-Logo-Vector.svg-.png"
               ].map((imgLink, index) => (
                 <div key={`R-${index}`} className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-white border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow p-2 sm:p-4">
                   {/* FIX: Removed grayscale & opacity */}
@@ -462,10 +462,10 @@ function LandingContent() {
              </RevealOnScroll>
              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
-                  { t: "Link Generator", d: "Generate direct links instantly. Supports multiple link creations at once to save your time.", img: "https://cdn-icons-png.flaticon.com/128/10332/10332309.png" },
-                  { t: "Reliable Tracking", d: "Secured click & order tracking.", img: "https://cdn-icons-png.flaticon.com/128/3121/3121538.png" },
-                  { t: "Deep Analytics", d: "Track AOV & real-time clicks.", img: "https://cdn-icons-png.flaticon.com/128/2422/2422801.png" },
-                  { t: "Fast Payouts", d: "Withdraw via UPI or Bank.", img: "https://cdn-icons-png.flaticon.com/128/10453/10453676.png" }
+                  { t: "Link Generator", d: "Generate direct links instantly. Supports multiple link creations at once to save your time.", img: "https://cdn.corenexis.com/files/c/8637518720.png" },
+                  { t: "Reliable Tracking", d: "Secured click & order tracking.", img: "https://cdn.corenexis.com/files/c/2598867720.png" },
+                  { t: "Deep Analytics", d: "Track AOV & real-time clicks.", img: "https://cdn.corenexis.com/files/c/3884247720.png" },
+                  { t: "Fast Payouts", d: "Withdraw via UPI or Bank.", img: "https://cdn.corenexis.com/files/c/9492639720.png" }
                 ].map((f, i) => (
                   <RevealOnScroll key={i} delay={i * 50}>
                     <div className="bg-white p-4 rounded-2xl flex items-center gap-4 border border-slate-100 shadow-sm hover:shadow-md transition-all h-full">
