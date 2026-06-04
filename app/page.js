@@ -235,10 +235,10 @@ function LandingContent() {
           <div className="grid md:grid-cols-2 gap-4">
             {[
               { title: "Rich Product Cards", desc: "Sale timers & direct buttons.", img: "https://cdn.corenexis.com/files/c/6443468720.png" },
-              { title: "Auto-Sliding Banners", desc: "Top deals rotate automatically.", img: "https://cdn.corenexis.com/files/c/4344623720.png" },
+        
               { title: "Theater Mode Reels", desc: "Embed Instagram/YouTube videos.", img: "https://cdn.corenexis.com/files/c/3359638720.png" },
               { title: "Category Collections", desc: "Organize products by niche.", img: "https://cdn.corenexis.com/files/c/7898679720.png" },
-        
+              { title: "Auto-Sliding Banners", desc: "Top deals rotate automatically.", img: "https://cdn.corenexis.com/files/c/4344623720.png" },
               { title: "Premium Themes", desc: "Change looks with one click.", img: "https://cdn.corenexis.com/files/c/5256529720.png" }
             ].map((f, i) => (
               <RevealOnScroll key={i} delay={i * 50}>
@@ -500,16 +500,18 @@ function LandingContent() {
         </section>
 
         {/* ========================================== */}
-        {/* 8. INSTAGRAM BREAKOUT (Clean Image Space) */}
+        {/* 8. INSTAGRAM BREAKOUT (Compact & Edge Faded) */}
         {/* ========================================== */}
-        <section id="redirection" className="py-13 px-4 bg-white border-y border-slate-100">
-           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12">
+        <section id="redirection" className="py-10 px-4 bg-white border-y border-slate-100">
+           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-6 md:gap-12">
               <div className="flex-1">
                  <RevealOnScroll>
-                   <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-6">Escape the Instagram Browser Trap.</h2>
-                   <p className="text-slate-600 font-medium mb-8">In-app browsers kill conversions. We use <strong className="text-slate-900">smart breakout technology</strong>. When followers click, we force open their native Chrome/Safari or directly open the Shopping App (Myntra/Amazon).</p>
+                   <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-5">Escape the Instagram Browser Trap.</h2>
+                   <p className="text-slate-600 font-medium mb-6">In-app browsers kill conversions. We use <strong className="text-slate-900">smart breakout technology</strong>. When followers click, we force open their native Chrome/Safari or directly open the Shopping App (Myntra/Amazon).</p>
                  </RevealOnScroll>
-                 <ul className="space-y-4 mb-8">
+                 
+                 {/* FIX: Reduced bottom margin here so image stays compact and close */}
+                 <ul className="space-y-4 mb-2 md:mb-0">
                    {["Flawless User Experience", "Prevents Login Drops", "Higher Conversion Rates"].map((t, i) => (
                      <RevealOnScroll key={i} delay={i * 100}>
                        <li className="flex items-center gap-3 font-bold text-slate-700">
@@ -522,13 +524,20 @@ function LandingContent() {
                    ))}
                  </ul>
               </div>
+              
               <RevealOnScroll delay={200} className="flex-1 w-full">
-                {/* FIX: Removed fixed heights. Added max-h to make it compact and remove top/bottom gaps */}
-                <div className="w-full flex items-center justify-center mt-6 md:mt-0">
+                {/* FIX: Removed margins, let the flexbox handle spacing naturally */}
+                <div className="w-full flex items-center justify-center">
                    <img 
-                     src="https://cdn.prod.website-files.com/666285153da630124c201ec0/6668bcbd672bf1109ddbb93f_1-04%20(1)-p-800.webp" 
-                     className="w-full max-w-sm h-auto max-h-[300px] sm:max-h-[400px] object-contain drop-shadow-2xl" 
+                     src="https://cdn.corenexis.com/files/c/9382297720.png" 
+                     /* FIX: Removed drop-shadow-2xl so it blends perfectly. Made it slightly larger to fit space */
+                     className="w-full max-w-lg h-auto object-contain scale-105" 
                      alt="App Redirection" 
+                     /* FIX: The Magic Fade. Keeps 82% of the center solid, fades the last 18% of edges */
+                     style={{ 
+                       WebkitMaskImage: 'radial-gradient(ellipse at center, black 82%, transparent 100%)', 
+                       maskImage: 'radial-gradient(ellipse at center, black 82%, transparent 100%)' 
+                     }}
                    />
                 </div>
               </RevealOnScroll>
