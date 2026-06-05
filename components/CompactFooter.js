@@ -8,7 +8,7 @@ export default function CompactFooter() {
         {/* 1. Logo & Text Area */}
         <div className="flex flex-col items-center md:items-start gap-3 md:w-1/3">
           <img 
-            src="https://pluspng.com/img-png/logo-flipkart-png-flipkart-logo-5000.png" 
+            src="https://i.postimg.cc/85xZSphm/favy-link-text-logo-avy-white-(raw)-png.png" 
             className="h-8 sm:h-10 w-auto object-contain" 
             alt="FavyLink Logo" 
           />

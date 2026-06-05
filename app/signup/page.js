@@ -58,13 +58,13 @@ export default function SignupPage() {
         {/* Header Section */}
         <div className="flex flex-col items-center text-center mb-8">
           <img 
-            src="https://i.postimg.cc/tCRHySXw/icon-512-ony-icon.png" 
+            src="https://i.postimg.cc/gcvJRMnS/favylink-text-logo-avy-black-(raw)-png.png" 
             className="h-10 w-auto object-contain mb-5" 
             alt="FavyLink Logo" 
           />
           <h2 className="text-2xl font-black text-slate-900 mb-1.5">Create an account</h2>
           <p className="text-[13px] font-bold text-slate-500">
-            Start monetizing your recommendations today.
+            Start monetizing your favourites today.
           </p>
         </div>
 

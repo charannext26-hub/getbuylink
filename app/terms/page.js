@@ -14,7 +14,7 @@ export default function TermsPage() {
           {/* Flat PNG Logo Only (No text, no box) */}
           <Link href="/" className="flex items-center cursor-pointer">
             <img 
-              src="https://i.postimg.cc/tCRHySXw/icon-512-ony-icon.png" 
+              src="https://i.postimg.cc/gcvJRMnS/favylink-text-logo-avy-black-(raw)-png.png" 
               className="h-8 sm:h-10 w-auto object-contain" 
               alt="FavyLink Logo" 
             />

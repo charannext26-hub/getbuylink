@@ -127,7 +127,7 @@ export default function UsernameForm() {
       {/* 🖼️ Logo Area */}
       <div className="flex justify-center mb-6 pt-4">
         <img 
-          src="https://pngimg.com/uploads/amazon/amazon_PNG6.png" 
+          src="https://i.postimg.cc/gcvJRMnS/favylink-text-logo-avy-black-(raw)-png.png" 
           className="h-10 w-auto object-contain drop-shadow-sm" 
           alt="FavyLink Logo" 
         />

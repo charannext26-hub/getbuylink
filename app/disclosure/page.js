@@ -14,7 +14,7 @@ export default function AffiliateDisclosurePage() {
           {/* Flat PNG Logo Only */}
           <Link href="/" className="flex items-center cursor-pointer">
             <img 
-              src="https://pluspng.com/img-png/logo-flipkart-png-flipkart-logo-5000.png" 
+              src="https://i.postimg.cc/gcvJRMnS/favylink-text-logo-avy-black-(raw)-png.png" 
               className="h-8 sm:h-10 w-auto object-contain" 
               alt="FavyLink Logo" 
             />
