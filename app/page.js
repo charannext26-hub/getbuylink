@@ -64,14 +64,14 @@ function LandingContent() {
     },
     { 
       id: "03", title: "Categories", 
-      bgImg: "https://cdn.postimage.me/2026/05/31/IMG_20260531_172224.jpg", 
-      fgImg: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600", 
+      bgImg: "https://i.postimg.cc/mk6JNZQ3/file-00000000c4f8720886b1829e-category-arjun.png", 
+      fgImg: "https://i.postimg.cc/BtfFLHX7/20260605-142003-category-new-jpg.jpg", 
       text: "Our AI fetches the best deals and posts them directly to your link on autopilot."
     },
     { 
       id: "04", title: "Trending", 
-      bgImg: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600", 
-      fgImg: "https://images.unsplash.com/photo-1534452286304-a15f33635201?q=80&w=600", 
+      bgImg: "https://i.postimg.cc/jdpksFv6/file-00000000e8447208b4b98e514eanannya.png", 
+      fgImg: "https://i.postimg.cc/TYDCHcGf/20260605-trending-page-jpg.jpg", 
       text: "Create beautiful product collections and themes that match your creator vibe."
     }
   ];
