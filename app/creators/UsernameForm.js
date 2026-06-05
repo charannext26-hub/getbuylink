@@ -18,7 +18,7 @@ const CATEGORIES = [
 ];
 
 // 🛑 Internal Platform Routes (Inko koi username nahi le sakta)
-const RESERVED_WORDS = ["admin", "api", "login", "signup", "dashboard", "creators", "settings", "about", "privacy", "terms", "help", "support", "contact"];
+const RESERVED_WORDS = ["dashboards", "create", "setting", "abouts", "privacy", "help", "support", "contact", "admin", "api", "login", "signup", "campaign", "campaigns", "terms", "term", "disclosure", "username", "support", "deal", "offer", "cron", "dashboard", "creators", "creator", "influencer", "settings", "about", "privacypolicy", "privacy", "home", "search", "explore"];
 
 export default function UsernameForm() {
   const { update } = useSession();
@@ -127,7 +127,7 @@ export default function UsernameForm() {
       {/* 🖼️ Logo Area */}
       <div className="flex justify-center mb-6 pt-4">
         <img 
-          src="https://i.postimg.cc/gcvJRMnS/favylink-text-logo-avy-black-(raw)-png.png" 
+          src="/logo-avy-black.png" 
           className="h-10 w-auto object-contain drop-shadow-sm" 
           alt="FavyLink Logo" 
         />

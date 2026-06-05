@@ -127,7 +127,7 @@ function LandingContent() {
           {/* UPDATE: Flat PNG Logo (No text, no background box) */}
           <div className="flex items-center cursor-pointer" onClick={() => scrollToSection("home")}>
              <img 
-               src="https://i.postimg.cc/gcvJRMnS/favylink-text-logo-avy-black-(raw)-png.png" 
+               src="/logo-avy-black.png" 
                alt="FavyLink Logo" 
                className="h-8 sm:h-9 w-auto object-contain" 
              />
@@ -651,7 +651,7 @@ function LandingContent() {
                 <div className="flex items-center mb-6">
                   {/* UPDATE: Flat PNG Logo (No text, no background box) */}
                   <img 
-                    src="https://i.postimg.cc/85xZSphm/favy-link-text-logo-avy-white-(raw)-png.png" 
+                    src="/logo-avy-white.png" 
                     className="h-10 sm:h-12 w-auto object-contain" 
                     alt="FavyLink Logo" 
                   />

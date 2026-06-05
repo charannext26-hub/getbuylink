@@ -49,7 +49,7 @@ export default function LoginPage() {
         {/* 1. Header Section with Flat Logo */}
         <div className="flex flex-col items-center text-center mb-8">
           <img 
-            src="https://i.postimg.cc/gcvJRMnS/favylink-text-logo-avy-black-(raw)-png.png" 
+            src="/logo-avy-black.png" 
             className="h-10 w-auto object-contain mb-5" 
             alt="FavyLink Logo" 
           />
