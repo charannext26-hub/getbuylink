@@ -51,25 +51,25 @@ function LandingContent() {
   // --- 4 Tabs Logic (Auto-play & Flip Animation) ---
   const tabs = [
     { 
-      id: "01", title: "Instagram Bio", 
-      bgImg: "https://cdn.postimage.me/2026/05/31/Screenshot_2026-05-31-17-23-45-09.jpg",
-      fgImg: "https://cdn.postimage.me/2026/05/31/IMG_20260531_114639.jpg",
+      id: "01", title: "Shop All", 
+      bgImg: "https://i.postimg.cc/JzSKYqQm/20260605-001358-jpg.jpg",
+      fgImg: "https://i.postimg.cc/y6bHYq1j/IMG-best-size-3-jpg.jpg",
       text: "Convert your followers into buyers by placing your premium FavyLink in your bio."
     },
     { 
-      id: "02", title: "Smart Store", 
-      bgImg: "https://cdn.postimage.me/2026/05/31/IMG_20260531_114639.jpg", 
-      fgImg: "https://cdn.postimage.me/2026/05/31/IMG_20260531_172224.jpg", 
+      id: "02", title: "Auto Deals", 
+      bgImg: "https://i.postimg.cc/Qd7cCrpt/20260605-001739-jpg.jpg", 
+      fgImg: "https://i.postimg.cc/rs1Z4Y0B/20260605-112422-04-jpg.jpg", 
       text: "A fully automated storefront that organizes your products professionally."
     },
     { 
-      id: "03", title: "Auto-Deals", 
+      id: "03", title: "Categories", 
       bgImg: "https://cdn.postimage.me/2026/05/31/IMG_20260531_172224.jpg", 
       fgImg: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600", 
       text: "Our AI fetches the best deals and posts them directly to your link on autopilot."
     },
     { 
-      id: "04", title: "Collections", 
+      id: "04", title: "Trending", 
       bgImg: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600", 
       fgImg: "https://images.unsplash.com/photo-1534452286304-a15f33635201?q=80&w=600", 
       text: "Create beautiful product collections and themes that match your creator vibe."
