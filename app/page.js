@@ -234,12 +234,12 @@ function LandingContent() {
 
           <div className="grid md:grid-cols-2 gap-4">
             {[
-              { title: "Rich Product Cards", desc: "Sale timers & direct buttons.", img: "https://cdn.corenexis.com/files/c/6443468720.png" },
+              { title: "High-Converting Product Cards", desc: "Showcase your recommendations with clean, visual cards. Display real-time prices, live discounts, exclusive coupon codes, and urgency-driving sale timers alongside clear 'Buy Now' buttons to maximize your conversion rates.", img: "https://cdn.corenexis.com/files/c/6443468720.png" },
         
-              { title: "Theater Mode Reels", desc: "Embed Instagram/YouTube videos.", img: "https://cdn.corenexis.com/files/c/3359638720.png" },
-              { title: "Category Collections", desc: "Organize products by niche.", img: "https://cdn.corenexis.com/files/c/7898679720.png" },
-              { title: "Auto-Sliding Banners", desc: "Top deals rotate automatically.", img: "https://cdn.corenexis.com/files/c/4344623720.png" },
-              { title: "Premium Themes", desc: "Change looks with one click.", img: "https://cdn.corenexis.com/files/c/5256529720.png" }
+              { title: "Immersive Shoppable Reels", desc: "Embed your YouTube Shorts and Instagram Reels directly on your page. Users can watch your honest reviews and shop the exact products without ever leaving the storefront.", img: "https://cdn.corenexis.com/files/c/3359638720.png" },
+              { title: "Smart Category Collections", desc: "Organize your links into dedicated folders like Tech Gadgets,Summer Outfits or Home Decor. Help your followers find exactly what they are looking for in seconds.", img: "https://cdn.corenexis.com/files/c/7898679720.png" },
+              { title: "Dynamic Promotional Banners", desc: "Highlight your top-performing deals or festive sales using multi-image, auto-sliding banner carousels. Link each banner to specific products or custom URLs to seamlessly redirect your audience's attention and drive instant sales.", img: "https://cdn.corenexis.com/files/c/4344623720.png" },
+              { title: "One-Click Premium Themes", desc: "Match your storefront to your personal brand identity. Switch between sleek dark mode, clean light mode, or custom color palettes with just a single click.", img: "https://cdn.corenexis.com/files/c/5256529720.png" }
             ].map((f, i) => (
               <RevealOnScroll key={i} delay={i * 50}>
                 <div className="bg-[#f8fafc] border border-slate-100 p-4 rounded-2xl flex items-center gap-4 hover:shadow-md transition-all">
