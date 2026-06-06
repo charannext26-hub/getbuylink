@@ -234,12 +234,12 @@ function LandingContent() {
 
           <div className="grid md:grid-cols-2 gap-4">
             {[
-              { title: "High-Converting Product Cards", desc: "Showcase your recommendations with clean, visual cards. Display real-time prices, live discounts, exclusive coupon codes, and urgency-driving sale timers alongside clear 'Buy Now' buttons to maximize your conversion rates.", img: "https://cdn.corenexis.com/files/c/6443468720.png" },
+              { title: "Rich Product Cards", desc: "Turn your favourites into scroll-stopping visual cards with live prices, discounts, coupons, and urgency timers. so your visitors can buy faster.", img: "https://cdn.corenexis.com/files/c/6443468720.png" },
         
-              { title: "Immersive Shoppable Reels", desc: "Embed your YouTube Shorts and Instagram Reels directly on your page. Users can watch your honest reviews and shop the exact products without ever leaving the storefront.", img: "https://cdn.corenexis.com/files/c/3359638720.png" },
-              { title: "Smart Category Collections", desc: "Organize your links into dedicated folders like Tech Gadgets,Summer Outfits or Home Decor. Help your followers find exactly what they are looking for in seconds.", img: "https://cdn.corenexis.com/files/c/7898679720.png" },
-              { title: "Dynamic Promotional Banners", desc: "Highlight your top-performing deals or festive sales using multi-image, auto-sliding banner carousels. Link each banner to specific products or custom URLs to seamlessly redirect your audience's attention and drive instant sales.", img: "https://cdn.corenexis.com/files/c/4344623720.png" },
-              { title: "One-Click Premium Themes", desc: "Match your storefront to your personal brand identity. Switch between sleek dark mode, clean light mode, or custom color palettes with just a single click.", img: "https://cdn.corenexis.com/files/c/5256529720.png" }
+              { title: "Immersive Shoppable Reels", desc: "Embed YouTube Shorts & Instagram Reels directly on your page so visitors can watch and shop instantly.", img: "https://cdn.corenexis.com/files/c/3359638720.png" },
+              { title: "Smart Category Collections", desc: "Organize links into smart collections like Tech Gadgets, Summer Outfits, and Home Decor for instant discovery.", img: "https://cdn.corenexis.com/files/c/7898679720.png" },
+              { title: "Dynamic Promotional Banners", desc: "Auto-sliding multi-image carousels to spotlight your best deals and drive instant sales.", img: "https://cdn.corenexis.com/files/c/4344623720.png" },
+              { title: "One-Click Premium Themes", desc: "Match your brand instantly with sleek dark mode, light mode, or custom colors in one click.", img: "https://cdn.corenexis.com/files/c/5256529720.png" }
             ].map((f, i) => (
               <RevealOnScroll key={i} delay={i * 50}>
                 <div className="bg-[#f8fafc] border border-slate-100 p-4 rounded-2xl flex items-center gap-4 hover:shadow-md transition-all">
@@ -287,8 +287,7 @@ function LandingContent() {
              <RevealOnScroll>
                <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">Zero-Effort Income.<br/>Meet Auto-Post</h2>
                <p className="text-slate-400 font-medium text-sm sm:text-base mb-10">
-                 Our system fetches the hottest deals and posts them directly to your storefront. 
-                 Setup your niche and watch your earnings grow while you sleep.
+                 Our smart engine automatically fetches high-converting, trending products from top e-commerce store and publishes them directly to your storefront. Set it once, and earn while you sleep.
                </p>
                
                {/* Premium Glowing Blob Image Area */}
@@ -304,9 +303,9 @@ function LandingContent() {
              {/* Restored Texts for Auto-Post Steps */}
              <div className="grid sm:grid-cols-3 gap-6">
                 {[
-                  { title: "Set Your Niche", desc: "Select Fashion, Tech, Beauty in your dashboard." },
-                  { title: "We Curate Deals", desc: "We fetch hot deals and auto-generate links." },
-                  { title: "Auto-Published", desc: "Deals appear on your page. You earn on autopilot." }
+                  { title: "Select Your Niche", desc: "Pick your niche — Tech, Fashion, Beauty, etc. Our system auto-customizes the product feed to match your audience perfectly." },
+                  { title: "Smart Deal Curation", desc: "Our AI scans top networks and curates high-rated products with maximum discounts and best commission rates." },
+                  { title: "Auto-Published & Monetized", desc: "Winning deals are instantly added to your storefront with your affiliate tags — so you never miss a commission." }
                 ].map((step, i) => (
                    <RevealOnScroll key={i} delay={i * 100}>
                      <div className="bg-slate-800/40 border border-slate-700 p-6 rounded-2xl h-full flex flex-col items-center text-center">
@@ -434,8 +433,8 @@ function LandingContent() {
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative">
                       <img src="https://cdn.corenexis.com/files/c/8775713720.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Explore Deals" />
                     </div>
-                    <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">1. Explore Deals</h3>
-                    <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Find deals from top retailers like Ajio, Flipkart, Myntra.</p>
+                    <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">1. Explore Top Deals</h3>
+                    <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Find Favourite product from top retailers like Aamazon, Ajio, Flipkart, Myntra.</p>
                   </div>
                 </RevealOnScroll>
 
@@ -445,8 +444,8 @@ function LandingContent() {
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative" style={{ animationDelay: '200ms' }}>
                       <img src="https://cdn.corenexis.com/files/c/8676211720.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Fetch Details" />
                     </div>
-                    <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">2. Fetch & Make Link</h3>
-                    <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Convert normal links into earning links instantly.</p>
+                    <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">2. Fetch Details & Make Link</h3>
+                    <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Fatch product details & Convert normal links into earning links instantly.</p>
                   </div>
                 </RevealOnScroll>
 
@@ -456,8 +455,8 @@ function LandingContent() {
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative" style={{ animationDelay: '400ms' }}>
                       <img src="https://cdn.corenexis.com/files/c/2332815720.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Publish" />
                     </div>
-                    <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">3. Publish & Earn</h3>
-                    <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Post to your bio page or share with your audience.</p>
+                    <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">3. Publish To Page & Earn</h3>
+                    <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Post link to your storefront or share with your audience and earn</p>
                   </div>
                 </RevealOnScroll>
 
@@ -474,15 +473,15 @@ function LandingContent() {
              <RevealOnScroll>
                <div className="text-center mb-12">
                  <h2 className="text-3xl font-black text-slate-900">Everything You Need to Grow.</h2>
-                 <p className="text-slate-500 font-medium">A powerful control center built for professional creators.</p>
+                 <p className="text-slate-500 font-medium">A powerful control center built for professional creators. Manage multiple links, track real-time performance, and optimize your revenue from a single dashboard.</p>
                </div>
              </RevealOnScroll>
              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
-                  { t: "Link Generator", d: "Generate direct links instantly. Supports multiple link creations at once to save your time.", img: "https://cdn.corenexis.com/files/c/8637518720.png" },
-                  { t: "Reliable Tracking", d: "Secured click & order tracking.", img: "https://cdn.corenexis.com/files/c/2598867720.png" },
-                  { t: "Deep Analytics", d: "Track AOV & real-time clicks.", img: "https://cdn.corenexis.com/files/c/3884247720.png" },
-                  { t: "Fast Payouts", d: "Withdraw via UPI or Bank.", img: "https://cdn.corenexis.com/files/c/9492639720.png" }
+                  { t: "Bulk Link Generator & Auto-Fetch", d: "Generate direct links instantly. Supports multiple link creations at once to save your time.", img: "https://cdn.corenexis.com/files/c/8637518720.png" },
+                  { t: "Real-Time Click & Sale Tracking", d: "Secured click & order tracking.", img: "https://cdn.corenexis.com/files/c/2598867720.png" },
+                  { t: "Deep, Transparent Analytics", d: "Track AOV & real-time clicks.", img: "https://cdn.corenexis.com/files/c/3884247720.png" },
+                  { t: "Commission Validation & Fast Payouts", d: "Withdraw via UPI or Bank.", img: "https://cdn.corenexis.com/files/c/9492639720.png" }
                 ].map((f, i) => (
                   <RevealOnScroll key={i} delay={i * 50}>
                     <div className="bg-white p-4 rounded-2xl flex items-center gap-4 border border-slate-100 shadow-sm hover:shadow-md transition-all h-full">
@@ -593,7 +592,7 @@ function LandingContent() {
               <div className="relative z-10">
                 <span className="bg-white/20 px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest mb-8 inline-block shadow-sm backdrop-blur-sm">100% FREE FOREVER</span>
                 <h2 className="text-4xl sm:text-6xl font-black mb-6 leading-tight">Start Monetizing Today.</h2>
-                <p className="text-blue-50 font-medium text-sm sm:text-lg max-w-2xl mx-auto mb-10">We believe creators shouldn't pay to earn. Get all premium storefront features and affiliate tools completely free.</p>
+                <p className="text-blue-50 font-medium text-sm sm:text-lg max-w-2xl mx-auto mb-10">No hidden fees, no monthly subscriptions. Get unlimited access to premium link-in-bio storefronts, smart breakout technology, and advanced tracking analytics completely free. You bring the audience, we bring the tools.</p>
                 <button 
   suppressHydrationWarning
   onClick={() => router.push('/register')}
@@ -657,7 +656,7 @@ function LandingContent() {
                   />
                 </div>
                 <p className="text-slate-400 text-sm max-w-sm mb-8 leading-relaxed">
-                  The ultimate hub for professional creators. Build a premium storefront, automate your affiliate deals, and multiply your earnings effortlessly.
+                  FavyLink is an advanced creator monetization platform and smart 'link-in-bio' storefront builder. We empower digital creators, influencers, and affiliate marketers to maximize their earnings through high-converting shoppable pages, auto-published deals, and intelligent app-breakout technology. Turn your social media audience into a scalable business with real-time analytics and seamless affiliate integration across Amazon, Flipkart, and 500+ top global brands.
                 </p>
                 
                 {/* Social Icons (SVGs) */}
