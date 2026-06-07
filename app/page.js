@@ -54,25 +54,25 @@ function LandingContent() {
       id: "01", title: "Shop All", 
       bgImg: "https://i.postimg.cc/JzSKYqQm/20260605-001358-jpg.jpg",
       fgImg: "https://i.postimg.cc/y6bHYq1j/IMG-best-size-3-jpg.jpg",
-      text: "Convert your followers into buyers by placing your premium FavyLink in your bio."
+      text: "Custom product cards, collections & video thumbnails in a stunning masonry feed."
     },
     { 
-      id: "02", title: "Auto Deals", 
+      id: "02", title: "Live Deals", 
       bgImg: "https://i.postimg.cc/Qd7cCrpt/20260605-001739-jpg.jpg", 
       fgImg: "https://i.postimg.cc/rs1Z4Y0B/20260605-112422-04-jpg.jpg", 
-      text: "A fully automated storefront that organizes your products professionally."
+      text: "Top deals auto-published in a clean grid with live prices and discounts."
     },
     { 
       id: "03", title: "Categories", 
       bgImg: "https://i.postimg.cc/mk6JNZQ3/file-00000000c4f8720886b1829e-category-arjun.png", 
       fgImg: "https://i.postimg.cc/BtfFLHX7/20260605-142003-category-new-jpg.jpg", 
-      text: "Our AI fetches the best deals and posts them directly to your link on autopilot."
+      text: "Organize products into smart, custom categories for easy discovery."
     },
     { 
       id: "04", title: "Trending", 
       bgImg: "https://i.postimg.cc/jdpksFv6/file-00000000e8447208b4b98e514eanannya.png", 
       fgImg: "https://i.postimg.cc/TYDCHcGf/20260605-trending-page-jpg.jpg", 
-      text: "Create beautiful product collections and themes that match your creator vibe."
+      text: "Automatically highlight your highest-clicking and best-converting products."
     }
   ];
 
@@ -181,7 +181,7 @@ function LandingContent() {
                 Make your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600">Favourite Link</span> Professional & Profitable.
               </h1>
               <p className="text-slate-700 text-base sm:text-lg font-bold mb-10 max-w-2xl mx-auto">
-                Turn your standard bio link into a beautiful, zero-coding storefront. <span className="font-black text-blue-600">Auto-Sync Deals</span> from 500+ brands and multiply your earnings while you sleep with smart, easy conversions.
+                Turn your standard bio link into a beautiful, zero-coding storefront. <span className="font-black text-blue-600">Auto-Sync Deals</span> from 500+ brands and multiply your earnings while you sleep with smart, seamless conversions.
               </p>
             </RevealOnScroll>
 
@@ -326,7 +326,7 @@ function LandingContent() {
         <section id="partners" className="py-14 overflow-hidden bg-white">
           <RevealOnScroll>
             <div className="max-w-7xl mx-auto px-4 text-center mb-10">
-              <h2 className="text-3xl font-black text-slate-900 mb-4">We Build Your Storefront.<br className="sm:hidden"/>  We Monetize Every Links.</h2>
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 mb-4">We Build Your Storefront.<br className="sm:hidden"/>  We Monetize Every Links.</h2>
               <p className="text-slate-500 font-medium">Partnered with top global brands to deliver the highest commissions in the market — turning your audience into consistent income.</p>
             </div>
           </RevealOnScroll>
@@ -618,10 +618,7 @@ function LandingContent() {
              </RevealOnScroll>
              <div className="space-y-3">
                {[
-                 { 
-                   q: "Is there a minimum follower requirement to join?", 
-                   a: "Not at all. We believe in empowering creators at every stage. Whether you have 100 followers or 1 million, you can join FavyLink instantly with zero follower criteria or strict eligibility rules." 
-                 },
+                 
                  { 
                    q: "Can I add my own custom links to my storefront?", 
                    a: "Yes, you have complete creative freedom. You are not restricted to using only our generated affiliate links. You can seamlessly add your personal custom URLs, portfolio links, or external websites directly to your FavyLink page." 
