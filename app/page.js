@@ -304,7 +304,7 @@ function LandingContent() {
              <div className="grid sm:grid-cols-3 gap-6">
                 {[
                   { title: "Select Your Niche", desc: "Pick your niche — Tech, Fashion, Beauty, etc. Our system auto-customizes the product feed to match your audience perfectly." },
-                  { title: "Smart Deal Curation", desc: "Our AI scans top networks and curates high-rated products with maximum discounts and best commission rates." },
+                  { title: "Smart Deal Curation", desc: "Our system scans top networks and curates high-rated products with maximum discounts and best commission rates." },
                   { title: "Auto-Published & Monetized", desc: "Winning deals are instantly added to your storefront with your affiliate tags — so you never miss a commission." }
                 ].map((step, i) => (
                    <RevealOnScroll key={i} delay={i * 100}>
@@ -326,8 +326,8 @@ function LandingContent() {
         <section id="partners" className="py-14 overflow-hidden bg-white">
           <RevealOnScroll>
             <div className="max-w-7xl mx-auto px-4 text-center mb-10">
-              <h2 className="text-3xl font-black text-slate-900 mb-4">We Don't Just Build Your Page.<br className="sm:hidden"/> We Monetize It.</h2>
-              <p className="text-slate-500 font-medium">Partnered with top global brands to give you the highest commissions in the market.</p>
+              <h2 className="text-3xl font-black text-slate-900 mb-4">We Build Your Storefront.<br className="sm:hidden"/>  We Monetize Every Links.</h2>
+              <p className="text-slate-500 font-medium">Partnered with top global brands to deliver the highest commissions in the market — turning your audience into consistent income.</p>
             </div>
           </RevealOnScroll>
 
@@ -478,10 +478,10 @@ function LandingContent() {
              </RevealOnScroll>
              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
-                  { t: "Bulk Link Generator & Auto-Fetch", d: "Generate direct links instantly. Supports multiple link creations at once to save your time.", img: "https://cdn.corenexis.com/files/c/8637518720.png" },
-                  { t: "Real-Time Click & Sale Tracking", d: "Secured click & order tracking.", img: "https://cdn.corenexis.com/files/c/2598867720.png" },
-                  { t: "Deep, Transparent Analytics", d: "Track AOV & real-time clicks.", img: "https://cdn.corenexis.com/files/c/3884247720.png" },
-                  { t: "Commission Validation & Fast Payouts", d: "Withdraw via UPI or Bank.", img: "https://cdn.corenexis.com/files/c/9492639720.png" }
+                  { t: "Bulk Link Generator & Auto-Fetch", d: "Paste multiple product URLs at once. Our smart system instantly fetche details, then generates fully monetized affiliate links in seconds — saving hours of manual work.", img: "https://cdn.corenexis.com/files/c/8637518720.png" },
+                  { t: "Real-Time Click & Sale Tracking", d: "Track every click and sale in real time. Get precise insights into which products are performing best and see conversions the moment they happen.", img: "https://cdn.corenexis.com/files/c/2598867720.png" },
+                  { t: "Deep, Transparent Analytics", d: "Access comprehensive performance data with full transparency. Monitor individual link metrics, day-by-day sales trends, and detailed reports filtered by stores or traffic sources.", img: "https://cdn.corenexis.com/files/c/3884247720.png" },
+                  { t: "Commission Validation & Fast Payouts", d: "We handle commission validation and approvals with partner brands. Get your earnings paid out quickly and seamlessly via UPI or bank transfer.", img: "https://cdn.corenexis.com/files/c/9492639720.png" }
                 ].map((f, i) => (
                   <RevealOnScroll key={i} delay={i * 50}>
                     <div className="bg-white p-4 rounded-2xl flex items-center gap-4 border border-slate-100 shadow-sm hover:shadow-md transition-all h-full">
@@ -618,15 +618,40 @@ function LandingContent() {
              </RevealOnScroll>
              <div className="space-y-3">
                {[
-                 { q: "Is FavyLink really free?", a: "Yes, it is 100% free to use for all creators. No hidden subscription fees." },
-                 { q: "How do I get paid?", a: "Earnings can be withdrawn directly to your UPI or Bank via NEFT once confirmed." },
-                 { q: "Can I add custom links?", a: "Yes, you have full freedom to add any affiliate, social, or custom link." }
+                 { 
+                   q: "Is there a minimum follower requirement to join?", 
+                   a: "Not at all. We believe in empowering creators at every stage. Whether you have 100 followers or 1 million, you can join FavyLink instantly with zero follower criteria or strict eligibility rules." 
+                 },
+                 { 
+                   q: "Can I add my own custom links to my storefront?", 
+                   a: "Yes, you have complete creative freedom. You are not restricted to using only our generated affiliate links. You can seamlessly add your personal custom URLs, portfolio links, or external websites directly to your FavyLink page." 
+                 },
+                 { 
+                   q: "Can I use my personal Amazon Associate tag?", 
+                   a: "Absolutely. FavyLink offers full Amazon Affiliate automation. You can integrate your own Amazon Associate tag into our system, and all your sales, clicks, and reports will reflect directly in your personal Amazon Associates dashboard." 
+                 },
+                 { 
+                   q: "Do I need brand approvals for Flipkart, Myntra, or Ajio?", 
+                   a: "No individual brand approvals are required. Once you are on FavyLink, you get pre-approved, instant access to generate and monetize links for Flipkart, Myntra, Ajio, and hundreds of other top campaigns without meeting any specific criteria." 
+                 },
+                 { 
+                   q: "Do I need to connect my social accounts to embed videos?", 
+                   a: "No complex account integrations or permissions are needed. To feature a Shoppable Reel or YouTube video, simply paste the video URL while adding your product. The video will embed and play automatically on your storefront alongside the product." 
+                 },
+                 { 
+                   q: "How do I withdraw my earnings?", 
+                   a: "We process payments swiftly and securely. Once your commissions are validated, you can withdraw your hard-earned money directly to your bank account via UPI or standard Bank Transfer with just a single click." 
+                 },
+                 { 
+                   q: "What makes 'Smart Breakout' different from normal Link-in-Bio tools?", 
+                   a: "Normal tools open links inside Instagram's built-in browser, which forces users to log in again, killing sales. Our Smart Breakout automatically forces the link to open in the user's native Shopping App (like Amazon) or Chrome. Other platforms charge expensive subscriptions for this, but on FavyLink, it is 100% free forever." 
+                 }
                ].map((f, i) => (
                  <RevealOnScroll key={i} delay={i * 100}>
                    <details className="group bg-white rounded-2xl border border-slate-200 overflow-hidden cursor-pointer shadow-sm">
                       <summary className="flex items-center justify-between p-6 font-bold text-slate-900 list-none">
                          {f.q}
-                         <span className="transition group-open:rotate-180 text-blue-600">
+                         <span className="transition group-open:rotate-180 text-blue-600 flex-shrink-0 ml-4">
                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7"/></svg>
                          </span>
                       </summary>
@@ -656,7 +681,7 @@ function LandingContent() {
                   />
                 </div>
                 <p className="text-slate-400 text-sm max-w-sm mb-8 leading-relaxed">
-                  FavyLink is an advanced creator monetization platform and smart 'link-in-bio' storefront builder. We empower digital creators, influencers, and affiliate marketers to maximize their earnings through high-converting shoppable pages, auto-published deals, and intelligent app-breakout technology. Turn your social media audience into a scalable business with real-time analytics and seamless affiliate integration across Amazon, Flipkart, and 500+ top global brands.
+                  FavyLink is an advanced creator monetization platform and smart link-in-bio storefront builder. We empower influencers, creators, and affiliate marketers to turn their social audience into a scalable income stream.<br/>Create high-converting shoppable pages, enjoy auto-published deals, and earn top commissions from Amazon, Flipkart, and 500+ premium brands - all with real-time analytics.
                 </p>
                 
                 {/* Social Icons (SVGs) */}

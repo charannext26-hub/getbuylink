@@ -13,7 +13,7 @@ export default function CompactFooter() {
             alt="FavyLink Logo" 
           />
           <p className="text-xs text-slate-400 text-center md:text-left leading-relaxed max-w-[250px]">
-            The ultimate hub for professional creators. Build a premium storefront, automate deals, and multiply earnings.
+            The ultimate hub for professional creators. Build a premium storefront, automate your affiliate deals, and multiply your earnings effortlessly.
           </p>
         </div>
 
@@ -53,7 +53,7 @@ export default function CompactFooter() {
       </div>
 
       <div className="max-w-5xl mx-auto border-t border-slate-800 mt-8 pt-6 text-center text-xs text-slate-500 font-medium">
-        © {new Date().getFullYear()} FavyLink. All rights reserved. Designed for Creators.
+        © {new Date().getFullYear()} FavyLink. All rights reserved. Designed for Professional Creators.
       </div>
     </footer>
   );
