@@ -308,13 +308,13 @@ function AddlinkContent() {
         {/* 👇 NAYA: Compact One-Line Header */}
         <div className="mb-4 flex flex-col md:flex-row md:items-end gap-1 md:gap-3">
           <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-none">Add Links & Collection</h1>
-          <p className="text-slate-500 font-bold text-xs md:text-sm mb-0.5">Generate smart links to monetize your audience.</p>
+          <p className="text-slate-500 font-bold text-xs md:text-sm mb-0.5">Generate/Add links to monetize your audience.</p>
         </div>
 
         {/* 👇 NAYA: Compact Monetization Method */}
         <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
           <h2 className="text-sm font-extrabold text-slate-800 mb-3 flex items-center gap-1.5">
-          How Proceed your Link
+          Select Link Type
           </h2>
           
           <div className="grid grid-cols-2 gap-2 md:gap-4">
@@ -323,14 +323,14 @@ function AddlinkContent() {
             <div onClick={() => setLinkMode("platform")} className={`cursor-pointer relative p-2.5 md:p-3 rounded-xl border-2 transition-all flex flex-col justify-center ${linkMode === 'platform' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}>
               <div className="flex items-center gap-2">
                 <input type="radio" checked={linkMode === 'platform'} readOnly className="w-3.5 h-3.5 accent-blue-600 pointer-events-none flex-shrink-0" />
-                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">Convert Link</div>
+                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">Monetize Link</div>
               </div>
               <div className="ml-5.5 mt-1 pl-1">
                 <button onClick={(e) => { e.stopPropagation(); router.push('/campaign-rates'); }} className="text-[9px] font-bold text-slate-400 hover:text-blue-600 flex items-center gap-1 transition-colors w-fit">
                   check campaigns <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>
               </div>
-              <button onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Premium Link", desc: "Our system automatically converts regular e-commerce product links into trackable, monetized links for you. You don't need your own affiliate account." }); }} className="absolute top-2 right-2 text-slate-300 hover:text-blue-600 z-10">
+              <button onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Monetize Link", desc: "Paste standard product URLs (like Amazon, Flipkart, Myntra) here. Our smart engine will automatically convert them into FavyLink affiliate links, ensuring you earn commissions on every sale." }); }} className="absolute top-2 right-2 text-slate-300 hover:text-blue-600 z-10">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               </button>
             </div>
@@ -339,9 +339,9 @@ function AddlinkContent() {
             <div onClick={() => setLinkMode("own")} className={`cursor-pointer relative p-2.5 md:p-3 rounded-xl border-2 transition-all flex flex-col justify-center ${linkMode === 'own' ? 'border-purple-600 bg-purple-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}>
               <div className="flex items-center gap-2">
                 <input type="radio" checked={linkMode === 'own'} readOnly className="w-3.5 h-3.5 accent-purple-600 pointer-events-none flex-shrink-0" />
-                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">No Convert Only Add</div>
+                <div className="font-extrabold text-[10px] md:text-xs text-slate-800 leading-tight">Direct Link</div>
               </div>
-              <button onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Personal Link", desc: "Paste your existing Amazon/Flipkart affiliate link here. We will save it exactly as is to display on your page." }); }} className="absolute top-2 right-2 text-slate-300 hover:text-purple-600 z-10">
+              <button onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Direct Link", desc: "Paste any URL exactly as it is. Use this for your personal portfolio, social profiles, YouTube videos, or your own existing affiliate links (like your personal Amazon Associate tags). We will not modify this link." }); }} className="absolute top-2 right-2 text-slate-300 hover:text-purple-600 z-10">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               </button>
             </div>
@@ -353,7 +353,7 @@ function AddlinkContent() {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
            <h2 className="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">
              <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-             Paste your links here
+             Paste URLs Here
            </h2>
            
           {/* 🚨 NAYA: Updated Placeholder */}
@@ -456,7 +456,7 @@ function AddlinkContent() {
            <div className="space-y-4">
              <h2 className="text-sm font-extrabold text-slate-400 uppercase tracking-wider flex items-center justify-between">
                <span className="flex items-center gap-2"><svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> Video Link</span>
-               <button onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Link Video/Reel", desc: "Paste your Instagram Reel or YouTube Short link here. We will display it right above this collection on your bio page!" }); }} className="text-slate-400 hover:text-blue-600 z-10">
+               <button onClick={(e) => { e.stopPropagation(); setInfoModal({ show: true, title: "Link Video/Reel", desc: "Paste your Insta or YouTube Vedio link here. We will display it right above this collection on your storefront!" }); }} className="text-slate-400 hover:text-blue-600 z-10">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                </button>
              </h2>

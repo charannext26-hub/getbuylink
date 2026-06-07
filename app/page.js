@@ -612,7 +612,7 @@ function LandingContent() {
            <div className="max-w-3xl mx-auto">
              <RevealOnScroll>
                <div className="text-center mb-10">
-                  <h2 className="text-3xl font-black text-slate-900 mb-3">Frequently Asked Questions</h2>
+                  <h2 className="text-xl font-black text-slate-900 mb-3">Frequently Asked Questions</h2>
                   <p className="text-slate-500 font-bold text-sm">Everything you need to know about FavyLink.</p>
                </div>
              </RevealOnScroll>
@@ -620,7 +620,7 @@ function LandingContent() {
                {[
                  
                  { 
-                   q: "Can I add my own custom links to my storefront?", 
+                   q: "Can I add my own custom Direct links to my storefront?", 
                    a: "Yes, you have complete creative freedom. You are not restricted to using only our generated affiliate links. You can seamlessly add your personal custom URLs, portfolio links, or external websites directly to your FavyLink page." 
                  },
                  { 

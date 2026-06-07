@@ -187,7 +187,7 @@ function AccountContent() {
       });
       const data = await res.json();
       if (data.success) {
-        showToast("✅ Profile Updated Successfully!");
+        showToast("✅ Updated Successfully!");
       } else {
         showToast("⚠️ Error saving profile.");
       }
@@ -214,7 +214,7 @@ function AccountContent() {
       });
       const link = document.createElement('a');
       link.href = dataUrl;
-      link.download = `${username}-LinkFav-QR.png`;
+      link.download = `${username}-FavyLink-QR.png`;
       link.click();
       showToast("✅ QR Code Downloaded!");
     } catch (err) {
@@ -292,7 +292,7 @@ function AccountContent() {
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                 </button>
               </div>
-              <span className="font-black text-[12px] md:text-sm truncate block text-slate-800 leading-tight">linkfav.com/{username}</span>
+              <span className="font-black text-[12px] md:text-sm truncate block text-slate-800 leading-tight">favylink.com/{username}</span>
             </div>
             <div className="flex shrink-0 gap-1.5 items-center">
               <button onClick={() => setShowQRModal(true)} className="flex items-center justify-center p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors rounded-lg border border-indigo-100 active:scale-95" title="Show QR Code">
@@ -313,7 +313,7 @@ function AccountContent() {
             {/* Left Side: Stacked Inputs */}
             <div className="flex-1 flex flex-col justify-between gap-2">
               <div className="flex justify-between items-center bg-slate-50 p-1.5 px-3 rounded-lg border border-slate-100">
-                 <span className="text-[9px] font-extrabold text-slate-400 ">UserId</span>
+                 <span className="text-[9px] font-extrabold text-slate-400 ">Username</span>
                  <span className="text-[11px] font-bold text-slate-600">@{username}</span>
               </div>
               <div className="flex justify-between items-center bg-slate-50 p-1.5 px-3 rounded-lg border border-slate-100">
@@ -340,10 +340,17 @@ function AccountContent() {
 
           {/* PROFILE DETAILS */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
-            <h2 className="text-sm font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-              Public Page Settings
-            </h2>
+  <div>
+    <h2 className="text-sm font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+      </svg>
+      Storefront Appearance
+    </h2>
+    <p className="text-xs text-slate-500 font-medium mt-1 ml-7">
+      Customize how your profile looks to your followers and visitors.
+    </p>
+  </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="md:col-span-2 flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -368,7 +375,7 @@ function AccountContent() {
 
               {/* Custom Theme Selector Button */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Premium Bio Theme</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Background Theme</label>
                 <button type="button" onClick={() => setIsThemeModalOpen(true)} className="w-full border-2 border-slate-200 rounded-xl p-2.5 font-bold focus:border-blue-500 outline-none transition-colors bg-white text-left flex justify-between items-center">
                   <span>{THEMES[formData.bioTheme]?.name || "Select Theme"}</span>
                   <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
@@ -418,7 +425,7 @@ function AccountContent() {
             >
               <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
                 <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></span>
-                Banners & Social Handle Link
+                Banners & Social Handle
               </h2>
               <div className={`p-2 rounded-full transition-transform duration-300 ${isMediaSectionOpen ? 'bg-slate-200 rotate-180' : 'bg-slate-100'}`}>
                 <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
@@ -613,18 +620,18 @@ function AccountContent() {
                 <div className="w-full flex justify-center mb-3">
                   <div className="bg-slate-800 text-white px-3.5 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
                     <svg className="w-3 h-3 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                    <span className="text-[10px] font-black tracking-widest uppercase">linkfav.com</span>
+                    <span className="text-[10px] font-black tracking-widest uppercase">favylink.com</span>
                   </div>
                 </div>
                 <div className="relative flex items-center justify-center w-full bg-white mb-1">
-                  <QRCodeSVG value={`https://linkfav.com/${username}`} size={210} bgColor={"#ffffff"} fgColor={"#0f172a"} level={"H"} />
+                  <QRCodeSVG value={`https://favylink.com/${username}`} size={210} bgColor={"#ffffff"} fgColor={"#0f172a"} level={"H"} />
                   <div className="absolute flex items-center justify-center bg-white rounded-full shadow-sm" style={{ width: "56px", height: "56px" }}>
                     <img src={formData.image || session?.user?.image || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} alt="Creator" crossOrigin="anonymous" className="w-12 h-12 rounded-full border-[2.5px] border-slate-200 bg-slate-100 object-cover" />
                   </div>
                 </div>
                 <div className="flex flex-col items-center w-full mt-1">
                   <p className="font-black text-[19px] text-slate-900 tracking-tight truncate w-full text-center">@{username}</p>
-                  <p className="text-[9.5px] font-extrabold text-slate-500 uppercase tracking-widest mt-0.5">Scan to shop my favs!</p>
+                  <p className="text-[9.5px] font-extrabold text-slate-500 uppercase tracking-widest mt-0.5">Scan to shop my favy!</p>
                 </div>
               </div>
             </div>
@@ -643,7 +650,7 @@ function AccountContent() {
         <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 animate-in fade-in" onClick={() => setIsThemeModalOpen(false)}>
           <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-black text-sm text-slate-800 flex items-center gap-1.5">🎨 Select Bio Theme</h3>
+              <h3 className="font-black text-sm text-slate-800 flex items-center gap-1.5">🎨 Select Theme</h3>
               <button onClick={() => setIsThemeModalOpen(false)} className="w-7 h-7 bg-slate-200 rounded-full text-slate-600 hover:bg-slate-800 hover:text-white font-extrabold flex items-center justify-center transition-colors">✕</button>
             </div>
             

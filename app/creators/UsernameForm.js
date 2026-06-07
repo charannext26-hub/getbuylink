@@ -134,15 +134,15 @@ export default function UsernameForm() {
       </div>
 
       <div className="text-center mb-6 px-4">
-        <h2 className="text-2xl font-black text-slate-900 mb-1">Setup Your Creator Profile</h2>
-        <p className="text-sm font-medium text-slate-500">Claim your unique storefront handle.</p>
+        <h2 className="text-2xl font-black text-slate-900 mb-1">Claim Your Storefront URL</h2>
+      
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col items-center w-full max-w-md mx-auto space-y-4 px-4">
         
         {/* STEP 1: USERNAME (Fixed Input Hiding) */}
         <div className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative">
-          <label className="block text-sm font-extrabold text-slate-800 mb-1">Claim Your Handle <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-extrabold text-slate-800 mb-1">Set Your Unique Username<span className="text-red-500">*</span></label>
           <p className="text-[10px] font-bold text-orange-600 mb-2.5 flex items-center gap-1">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             Permanent. Cannot be changed later.
@@ -156,7 +156,7 @@ export default function UsernameForm() {
               type="text"
               value={username}
               onChange={handleUsernameChange}
-              placeholder="name"
+              placeholder="yourname"
               className="flex-1 bg-transparent focus:outline-none text-slate-900 font-bold text-sm min-w-0 px-1"
               required
               maxLength={20}
@@ -187,7 +187,7 @@ export default function UsernameForm() {
             rows="2"
             value={socialLinks}
             onChange={(e) => setSocialLinks(e.target.value)}
-            placeholder={`https://instagram.com/yourprofilenhttps://youtube.com/@yourchannel`}
+            placeholder={`https://instagram.com/yourprofilen   https://youtube.com/@yourchannel`}
             className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-slate-900 font-medium text-xs resize-none"
           ></textarea>
         </div>
@@ -232,7 +232,7 @@ export default function UsernameForm() {
           >
             {loading ? "Saving..." : (
               <>
-                Complete Setup <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                Go to Dashboard <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
               </>
             )}
           </button>

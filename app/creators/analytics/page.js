@@ -539,8 +539,8 @@ function AnalyticsDashboard() {
                   <div className="flex gap-3 items-start">
                      <div className="bg-blue-200 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center shrink-0 font-black text-xs mt-0.5">2</div>
                      <div>
-                        <h4 className="font-extrabold text-blue-900 text-sm">Zero Tracking on 'Own Links'</h4>
-                        <p className="text-xs font-bold text-slate-600 mt-1.5 leading-relaxed">We strictly respect your privacy. Links added manually as 'Own Links' (non-platform links) are not tracked by our system. No clicks or sales data will be collected for them.</p>
+                        <h4 className="font-extrabold text-blue-900 text-sm">Zero Tracking on 'Direct Links'</h4>
+                        <p className="text-xs font-bold text-slate-600 mt-1.5 leading-relaxed">We strictly respect your privacy. Links added manually as 'Direct Links' (non-platform links) are not tracked by our system. No clicks or sales data will be collected for them.</p>
                      </div>
                   </div>
                   <div className="flex gap-3 items-start">

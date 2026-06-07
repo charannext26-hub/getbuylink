@@ -65,7 +65,7 @@ function DashboardContent() {
       });
       const link = document.createElement('a');
       link.href = dataUrl;
-      link.download = `${dbUser.username}-LinkFav-QR.png`;
+      link.download = `${dbUser.username}-FavyLink-QR.png`;
       link.click();
       showToast("✅ QR Code Downloaded!");
     } catch (err) {
@@ -337,7 +337,7 @@ function DashboardContent() {
         )}
       </button>
     </div>
-    <span className="font-black text-[12px] md:text-sm truncate block text-slate-800 leading-tight">linkfav.com/{dbUser.username}</span>
+    <span className="font-black text-[12px] md:text-sm truncate block text-slate-800 leading-tight">favylink.com/{dbUser.username}</span>
   </div>
 
   <div className="flex shrink-0 gap-1.5 items-center">
@@ -377,7 +377,7 @@ function DashboardContent() {
                 <div className="grid grid-cols-3 gap-2 md:gap-6 divide-x divide-slate-100">
                   <div className="pr-1 md:pr-4">
                     <p className="text-[9px] md:text-[11px] font-extrabold text-slate-800 uppercase mb-2 md:mb-3 flex items-center gap-1 md:gap-1.5 truncate">
-                      <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-blue-500 shrink-0"></span> Platform
+                      <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-blue-500 shrink-0"></span> monetized links
                     </p>
                     <div className="space-y-1 md:space-y-2">
                       <div className="flex flex-col md:flex-row md:justify-between md:items-center"><span className="text-[9px] md:text-xs font-bold text-slate-500">Gen:</span><span className="text-[10px] md:text-sm font-black text-slate-800">{stats.platformStats.total}</span></div>
@@ -389,19 +389,19 @@ function DashboardContent() {
 
                   <div className="px-2 md:px-4">
                     <p className="text-[9px] md:text-[11px] font-extrabold text-slate-800 uppercase mb-2 md:mb-3 flex items-center gap-1 md:gap-1.5 truncate">
-                      <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-purple-500 shrink-0"></span> Own Links
+                      <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-purple-500 shrink-0"></span> direct Links
                     </p>
                     <div className="space-y-1 md:space-y-2">
                       <div className="flex flex-col md:flex-row md:justify-between md:items-center"><span className="text-[9px] md:text-xs font-bold text-slate-500">Add:</span><span className="text-[10px] md:text-sm font-black text-slate-800">{stats.ownStats.total}</span></div>
                       <div className="flex flex-col md:flex-row md:justify-between md:items-center"><span className="text-[9px] md:text-xs font-bold text-slate-500">Vid:</span><span className="text-[10px] md:text-sm font-black text-slate-800">{stats.ownStats.videoCount}</span></div>
                       <div className="flex flex-col md:flex-row md:justify-between md:items-center"><span className="text-[9px] md:text-xs font-bold text-slate-500">Col:</span><span className="text-[10px] md:text-sm font-black text-slate-800">{stats.ownStats.collectionCount}</span></div>
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-center mt-1.5 pt-1.5 border-t border-slate-50"><span className="text-[7.5px] md:text-[10px] font-bold text-slate-400 italic mt-1 leading-tight">No Clicks</span></div>
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-center mt-1.5 pt-1.5 border-t border-slate-50"><span className="text-[7.5px] md:text-[10px] font-bold text-slate-400 italic mt-1 leading-tight">No Clicks Count</span></div>
                     </div>
                   </div>
 
                   <div className="pl-2 md:pl-4">
                     <p className="text-[9px] md:text-[11px] font-extrabold text-slate-800 uppercase mb-2 md:mb-3 flex items-center gap-1 md:gap-1.5 truncate">
-                      <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-orange-500 shrink-0"></span> Auto-Post
+                      <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-orange-500 shrink-0"></span> Auto-Published
                     </p>
                     <div className="space-y-1 md:space-y-2">
                       <div className="flex flex-col md:flex-row md:justify-between md:items-center"><span className="text-[9px] md:text-xs font-bold text-slate-500">Live:</span><span className="text-[10px] md:text-sm font-black text-slate-800">{stats.autoPostStats.totalTelegramDeals}</span></div>
@@ -416,7 +416,7 @@ function DashboardContent() {
               {/* YOUTUBE/TUTORIAL SLIDER */}
               {platformConfig?.youtubeBanners?.isActive && platformConfig?.youtubeBanners?.videos?.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 px-1">Creator Tutorials</h3>
+                  <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 px-1">explore favylink</h3>
                   <div className="flex overflow-x-auto gap-4 pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
                     {platformConfig.youtubeBanners.videos.map((vid, idx) => {
                       const isYoutube = vid.videoUrl && (vid.videoUrl.includes('youtube.com') || vid.videoUrl.includes('youtu.be'));
@@ -444,7 +444,7 @@ function DashboardContent() {
                   <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 px-1">Tips & Updates</h3>
                   <div ref={bannerScrollRef} onScroll={handleScroll} className="flex overflow-x-auto gap-4 snap-x snap-mandatory pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] scroll-smooth">
                     {platformConfig.banners.map((banner, idx) => (
-                      <a key={idx} href={banner.linkUrl || "#"} className="snap-center shrink-0 w-[90%] md:w-[70%] aspect-[21/9] rounded-2xl overflow-hidden relative shadow-sm block group bg-slate-200">
+                      <a key={idx} href={banner.linkUrl || "#"} className="snap-center shrink-0 w-[90%] md:w-[80%] aspect-[21/8] rounded-2xl overflow-hidden relative shadow-sm block group bg-slate-200">
                         <img src={banner.imageUrl} alt={`Banner ${idx}`} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       </a>
                     ))}
@@ -514,7 +514,7 @@ function DashboardContent() {
               <span className="bg-blue-100 text-blue-600 w-6 h-6 rounded-md flex items-center justify-center">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V10l-1.5-1.5M5 21V10L3.5 8.5M22 6l-2-2H4L2 6v2h20V6zM8 21v-4a2 2 0 014 0v4"></path></svg>
               </span>
-              Popular Store List
+              Popular Campaigns
             </h3>
             <Link href="/campaign-rates" className="text-[11px] font-extrabold text-blue-600 hover:text-blue-800 flex items-center shrink-0 bg-blue-50 px-2.5 py-1 rounded-md transition-colors">
               See All <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
@@ -793,24 +793,17 @@ function DashboardContent() {
                   <svg className="w-4 h-4 ml-auto text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </summary>
                 <div className="pl-11 py-2 space-y-2">
-                  <a href="mailto:support@getbuylink.com" className="block text-sm font-bold text-slate-500 hover:text-blue-600">📧 support@getbuylink.com</a>
+                  <a href="mailto:support@favylink.com" className="block text-sm font-bold text-slate-500 hover:text-blue-600">📧 support@favylink.com</a>
                   <a href="tel:+919986955416" className="block text-sm font-bold text-slate-500 hover:text-blue-600">📞 +91 9986955416</a>
                 </div>
               </details>
             </div>
 
-            <div className="pt-2 pb-4 border-t border-slate-200">
-              <div className="flex justify-center gap-3 mb-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">
-                <Link href="#" className="hover:text-blue-600 transition-colors">Terms</Link>
-                <span>•</span>
-                <Link href="#" className="hover:text-blue-600 transition-colors">Privacy</Link>
-                <span>•</span>
-                <Link href="#" className="hover:text-blue-600 transition-colors">About Us</Link>
-              </div>
+             <div className="pt-2 pb-4 border-t border-slate-200">
 
               <button onClick={() => signOut({ callbackUrl: '/login' })} className="flex items-center justify-center gap-2 w-[90%] mx-auto p-3 rounded-xl hover:bg-red-50 transition-colors text-red-600 font-bold bg-slate-50 border border-slate-100">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                Logout Account
+                Logout 
               </button>
             </div>
           </div>
@@ -845,14 +838,14 @@ function DashboardContent() {
                 <div className="w-full flex justify-center mb-3">
                   <div className="bg-slate-900 text-white px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
                     <svg className="w-3 h-3 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                    <span className="text-[10px] font-black tracking-widest uppercase">linkfav.com</span>
+                    <span className="text-[10px] font-black tracking-widest uppercase">favylink.com</span>
                   </div>
                 </div>
 
                 {/* 2. THE QR CODE WRAPPER */}
                 <div className="relative flex items-center justify-center w-full bg-white mb-1">
                   <QRCodeSVG 
-                    value={`https://linkfav.com/${dbUser?.username}`}
+                    value={`https://favylink.com/${dbUser?.username}`}
                     size={210} 
                     bgColor={"#ffffff"}
                     fgColor={"#0f172a"}
@@ -876,7 +869,7 @@ function DashboardContent() {
                     @{dbUser?.username}
                   </p>
                   <p className="text-[9.5px] font-extrabold text-slate-500 uppercase tracking-widest mt-0.5">
-                    Scan to shop my favs!
+                    Scan to shop my favy!
                   </p>
                 </div>
 
