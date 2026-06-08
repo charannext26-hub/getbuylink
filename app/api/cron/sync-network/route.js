@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+import connectToDatabase from "@/lib/mongodb";
 import LinkPerformance from "@/lib/models/LinkPerformance";
 
 export async function GET(req) {
@@ -10,11 +10,10 @@ export async function GET(req) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_URI);
-    }
+    // Cached connection module used to prevent connection pool exhausting
+    await connectToDatabase();
 
-    // 📅 Pichle 30 din ka data
+    // 📅 Past 30 days data synchronization bounds
     const endDate = new Date().toISOString().split('T')[0]; 
     const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; 
     const CUELINKS_API_KEY = process.env.CUELINKS_API_KEY;
@@ -48,7 +47,7 @@ export async function GET(req) {
     const transactions = data.transactions || [];
     let updatedCount = 0;
 
-    // 🚀 PROCESSING EACH TRANSACTION
+    // 🚀 PROCESSING EACH TRANSACTION FROM THE PULL STREAM
     for (const txn of transactions) {
       
       const username = txn.aff_sub || txn.subid1; 
@@ -67,7 +66,7 @@ export async function GET(req) {
 
       const storeName = txn.store_name || "Unknown";
       
-      // 🚨 EXACT UNIQUE ID
+      // 🚨 EXACT UNIQUE TRANSACTION ID FROM CUELINKS
       const uniqueTxnId = txn.id ? txn.id.toString() : `${txn.order_id}_${Math.random().toString(36).substr(2,5)}`;
       const orderId = txn.order_id || "Unknown"; 
       const txnStatus = (txn.status || "pending").toLowerCase();
@@ -85,7 +84,7 @@ export async function GET(req) {
           query.store = new RegExp(storeName, "i");
       }
 
-      // 🛑 FIND THE LINK FIRST
+      // 🛑 FIND THE TRACKING DOCUMENT
       const linkDoc = await LinkPerformance.findOne(query);
 
       if (!linkDoc) {
@@ -93,88 +92,97 @@ export async function GET(req) {
         continue; 
       }
 
+      // 🧠 MASTER FALLBACK SMART PRODUCT NAME EXTRACTOR
+      let actualProductName = txn.product_name || "Target Product";
+
+      // Checking if product name is invalid/missing and substituting extra_info string context safely
+      if (!txn.product_name || txn.product_name.trim() === "" || txn.product_name === "N/A") {
+        if (txn.extra_info && txn.extra_info.trim() !== "" && txn.extra_info !== "N/A" && txn.extra_info !== "null") {
+          // Cleans template syntax strings or curly braces if emitted by certain affiliate edge subids
+          actualProductName = txn.extra_info.replace(/[{}()\[\]]/g, "").trim();
+        } else if (linkDoc.title) {
+          actualProductName = linkDoc.title; // Ultimate fallback to original generated link title asset
+        }
+      }
+
       // ============================================================
-      // 🕵️‍♂️ DUPLICATE ORDER PREVENTION (THE MASTER FIX)
+      // 🕵️‍♂️ MULTI-ITEM SAME-ORDER DUPLICATE PREVENTION LOGIC
       // ============================================================
       const existingTxnIndex = linkDoc.transactions.findIndex(t => {
-          // Priority 1: Exact Unique Transaction ID match (Sabse best)
-          if (t.transactionId && t.transactionId === uniqueTxnId) return true;
-          
-          // Priority 2: Purane DB records ka backup (Jisme abhi transactionId nahi hai, par orderId match ho raha hai)
-          if (!t.transactionId && t.orderId === orderId) return true;
-          
+          // Multi-item order mapping check (transaction ID + unique extracted product string)
+          if (t.transactionId === uniqueTxnId && t.productName === actualProductName) return true;
+          if (!t.transactionId && t.orderId === orderId && t.productName === actualProductName) return true;
           return false;
       });
 
       if (existingTxnIndex >= 0) {
-        // 🔄 SCENARIO 1: ITEM EXISTS -> UPDATE STATUS & COMMISSION ONLY
+        // 🔄 SCENARIO 1: ITEM STRUCT FOUND -> RE-CALCULATE AGGREGATES & UPDATE Lifecycle STATUS
         const existingTxn = linkDoc.transactions[existingTxnIndex];
 
-        // 🚨 UPGRADE OLD RECORDS: Agar purane record mein transactionId nahi hai, toh abhi daal do!
+        // Ensure current sync object retains unique ID sequence values
         if (!linkDoc.transactions[existingTxnIndex].transactionId) {
             linkDoc.transactions[existingTxnIndex].transactionId = uniqueTxnId;
         }
 
-        // Deduct old values from Aggregates before adding new ones
+        // Subtracting past values out before patching new network states back into aggregate fields
         if (existingTxn.status === 'pending') linkDoc.earnings.pending -= existingTxn.commission;
         if (existingTxn.status === 'approved' || existingTxn.status === 'confirmed') linkDoc.earnings.confirmed -= existingTxn.commission;
         if (existingTxn.status === 'cancelled' || existingTxn.status === 'declined' || existingTxn.status === 'rejected') linkDoc.earnings.cancelled -= existingTxn.commission;
 
-        // Update the specific transaction object
+        // Sync fresh status/commission payload items
         linkDoc.transactions[existingTxnIndex].status = txnStatus;
         linkDoc.transactions[existingTxnIndex].commission = creatorShare;
+        linkDoc.transactions[existingTxnIndex].saleAmount = saleAmount;
 
-        // Add new values to Aggregates
+        // Re-adding adjusted payload items back into global balance tracking items
         if (txnStatus === 'pending') linkDoc.earnings.pending += creatorShare;
         if (txnStatus === 'approved' || txnStatus === 'confirmed') linkDoc.earnings.confirmed += creatorShare;
         if (txnStatus === 'cancelled' || txnStatus === 'declined' || txnStatus === 'rejected') linkDoc.earnings.cancelled += creatorShare;
 
-        console.log(`🔄 UPDATED Item ID: ${uniqueTxnId} (Order: ${orderId}) to status: ${txnStatus}`);
+        console.log(`🔄 CRON SYNC UPDATE: Txn: ${uniqueTxnId} (${actualProductName}) status set to: ${txnStatus}`);
 
       } else {
-        // 🆕 SCENARIO 2: BRAND NEW ITEM -> PUSH NEW TRANSACTION
-        
+        // 🆕 SCENARIO 2: GENUINE NEW ITEM RECORD -> PUSH NEW OBJECT STRUCT
         const newTransaction = {
           transactionId: uniqueTxnId, 
           orderId: orderId, 
-          productName: txn.product_name || txn.extra_info || "Unknown Product",
+          productName: actualProductName,
           category: txn.category || "Other",
           transactionDate: txn.transaction_date ? new Date(txn.transaction_date) : new Date(),
-          channelId: txn.channel_id || "",
+          channelId: txn.channel_id || "Cuelinks",
           saleAmount: saleAmount,
           commission: creatorShare,
           status: txnStatus
         };
 
-        // Add to array
         linkDoc.transactions.push(newTransaction);
 
-        // Increment Aggregates (ONLY FOR NEW ITEMS)
+        // Core balance aggregation values incremental step logic runs exclusively on new items
         linkDoc.sales += 1;
         linkDoc.totalOrderValue += saleAmount;
         
-        // Add to earnings based on status
+        if (!linkDoc.earnings) linkDoc.earnings = { pending: 0, confirmed: 0, cancelled: 0 };
+        
         if (txnStatus === 'pending') linkDoc.earnings.pending += creatorShare;
         if (txnStatus === 'approved' || txnStatus === 'confirmed') linkDoc.earnings.confirmed += creatorShare;
         if (txnStatus === 'cancelled' || txnStatus === 'declined' || txnStatus === 'rejected') linkDoc.earnings.cancelled += creatorShare;
 
-        console.log(`✅ ADDED NEW Item ID: ${uniqueTxnId} for ${username} (Link: ${shortCode})`);
+        console.log(`✅ CRON SYNC ADDED: Txn: ${uniqueTxnId} (${actualProductName}) for user ${username}`);
       }
 
-      // Safe update conversion rate
+      // Safe update conversion rate calculations
       if (linkDoc.clicks > 0) {
-        linkDoc.conversionRate = (linkDoc.sales / linkDoc.clicks) * 100;
+        linkDoc.conversionRate = parseFloat(((linkDoc.sales / linkDoc.clicks) * 100).toFixed(2));
       }
 
-      // Finally, save the updated document
       await linkDoc.save();
       updatedCount++;
     }
 
-    return NextResponse.json({ success: true, updatedRecords: updatedCount, message: "Sync successful" });
+    return NextResponse.json({ success: true, updatedRecords: updatedCount, message: "Sync execution successfully closed." });
 
   } catch (error) {
-    console.error("⛔ CRON Sync Error:", error);
+    console.error("⛔ CRON Sync Global Script Error:", error);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }

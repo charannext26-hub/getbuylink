@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
+import connectToDatabase from "@/lib/mongodb"; // 🚨 NAYA: Optimized DB Connection
 import LinkPerformance from "@/lib/models/LinkPerformance";
 
 export async function GET(req) {
   try {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_URI);
-    }
+    // 🚨 NAYA: Prevent Vercel DB Timeout Error
+    await connectToDatabase();
 
     const { searchParams } = new URL(req.url);
     
@@ -18,7 +18,7 @@ export async function GET(req) {
     const baseOrderId = searchParams.get('order_id') || `ORDER_${Date.now()}`;
     const transaction_date = searchParams.get('transaction_date') || new Date().toISOString();
     
-    // 🚨 NAYA LOGIC: Sankmo se 'comment' (Product Name) nikalna
+    // Sankmo se 'comment' (Product Name) nikalna
     const rawComment = searchParams.get('comment');
 
     if (!click_id) {
@@ -29,7 +29,7 @@ export async function GET(req) {
     const clickLog = await mongoose.connection.db.collection('clicklogs').findOne({ clickId: click_id });
     
     if (!clickLog) {
-        console.log(`❌ Click ID ${click_id} not found in DB.`);
+        console.log(`❌ SANKMO: Click ID ${click_id} not found in DB.`);
         return NextResponse.json({ success: true, message: "Click not found, ignored." }); 
     }
 
@@ -42,25 +42,23 @@ export async function GET(req) {
     }
 
     // 3. 🧠 SMART PRODUCT NAME EXTRACTOR
-    let actualProductName = linkDoc.title || "Unknown Product"; // Fallback to our original title
+    let actualProductName = linkDoc.title || "Unknown Product"; 
     if (rawComment && rawComment.trim() !== "") {
         try {
-            // Check agar Sankmo ne JSON format bheja hai (e.g. {"title":"...","customer_type":"..."})
             const parsedComment = JSON.parse(rawComment);
             if (parsedComment.title) {
                 actualProductName = parsedComment.title;
             } else {
-                actualProductName = rawComment; // Agar JSON hai par title nahi hai
+                actualProductName = rawComment; 
             }
         } catch (e) {
-            // Agar normal text hai (JSON nahi hai)
             actualProductName = rawComment;
         }
     }
 
     console.log(`🔔 SANKMO POSTBACK: Order: ${baseOrderId} | Product: ${actualProductName} | Status: ${rawStatus} | Comm: ₹${creatorShare}`);
 
-    // Status Normalization (Cuelinks style)
+    // Status Normalization 
     let txnStatus = "pending";
     const sLower = rawStatus.toLowerCase();
     if (sLower.includes('approve') || sLower.includes('confirm') || sLower.includes('success')) {
@@ -70,9 +68,8 @@ export async function GET(req) {
     }
 
     // ============================================================
-    // 🕵️‍♂️ DUPLICATE ORDER PREVENTION (Multiple products in 1 order handle karna)
+    // 🕵️‍♂️ DUPLICATE ORDER PREVENTION (Strict Matching)
     // ============================================================
-    // Hum Order ID aur Product Name dono se check karenge
     const existingTxnIndex = linkDoc.transactions.findIndex(t => 
         t.orderId === baseOrderId && t.productName === actualProductName
     );
@@ -81,17 +78,19 @@ export async function GET(req) {
         // 🔄 SCENARIO 1: ITEM EXISTS -> UPDATE STATUS & COMMISSION ONLY
         const existingTxn = linkDoc.transactions[existingTxnIndex];
 
-        // Deduct old values
+        // 🚨 NAYA: DB Struct Sync Failsafe (Agar purane records mein transactionId nahi hai)
+        if (!linkDoc.transactions[existingTxnIndex].transactionId) {
+            linkDoc.transactions[existingTxnIndex].transactionId = `${baseOrderId}_${Math.random().toString(36).substr(2, 5)}`;
+        }
+
         if (existingTxn.status === 'pending') linkDoc.earnings.pending -= existingTxn.commission;
         if (existingTxn.status === 'confirmed' || existingTxn.status === 'approved') linkDoc.earnings.confirmed -= existingTxn.commission;
         if (existingTxn.status === 'cancelled' || existingTxn.status === 'declined' || existingTxn.status === 'rejected') linkDoc.earnings.cancelled -= existingTxn.commission;
 
-        // Update transaction object
         linkDoc.transactions[existingTxnIndex].status = txnStatus;
         linkDoc.transactions[existingTxnIndex].commission = creatorShare;
         linkDoc.transactions[existingTxnIndex].saleAmount = saleAmount;
 
-        // Add new values
         if (txnStatus === 'pending') linkDoc.earnings.pending += creatorShare;
         if (txnStatus === 'confirmed' || txnStatus === 'approved') linkDoc.earnings.confirmed += creatorShare;
         if (txnStatus === 'cancelled' || txnStatus === 'declined' || txnStatus === 'rejected') linkDoc.earnings.cancelled += creatorShare;
@@ -110,8 +109,8 @@ export async function GET(req) {
         const newTransaction = {
           transactionId: uniqueTxnId, 
           orderId: baseOrderId, 
-          productName: actualProductName, // 👈 Asli kharida hua product naam!
-          category: linkDoc.store || "Other", // Store name (e.g. Flipkart)
+          productName: actualProductName, 
+          category: linkDoc.store || "Other", 
           transactionDate: new Date(transaction_date),
           channelId: "Sankmo",
           saleAmount: saleAmount,

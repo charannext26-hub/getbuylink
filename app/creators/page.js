@@ -376,7 +376,7 @@ function DashboardContent() {
                 
                 <div className="grid grid-cols-3 gap-2 md:gap-6 divide-x divide-slate-100">
                   <div className="pr-1 md:pr-4">
-                    <p className="text-[9px] md:text-[11px] font-extrabold text-slate-800 uppercase mb-2 md:mb-3 flex items-center gap-1 md:gap-1.5 truncate">
+                    <p className="text-[7px] md:text-[11px] font-extrabold text-slate-800 uppercase mb-2 md:mb-3 flex items-center gap-1 md:gap-1.5 truncate">
                       <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-blue-500 shrink-0"></span> monetized links
                     </p>
                     <div className="space-y-1 md:space-y-2">
@@ -388,7 +388,7 @@ function DashboardContent() {
                   </div>
 
                   <div className="px-2 md:px-4">
-                    <p className="text-[9px] md:text-[11px] font-extrabold text-slate-800 uppercase mb-2 md:mb-3 flex items-center gap-1 md:gap-1.5 truncate">
+                    <p className="text-[7px] md:text-[11px] font-extrabold text-slate-800 uppercase mb-2 md:mb-3 flex items-center gap-1 md:gap-1.5 truncate">
                       <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-purple-500 shrink-0"></span> direct Links
                     </p>
                     <div className="space-y-1 md:space-y-2">
@@ -400,7 +400,7 @@ function DashboardContent() {
                   </div>
 
                   <div className="pl-2 md:pl-4">
-                    <p className="text-[9px] md:text-[11px] font-extrabold text-slate-800 uppercase mb-2 md:mb-3 flex items-center gap-1 md:gap-1.5 truncate">
+                    <p className="text-[7px] md:text-[11px] font-extrabold text-slate-800 uppercase mb-2 md:mb-3 flex items-center gap-1 md:gap-1.5 truncate">
                       <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-orange-500 shrink-0"></span> Auto-Published
                     </p>
                     <div className="space-y-1 md:space-y-2">
@@ -444,7 +444,7 @@ function DashboardContent() {
                   <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 px-1">Tips & Updates</h3>
                   <div ref={bannerScrollRef} onScroll={handleScroll} className="flex overflow-x-auto gap-4 snap-x snap-mandatory pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] scroll-smooth">
                     {platformConfig.banners.map((banner, idx) => (
-                      <a key={idx} href={banner.linkUrl || "#"} className="snap-center shrink-0 w-[90%] md:w-[80%] aspect-[21/8] rounded-2xl overflow-hidden relative shadow-sm block group bg-slate-200">
+                      <a key={idx} href={banner.linkUrl || "#"} className="snap-center shrink-0 w-[90%] md:w-[80%] aspect-[24/12] rounded-2xl overflow-hidden relative shadow-sm block group bg-slate-200">
                         <img src={banner.imageUrl} alt={`Banner ${idx}`} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       </a>
                     ))}
