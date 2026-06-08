@@ -37,7 +37,7 @@ const sankmoCampaigns = {
     "flipkart": "83956760",
     "myntra": "16407658",
     "ajio": "91411482",
-    "shopsy": "78454597",
+    
     "dot&key": "80483577"
 };
 const SANKMO_PUB_ID = "xPH2IO4";

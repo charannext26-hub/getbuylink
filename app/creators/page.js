@@ -444,7 +444,7 @@ function DashboardContent() {
                   <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 px-1">Tips & Updates</h3>
                   <div ref={bannerScrollRef} onScroll={handleScroll} className="flex overflow-x-auto gap-4 snap-x snap-mandatory pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] scroll-smooth">
                     {platformConfig.banners.map((banner, idx) => (
-                      <a key={idx} href={banner.linkUrl || "#"} className="snap-center shrink-0 w-[90%] md:w-[80%] aspect-[24/12] rounded-2xl overflow-hidden relative shadow-sm block group bg-slate-200">
+                      <a key={idx} href={banner.linkUrl || "#"} className="snap-center shrink-0 w-[90%] md:w-[80%] aspect-[28/12] rounded-2xl overflow-hidden relative shadow-sm block group bg-slate-200">
                         <img src={banner.imageUrl} alt={`Banner ${idx}`} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       </a>
                     ))}
