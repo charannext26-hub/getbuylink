@@ -170,7 +170,7 @@ function DashboardContent() {
       else if (hour < 18) timeGreeting = "Good Afternoon";
 
       const firstName = session.user.name.split(" ")[0];
-      setGreetingText(`Hi ${firstName}, ${timeGreeting}!`);
+      setGreetingText(`Hello ${firstName}, ${timeGreeting}!`);
     }
   }, [session?.user?.name]);
 

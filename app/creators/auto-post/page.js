@@ -9,7 +9,7 @@ const fetcher = (url) => fetch(url).then((res) => res.json());
 
 const ALL_CATEGORIES = [
   "Men's Fashion", "Women's Fashion", "Electronics & Mobiles", 
-  "Beauty & Grooming", "Home & Kitchen", "Footwear", "Accessories", "Grocery", "Special Deals"
+  "Beauty & Grooming", "Home & Kitchen", "Footwear", "Accessories", "Grocery", "Kids Product", "Special Deals"
 ];
 
 function AutoPostContent() {

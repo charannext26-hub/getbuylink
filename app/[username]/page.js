@@ -491,12 +491,12 @@ export default function CreatorBioPage({ params }) {
                   <h3 className={`text-xl font-black mb-4 flex items-center gap-2 ${currentTheme.text}`}><span className="text-yellow-500">⚠️</span> Disclaimer</h3>
                   <div className={`space-y-4 text-sm font-medium opacity-90 ${currentTheme.text}`}>
                       <p className="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/10">
-                          <span className="text-xl">💰</span>
-                          <span className="leading-snug">Prices change rapidly. The price shown was accurate at posting time but might have updated on the store.</span>
+                          <span className="text-xl">🏷️</span>
+                          <span className="leading-snug">Prices displayed are real-time promotional rates and may vary. They might differ from the original store price. Please verify the latest price on the brands website before making a purchase.</span>
                       </p>
                       <p className="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/10">
-                          <span className="text-xl">🛒</span>
-                          <span className="leading-snug">Stock is limited. High-discount deals sell out fast. Grab them quickly!</span>
+                          <span className="text-xl">📦</span>
+                          <span className="leading-snug">Product availability is based on merchant data and can change quickly. Some items shown here may be out of stock on the original store. Always check current stock directly on the brands website.</span>
                       </p>
                   </div>
                   <button onClick={() => setIsDisclaimerDrawerOpen(false)} className="w-full mt-6 py-3 bg-emerald-500 text-white rounded-xl font-bold shadow-md">Got it!</button>
@@ -529,7 +529,7 @@ export default function CreatorBioPage({ params }) {
         <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/60 backdrop-blur-sm px-4 pb-4" onClick={() => setIsShareDrawerOpen(false)}>
             <div className={`w-full max-w-md ${currentTheme.bg} rounded-[2rem] p-5 animate-in slide-in-from-bottom duration-300 shadow-2xl backdrop-blur-xl border border-white/20`} onClick={e => e.stopPropagation()}>
                 <div className="w-12 h-1.5 bg-slate-400/50 rounded-full mx-auto mb-5"></div>
-                <h3 className={`text-xl font-black mb-5 pl-1 ${currentTheme.text}`}>Share Specific Page</h3>
+                <h3 className={`text-xl font-black mb-5 pl-1 ${currentTheme.text}`}>Share tab you want visitors to see first</h3>
                 <div className="space-y-3">
                     {[
                         { id: 'home', icon: '🛍️', label: 'Shop All Feed' },

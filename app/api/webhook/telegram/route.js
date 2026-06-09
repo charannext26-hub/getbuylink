@@ -18,6 +18,7 @@ const BROAD_CATEGORIES = [
   "Footwear", 
   "Accessories", 
   "Grocery",
+  "Kids Product",
   "Special Deals"
 ];
 
@@ -116,7 +117,7 @@ export async function POST(req) {
     };
 
     // 🤖 THE MULTI-MODEL AI BRAIN (Failover System)
-    const AI_MODELS = ["gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"];
+    const AI_MODELS = ["gemini-3.1-flash-lite", "gemini-2.5-flash-lite", "gemini-2.5-flash"];
     let aiSuccess = false;
 
     for (const modelName of AI_MODELS) {
