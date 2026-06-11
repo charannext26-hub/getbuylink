@@ -342,7 +342,7 @@ function AddlinkContent() {
             {/* PREMIUM / MONETIZE LINK OPTION */}
             <div 
               onClick={() => setLinkMode("platform")}
-              className={`cursor-pointer group flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 ${
+              className={`cursor-pointer group flex items-center justify-between py-2.5 px-4 rounded-2xl border-2 transition-all duration-200 ${
                 linkMode === 'platform' 
                   ? 'border-blue-600 bg-blue-50/70 shadow-sm' 
                   : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
@@ -360,7 +360,7 @@ function AddlinkContent() {
                   e.stopPropagation(); 
                   setInfoModal({ 
                     show: true, 
-                    title: "Monetize by favylink", 
+                    title: "Monetize Link", 
                     desc: "Paste standard product URLs (like Amazon, Flipkart, Myntra) here. Our smart engine will automatically convert them into FavyLink affiliate links, ensuring you earn commissions on every sale.",
                     actionText: "View Active Campaigns",
                     actionLink: "/campaign-rates"
@@ -375,7 +375,7 @@ function AddlinkContent() {
             {/* OWN / DIRECT LINK OPTION */}
             <div 
               onClick={() => setLinkMode("own")}
-              className={`cursor-pointer group flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 ${
+              className={`cursor-pointer group flex items-center justify-between py-2.5 px-4 rounded-2xl border-2 transition-all duration-200 ${
                 linkMode === 'own' 
                   ? 'border-purple-600 bg-purple-50/70 shadow-sm' 
                   : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
@@ -541,7 +541,7 @@ function AddlinkContent() {
                  <input 
                    type="text" 
                    list="category-list"
-                   placeholder="Select Category" 
+                   placeholder="Category Select" 
                    value={category} 
                    onChange={(e) => setCategory(e.target.value)} 
                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-3.5 text-slate-900 font-bold text-sm focus:border-blue-500 outline-none" 
