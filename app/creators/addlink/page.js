@@ -243,11 +243,32 @@ function AddlinkContent() {
       
       {/* INFO MODAL POPUP */}
       {infoModal.show && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-sm w-full shadow-2xl transform animate-in zoom-in duration-200">
-            <h3 className="font-extrabold text-lg text-slate-900 mb-2">{infoModal.title}</h3>
-            <p className="text-slate-500 text-sm font-medium leading-relaxed mb-6">{infoModal.desc}</p>
-            <button onClick={() => setInfoModal({ show: false, title: "", desc: "" })} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+            <h3 className="text-xl font-bold text-slate-800 mb-2">{infoModal.title}</h3>
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              {infoModal.desc}
+            </p>
+            
+            {/* NAYA: Campaign Link Button (Ye auto-hide hota hai) */}
+            {infoModal.actionText && (
+              <button 
+                onClick={() => {
+                  setInfoModal({ show: false });
+                  router.push(infoModal.actionLink);
+                }}
+                className="w-full mb-3 bg-slate-50 text-blue-600 font-extrabold border border-blue-200 py-3 rounded-xl hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+              >
+                {infoModal.actionText}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+              </button>
+            )}
+
+            {/* Default Got It Button */}
+            <button 
+              onClick={() => setInfoModal({ show: false })} 
+              className="w-full bg-blue-600 text-white font-extrabold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+            >
               Got it
             </button>
           </div>
@@ -311,89 +332,78 @@ function AddlinkContent() {
           <p className="text-slate-500 font-bold text-xs md:text-sm mb-0.5">Generate/Add links to monetize your audience.</p>
         </div>
 
-        {/* 👇 NAYA: Compact Monetization Method */}
-        <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
-          <h2 className="text-sm font-extrabold text-slate-800 mb-3 flex items-center gap-1.5">
-          Select Link Type
+        {/* 1. LINK MODE SELECTION */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h2 className="text-lg font-extrabold text-slate-800 mb-4">
+            Select Link Type
           </h2>
-          
-          <div className="grid grid-cols-2 gap-2 md:gap-4">
+          <div className="flex flex-col gap-3">
             
-  {/* PREMIUM / MONETIZE LINK */}
-  <div 
-    onClick={() => setLinkMode("platform")} 
-    className={`cursor-pointer group flex items-center justify-between p-3.5 md:p-4 rounded-xl border-2 transition-all duration-200 ${
-      linkMode === 'platform' 
-        ? 'border-blue-600 bg-blue-50/70 shadow-sm' 
-        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-    }`}
-  >
-    <div className="flex items-center gap-3">
-      <input 
-        type="radio" 
-        checked={linkMode === 'platform'} 
-        readOnly 
-        className="w-4 h-4 accent-blue-600 pointer-events-none" 
-      />
-      <span className={`font-bold text-sm md:text-base ${linkMode === 'platform' ? 'text-blue-900' : 'text-slate-700'}`}>
-        Auto-Monetize Link
-      </span>
-    </div>
-    
-    <button 
-      onClick={(e) => { 
-        e.stopPropagation(); 
-        setInfoModal({ 
-          show: true, 
-          title: "Auto-Monetize Link", 
-          desc: "Paste standard product URLs (like Amazon, Flipkart, Myntra) here. Our smart engine will automatically convert them into FavyLink affiliate links, ensuring you earn commissions on every sale.",
-          // Note: Aapko apne Modal component mein ye action button render karna padega
-          actionText: "View Active Campaigns",
-          actionLink: "/campaign-rates"
-        }); 
-      }} 
-      className={`p-1.5 rounded-md transition-colors ${linkMode === 'platform' ? 'text-blue-600 hover:bg-blue-100' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200'}`}
-    >
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-    </button>
-  </div>
+            {/* PREMIUM / MONETIZE LINK OPTION */}
+            <div 
+              onClick={() => setLinkMode("platform")}
+              className={`cursor-pointer group flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 ${
+                linkMode === 'platform' 
+                  ? 'border-blue-600 bg-blue-50/70 shadow-sm' 
+                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <input type="radio" checked={linkMode === 'platform'} readOnly className="w-4 h-4 accent-blue-600 pointer-events-none" />
+                <div className={`font-bold text-sm md:text-base ${linkMode === 'platform' ? 'text-blue-900' : 'text-slate-700'}`}>
+                  Monetize Link
+                </div>
+              </div>
+              
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setInfoModal({ 
+                    show: true, 
+                    title: "Monetize by favylink", 
+                    desc: "Paste standard product URLs (like Amazon, Flipkart, Myntra) here. Our smart engine will automatically convert them into FavyLink affiliate links, ensuring you earn commissions on every sale.",
+                    actionText: "View Active Campaigns",
+                    actionLink: "/campaign-rates"
+                  }); 
+                }} 
+                className={`p-1.5 rounded-md transition-colors ${linkMode === 'platform' ? 'text-blue-600 hover:bg-blue-100' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200'}`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </button>
+            </div>
 
-  {/* OWN / DIRECT LINK */}
-  <div 
-    onClick={() => setLinkMode("own")} 
-    className={`cursor-pointer group flex items-center justify-between p-3.5 md:p-4 rounded-xl border-2 transition-all duration-200 ${
-      linkMode === 'own' 
-        ? 'border-purple-600 bg-purple-50/70 shadow-sm' 
-        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-    }`}
-  >
-    <div className="flex items-center gap-3">
-      <input 
-        type="radio" 
-        checked={linkMode === 'own'} 
-        readOnly 
-        className="w-4 h-4 accent-purple-600 pointer-events-none" 
-      />
-      <span className={`font-bold text-sm md:text-base ${linkMode === 'own' ? 'text-purple-900' : 'text-slate-700'}`}>
-        Direct Link
-      </span>
-    </div>
-    
-    <button 
-      onClick={(e) => { 
-        e.stopPropagation(); 
-        setInfoModal({ 
-          show: true, 
-          title: "Direct Link", 
-          desc: "Paste any URL exactly as it is. Use this for your personal portfolio, social profiles, YouTube videos, or your own existing affiliate links (like your personal Amazon Associate tags). We will not modify this link." 
-        }); 
-      }} 
-      className={`p-1.5 rounded-md transition-colors ${linkMode === 'own' ? 'text-purple-600 hover:bg-purple-100' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200'}`}
-    >
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-    </button>
-  </div>
-</div>
+            {/* OWN / DIRECT LINK OPTION */}
+            <div 
+              onClick={() => setLinkMode("own")}
+              className={`cursor-pointer group flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 ${
+                linkMode === 'own' 
+                  ? 'border-purple-600 bg-purple-50/70 shadow-sm' 
+                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <input type="radio" checked={linkMode === 'own'} readOnly className="w-4 h-4 accent-purple-600 pointer-events-none" />
+                <div className={`font-bold text-sm md:text-base ${linkMode === 'own' ? 'text-purple-900' : 'text-slate-700'}`}>
+                  Direct Link
+                </div>
+              </div>
+              
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setInfoModal({ 
+                    show: true, 
+                    title: "Direct Link", 
+                    desc: "Paste any URL exactly as it is. Use this for your personal portfolio, social profiles, YouTube videos, or your own existing affiliate links (like your personal Amazon Associate tags). We will not modify this link." 
+                  }); 
+                }} 
+                className={`p-1.5 rounded-md transition-colors ${linkMode === 'own' ? 'text-purple-600 hover:bg-purple-100' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200'}`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </button>
+            </div>
+
+          </div>
         </div>
 
         {/* 2. ADD LINKS BOX */}
@@ -412,31 +422,25 @@ function AddlinkContent() {
             className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-4 text-slate-900 text-sm font-medium focus:outline-none focus:border-blue-500 transition-colors placeholder:text-slate-400"
           ></textarea>
           
-          {/* 🚨 NAYA: Magic Button */}
-          <button onClick={handleFetchPreview} disabled={isFetching || !rawLinks.trim()} className="mt-4 w-full md:w-auto px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-            {isFetching ? "Fetching Details..." : (
-              <>
-                <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="20" 
-    height="20" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
-    className="text-yellow-400 drop-shadow-sm"
-  >
-    <path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"></path>
-    <path d="m14 7 3-3 3 3-3 3Z"></path>
-    <path d="m5 11 2-2 2 2-2 2Z"></path>
-    <path d="m19 15 2-2 2 2-2 2Z"></path>
-  </svg>
-                Fetch Details
-              </>
-            )}
-          </button>
+          {/* Magic Button */}
+          {/* NAYA: Trendy Magic Sparkle Button */}
+      <button 
+        onClick={handleFetchPreview} 
+        disabled={isFetching || !rawLinks.trim()} 
+        className="mt-4 w-full bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-sm md:text-base py-3.5 md:py-4 rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-md active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+      >
+        {isFetching ? "Fetching Details..." : (
+          <>
+            {/* Modern AI Sparkle Icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" className="text-yellow-400 drop-shadow-md">
+              <path d="M11.644 1.547a.75.75 0 0 1 1.212 0l2.02 2.693a2.25 2.25 0 0 0 1.096 1.096l2.693 2.02a.75.75 0 0 1 0 1.212l-2.693 2.02a2.25 2.25 0 0 0-1.096 1.096l-2.02 2.693a.75.75 0 0 1-1.212 0l-2.02-2.693a2.25 2.25 0 0 0-1.096-1.096l-2.693-2.02a.75.75 0 0 1 0-1.212l2.693-2.02a2.25 2.25 0 0 0 1.096-1.096l2.02-2.693Z" />
+              <path d="M19.456 12.015a.75.75 0 0 1 .606 0l1.01.758a1.125 1.125 0 0 0 .548.548l.758 1.01a.75.75 0 0 1 0 .606l-.758 1.01a1.125 1.125 0 0 0-.548.548l-1.01.758a.75.75 0 0 1-.606 0l-1.01-.758a1.125 1.125 0 0 0-.548-.548l-.758-1.01a.75.75 0 0 1 0-.606l.758-1.01a1.125 1.125 0 0 0 .548-.548l1.01-.758Z" />
+              <path d="M4.544 16.015a.75.75 0 0 1 .606 0l1.01.758a1.125 1.125 0 0 0 .548.548l.758 1.01a.75.75 0 0 1 0 .606l-.758 1.01a1.125 1.125 0 0 0-.548.548l-1.01.758a.75.75 0 0 1-.606 0l-1.01-.758a1.125 1.125 0 0 0-.548-.548l-.758-1.01a.75.75 0 0 1 0-.606l.758-1.01a1.125 1.125 0 0 0 .548-.548l1.01-.758Z" />
+            </svg>
+            Fetch Details
+          </>
+        )}
+      </button>
         </div>
 
         {/* 3. LIVE PREVIEW EDIT CARDS */}
