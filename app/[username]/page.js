@@ -899,7 +899,7 @@ export default function CreatorBioPage({ params }) {
                               
                               {/* Smart Pricing Block (BUG FIXED: Handles missing price but available discount) */}
                               {(activeDeal.price || activeDeal.discountPercent) && (
-                                  <div className="bg-white/5 backdrop-blur-md rounded-xl px-3 py-2 mb-4 inline-flex items-end gap-2 border border-white/10 shadow-sm">
+                                  <div className="bg-white/20 backdrop-blur-md rounded-xl px-3 py-2 mb-4 inline-flex items-end gap-2 border border-white/20 shadow-sm">
                                       
                                       {/* Agar Price hai toh dikhao */}
                                       {activeDeal.price && (
@@ -975,7 +975,7 @@ export default function CreatorBioPage({ params }) {
                                   </div>
                               )}
 
-                              {/* Similar Category Products (BUG FIXED: Now fetches from full 'deals' array) */}
+                              {/* Similar Category Products (BUG FIXED: Random Shuffle Logic Added) */}
                               {activeDeal.category && activeDeal.category !== "Other" && (
                                   <div className="mt-8 border-t border-white/10 pt-6">
                                       <h3 className="font-black text-[15px] mb-4 uppercase tracking-wide opacity-90">
@@ -984,8 +984,10 @@ export default function CreatorBioPage({ params }) {
                                       <div className="columns-2 gap-3 space-y-3">
                                           {deals
                                               .filter(d => d.category === activeDeal.category && d._id !== activeDeal._id)
-                                              .sort((a, b) => (b.totalClicks || 0) - (a.totalClicks || 0))
-                                              .slice(0, 6)
+                                              // 👇 NAYA LOGIC: Ye line array ko har baar randomly mix (shuffle) kar degi
+                                              .sort(() => 0.5 - Math.random())
+                                              // 👇 6 ki jagah 8 kar diya hai taaki explore karne mein aur maza aaye
+                                              .slice(0, 8) 
                                               .map((relatedDeal, idx) => (
                                                   <div key={idx} className="break-inside-avoid relative">
                                                       <GridProductCard deal={relatedDeal} onClick={() => openDetailedModal(relatedDeal)} themeCardClass={currentTheme.card} onToast={triggerToast} />

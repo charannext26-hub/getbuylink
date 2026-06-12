@@ -283,7 +283,7 @@ function AddlinkContent() {
               <div>
                 <h2 className="font-extrabold text-xl text-slate-900 flex items-center gap-2">
                   <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                  Deals Published!
+                  Published!
                 </h2>
                 <p className="text-xs font-bold text-slate-500 mt-1">Your links are ready to be shared.</p>
               </div>
@@ -329,7 +329,7 @@ function AddlinkContent() {
         {/* 👇 NAYA: Compact One-Line Header */}
         <div className="mb-4 flex flex-col md:flex-row md:items-end gap-1 md:gap-3">
           <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-none">Add Links & Collection</h1>
-          <p className="text-slate-500 font-bold text-xs md:text-sm mb-0.5">Generate/Add links to monetize your audience.</p>
+          <p className="text-slate-500 font-bold text-xs md:text-sm mb-0.5">Add Favourite links to monetize your audience.</p>
         </div>
 
         {/* 1. LINK MODE SELECTION */}
@@ -342,7 +342,7 @@ function AddlinkContent() {
             {/* PREMIUM / MONETIZE LINK OPTION */}
             <div 
               onClick={() => setLinkMode("platform")}
-              className={`cursor-pointer group flex items-center justify-between py-2.5 px-4 rounded-2xl border-2 transition-all duration-200 ${
+              className={`cursor-pointer group flex items-center justify-between py-1.5 px-4 rounded-2xl border-2 transition-all duration-200 ${
                 linkMode === 'platform' 
                   ? 'border-blue-600 bg-blue-50/70 shadow-sm' 
                   : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
@@ -375,7 +375,7 @@ function AddlinkContent() {
             {/* OWN / DIRECT LINK OPTION */}
             <div 
               onClick={() => setLinkMode("own")}
-              className={`cursor-pointer group flex items-center justify-between py-2.5 px-4 rounded-2xl border-2 transition-all duration-200 ${
+              className={`cursor-pointer group flex items-center justify-between py-1.5 px-4 rounded-2xl border-2 transition-all duration-200 ${
                 linkMode === 'own' 
                   ? 'border-purple-600 bg-purple-50/70 shadow-sm' 
                   : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
@@ -748,9 +748,9 @@ function AddlinkContent() {
                        <label className="text-[10px] font-extrabold text-slate-400 uppercase">Button #2 (Your Store)</label>
                        <div className="grid grid-cols-2 gap-2 mt-1">
                           <div className="text-xs font-bold text-slate-700 bg-slate-50 p-2 rounded border border-slate-100 truncate">Visit my store 🚀</div>
-                          <div className="text-[10px] font-medium text-blue-600 bg-slate-50 p-2 rounded border border-slate-100 truncate">https://getbuylink.vercel.app/{username}</div>
+                          <div className="text-[10px] font-medium text-blue-600 bg-slate-50 p-2 rounded border border-slate-100 truncate">https://favylink.com/{username}</div>
                        </div>
-                       <button onClick={() => { navigator.clipboard.writeText(`Name: Visit my store 🚀\nLink: https://getbuylink.vercel.app/${username}`); showToast("Button 2 Copied!"); }} className="absolute top-3 right-3 text-slate-400 bg-slate-100 p-1.5 rounded-md hover:bg-slate-200 transition-colors">
+                       <button onClick={() => { navigator.clipboard.writeText(`Name: Visit my store 🚀\nLink: https://favylink.com/${username}`); showToast("Button 2 Copied!"); }} className="absolute top-3 right-3 text-slate-400 bg-slate-100 p-1.5 rounded-md hover:bg-slate-200 transition-colors">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                        </button>
                     </div>
@@ -760,15 +760,15 @@ function AddlinkContent() {
                        <label className="text-[10px] font-extrabold text-slate-400 uppercase">Button #3 (Live Offers)</label>
                        <div className="grid grid-cols-2 gap-2 mt-1">
                           <div className="text-xs font-bold text-slate-700 bg-slate-50 p-2 rounded border border-slate-100 truncate">Live Deals ⚡</div>
-                          <div className="text-[10px] font-medium text-blue-600 bg-slate-50 p-2 rounded border border-slate-100 truncate">https://getbuylink.vercel.app/{username}?tab=liveoffer</div>
+                          <div className="text-[10px] font-medium text-blue-600 bg-slate-50 p-2 rounded border border-slate-100 truncate">https://favylink.com/{username}?tab=liveoffer</div>
                        </div>
-                       <button onClick={() => { navigator.clipboard.writeText(`Name: Live Deals ⚡\nLink: https://getbuylink.vercel.app/${username}?tab=liveoffer`); showToast("Button 3 Copied!"); }} className="absolute top-3 right-3 text-slate-400 bg-slate-100 p-1.5 rounded-md hover:bg-slate-200 transition-colors">
+                       <button onClick={() => { navigator.clipboard.writeText(`Name: Live Deals ⚡\nLink: https://favylink.com/${username}?tab=liveoffer`); showToast("Button 3 Copied!"); }} className="absolute top-3 right-3 text-slate-400 bg-slate-100 p-1.5 rounded-md hover:bg-slate-200 transition-colors">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                        </button>
                     </div>
 
                     <button onClick={() => { 
-                       const fullText = `--- DM CONTENT ---\n${randomDmText}\n\n--- BUTTON 1 ---\nName: Shop Now\nLink: ${autoDmModal.linkObj?.url}\n\n--- BUTTON 2 ---\nName: Visit my store 🚀\nLink: https://getbuylink.vercel.app/${username}\n\n--- BUTTON 3 ---\nName: Live Deals ⚡\nLink: https://getbuylink.vercel.app/${username}?tab=liveoffer`;
+                       const fullText = `--- DM CONTENT ---\n${randomDmText}\n\n--- BUTTON 1 ---\nName: Shop Now\nLink: ${autoDmModal.linkObj?.url}\n\n--- BUTTON 2 ---\nName: Visit my store 🚀\nLink: https://favylink.com/${username}\n\n--- BUTTON 3 ---\nName: Live Deals ⚡\nLink: https://favylink.com/${username}?tab=liveoffer`;
                        navigator.clipboard.writeText(fullText); 
                        showToast("All templates copied"); 
                     }} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-sm shadow-md hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
