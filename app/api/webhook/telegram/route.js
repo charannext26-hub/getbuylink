@@ -22,34 +22,24 @@ const BROAD_CATEGORIES = [
   "Special Deals"
 ];
 
-// 🧹 THE PRICE CLEANER (Kachra saaf karke ₹ lagayega)
+// 🧹 THE PRICE CLEANER
 function formatPrice(rawPrice) {
   if (!rawPrice) return "";
-  
-  // "Rs", "Rs.", "Price", "rupees", aur purane "₹" ko delete karo
   let cleanStr = String(rawPrice).replace(/rs\.?|rupees|price|₹/gi, "").trim();
-  
-  // Sirf numbers aur comma (jaise 1,299) ko dhoondho
   const numberMatch = cleanStr.match(/[\d,]+(\.\d+)?/);
-  
   if (numberMatch) {
-      return `₹${numberMatch[0]}`; // Ekdum saaf format: ₹1,299
+      return `₹${numberMatch[0]}`; 
   }
   return ""; 
 }
 
-// 🧹 THE DISCOUNT CLEANER (Kachra saaf karke '% OFF' lagayega)
+// 🧹 THE DISCOUNT CLEANER
 function formatDiscount(rawDiscount) {
   if (!rawDiscount) return "";
-  
-  // String ko uppercase kardo aur purana "OFF" hata do taaki double na ho
   let cleanStr = String(rawDiscount).toUpperCase().replace(/\s*OFF\s*/g, "").trim();
-  
-  // Sirf number dhoondho (jaise 56, 10, 80)
   const numberMatch = cleanStr.match(/(\d+)/);
-  
   if (numberMatch) {
-      return `${numberMatch[1]}% OFF`; // Ekdum premium format: 56% OFF
+      return `${numberMatch[1]}% OFF`; 
   }
   return ""; 
 }
@@ -112,11 +102,13 @@ export async function POST(req) {
       catchyTitle: ogTitle,
       category: guessCategory(text + " " + ogTitle), 
       price: formatPrice(scraperPrice), 
-      discountPercent: formatDiscount(scraperDiscount), // 🔥 Scraper ka discount clean kiya
-      couponCode: ""
+      discountPercent: formatDiscount(scraperDiscount), 
+      couponCode: "",
+      description: "An amazing handpicked deal. Click to grab it before the offer ends!",
+      saleEndTime: null
     };
 
-    // 🤖 THE MULTI-MODEL AI BRAIN (Failover System)
+    // 🤖 THE MULTI-MODEL AI BRAIN
     const AI_MODELS = ["gemini-3.1-flash-lite", "gemini-2.5-flash-lite", "gemini-2.5-flash"];
     let aiSuccess = false;
 
@@ -125,11 +117,11 @@ export async function POST(req) {
           console.log(`➡️ Trying AI Model: ${modelName}`);
           const model = genAI.getGenerativeModel({ 
               model: modelName,
-              generationConfig: { responseMimeType: "application/json" } // FORCE 100% JSON
+              generationConfig: { responseMimeType: "application/json" }
           }); 
 
           const prompt = `
-            Analyze this e-commerce deal.
+            Analyze this e-commerce deal carefully.
             TELEGRAM POST: "${text}"
             SCRAPED TITLE: "${ogTitle}"
             
@@ -138,8 +130,10 @@ export async function POST(req) {
             3. price: Extract ONLY the final price number from text. If none, return "".
             4. discountPercent: Extract discount (e.g. "50% OFF") from text. If none, return "".
             5. couponCode: Extract promo code from text. If none, return "".
+            6. description: Write a highly engaging, sales-driven 3-line product description. End with a "Why buy this?" section containing 2 short bullet points.
+            7. saleEndTime: If a specific expiry time, date, or "valid till" is mentioned, extract it. Otherwise, return "".
             
-            Respond ONLY with a valid JSON object.
+            Respond ONLY with a valid JSON object matching these 7 keys.
           `;
 
           const result = await model.generateContent(prompt);
@@ -155,14 +149,17 @@ export async function POST(req) {
               aiData.category = guessCategory(text + " " + ogTitle); 
           }
           
-          // 🔥 AI ne jo price aur discount diya, usko clean karke format karo
           aiData.price = formatPrice(parsedAiData.price) || formatPrice(scraperPrice) || "";
           aiData.discountPercent = formatDiscount(parsedAiData.discountPercent) || formatDiscount(scraperDiscount) || "";
           aiData.couponCode = parsedAiData.couponCode || "";
           
+          // 🔥 NAYA: Capturing the generated description and expiry time
+          aiData.description = parsedAiData.description || aiData.description;
+          aiData.saleEndTime = parsedAiData.saleEndTime || null;
+          
           console.log(`✅ AI Parsed Successfully using ${modelName}!`);
           aiSuccess = true;
-          break; // Data mil gaya, aage ke models ko check mat karo (Loop Stop)
+          break; 
 
         } catch (aiError) {
           console.log(`⚠️ Model ${modelName} failed/Limit Reached. Switching to next...`);
@@ -191,9 +188,11 @@ export async function POST(req) {
       discountPercent: aiData.discountPercent,
       couponCode: aiData.couponCode,
       source: "telegram",
+      description: aiData.description, // 🔥 Saved to DB
+      saleEndTime: aiData.saleEndTime // 🔥 Saved to DB
     });
 
-    console.log("✅ Auto Deal saved cleanly. Price:", newDeal.price, "Discount:", newDeal.discountPercent, "Category:", newDeal.category);
+    console.log("✅ Auto Deal saved cleanly. Category:", newDeal.category);
 
     return NextResponse.json({ success: true }, { status: 200 });
 

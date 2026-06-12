@@ -182,6 +182,55 @@ export default function CreatorBioPage({ params }) {
   const [isEscapingApp, setIsEscapingApp] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
 
+  // 👇 YAHAN PASTE KIJIYE: Detailed Product Modal States
+  const [detailedDealModal, setDetailedDealModal] = useState({ isOpen: false, deal: null });
+  const [isGeneratingShare, setIsGeneratingShare] = useState(false);
+
+  // 👇 YAHAN PASTE KIJIYE: Back Button se Modal Close karne ka Logic
+  useEffect(() => {
+      const handlePopState = () => {
+          if (detailedDealModal.isOpen) {
+              setDetailedDealModal({ isOpen: false, deal: null });
+          }
+      };
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+  }, [detailedDealModal.isOpen]);
+
+  const openDetailedModal = (deal) => {
+      window.history.pushState({ modalOpen: true }, ''); 
+      setDetailedDealModal({ isOpen: true, deal });
+  };
+
+  const handleShareDetailedDeal = async (deal) => {
+      setIsGeneratingShare(true);
+      try {
+          let finalUrl = deal.expandedUrl || deal.originalUrl;
+          if (creator) {
+              const res = await fetch('/api/generate-link', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ dealId: deal._id, creatorUsername: creator.username, triggerSource: "detailed_share" })
+              });
+              const data = await res.json();
+              if (data.success && data.shortCode) finalUrl = `${window.location.origin}/go/${data.shortCode}`;
+          }
+          
+          const shareText = `🔥 ${deal.title}\n\n🛒 Store: ${deal.store}\n💰 Price: ${deal.price || 'Best Price'}\n\nGrab the deal here: `;
+          
+          if (navigator.share) {
+              navigator.share({ title: deal.title, text: shareText, url: finalUrl }).catch(()=>{});
+          } else {
+              navigator.clipboard.writeText(shareText + finalUrl);
+              triggerToast("Link & Details Copied!");
+          }
+      } catch (e) {
+          triggerToast("Failed to generate share link");
+      } finally {
+          setIsGeneratingShare(false);
+      }
+  };
+
   // 👇 NAYA: Passive Scroll Listener (For Smooth Scrolling)
   useEffect(() => {
       const handleScroll = () => {
@@ -752,7 +801,8 @@ export default function CreatorBioPage({ params }) {
                       {telegramDeals.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No live deals right now.</p> : 
                           orderedTelegramDeals.map((deal, idx) => ( 
                               <div key={idx} className="break-inside-avoid"> 
-                                  <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} showTimeAgo={true} />
+                                  {/* 👇 NAYA: onClick = openDetailedModal, aur isLiveOffer={true} */}
+                                  <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} showTimeAgo={true} isLiveOffer={true} />
                               </div>
                           ))
                       }
@@ -800,9 +850,77 @@ export default function CreatorBioPage({ params }) {
         </div>
       )}
 
-      </div>
-    </div>
-  );
+      {/* 🚀 YAHAN AAYEGA DETAILED PRODUCT MODAL */}
+      {detailedDealModal.isOpen && detailedDealModal.deal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => { window.history.back(); }}>
+            
+            <div className={`w-full max-w-md ${currentTheme.bg} rounded-[2rem] overflow-hidden shadow-2xl border border-white/20 animate-in zoom-in-95 duration-300 flex flex-col max-h-[85vh] relative mb-12`} onClick={e => e.stopPropagation()}>
+                {/* Scrollable Area */}
+                <div className="overflow-y-auto [&::-webkit-scrollbar]:hidden flex-1 pb-24">
+                    <div className="w-full aspect-square bg-white relative p-4 flex items-center justify-center shadow-inner">
+                        <img src={detailedDealModal.deal.image} className="w-full h-full object-contain mix-blend-multiply" alt="Product" />
+                        <div className="absolute top-4 left-4 bg-black/80 text-white text-[10px] font-black px-3 py-1.5 rounded-full backdrop-blur-md shadow-md">
+                            {detailedDealModal.deal.store || "Exclusive"}
+                        </div>
+                        {detailedDealModal.deal.discountPercent && (
+                            <div className="absolute top-4 right-4 bg-rose-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-md animate-pulse">
+                                {detailedDealModal.deal.discountPercent}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={`p-5 ${currentTheme.text}`}>
+                        <h2 className="text-lg font-black leading-tight mb-3 opacity-95">{detailedDealModal.deal.title}</h2>
+                        
+                        <div className="flex items-center gap-3 mb-4">
+                            {detailedDealModal.deal.price && <span className="text-3xl font-black text-emerald-500">{detailedDealModal.deal.price}</span>}
+                        </div>
+
+                        {detailedDealModal.deal.description && (
+                            <div className="bg-white/5 border border-white/10 p-4 rounded-2xl mb-4 text-sm font-medium leading-relaxed opacity-90 shadow-sm">
+                                {detailedDealModal.deal.description}
+                            </div>
+                        )}
+
+                        {detailedDealModal.deal.saleEndTime && (
+                            <div className="mb-4 bg-red-500/10 border border-red-500/20 p-3 rounded-2xl">
+                                <LiveTimer targetDate={detailedDealModal.deal.saleEndTime} />
+                            </div>
+                        )}
+
+                        {detailedDealModal.deal.couponCode && (
+                            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 border-dashed rounded-xl px-4 py-3 mb-2">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-0.5">Use Coupon Code</span>
+                                    <span className="text-lg font-black text-emerald-500 tracking-wider">{detailedDealModal.deal.couponCode}</span>
+                                </div>
+                                <button onClick={() => { navigator.clipboard.writeText(detailedDealModal.deal.couponCode); triggerToast("Coupon copied!"); }} className="bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md active:scale-95 transition-all">COPY</button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Fixed Bottom Action Bar */}
+                <div className="absolute bottom-0 left-0 w-full p-4 bg-black/40 backdrop-blur-xl border-t border-white/10 flex items-center gap-3">
+                    <button onClick={() => handleShareDetailedDeal(detailedDealModal.deal)} disabled={isGeneratingShare} className="w-14 h-14 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl flex items-center justify-center text-white shrink-0 transition-all active:scale-95">
+                        {isGeneratingShare ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>}
+                    </button>
+                    <button onClick={() => handleDealClick(detailedDealModal.deal)} className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg rounded-2xl shadow-[0_4px_20px_rgba(16,185,129,0.4)] flex items-center justify-center transition-all active:scale-95">
+                        Buy on {detailedDealModal.deal.store || "Store"}
+                    </button>
+                </div>
+            </div>
+
+            {/* Floating Close Button */}
+            <button onClick={() => { window.history.back(); }} className="absolute bottom-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-white/20 backdrop-blur-xl border border-white/30 text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-white/40 transition-all z-[210]">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+      )}
+
+      </div> 
+    </div> 
+  ); 
 }
 
 // ----------------- UNIVERSAL PRODUCT CARD -----------------
@@ -864,18 +982,16 @@ function LiveTimer({ targetDate }) {
     );
 }
 
-function GridProductCard({ deal, onClick, themeCardClass, onToast, showTimeAgo }) {
+// 👇 NAYA: isLiveOffer add kiya
+function GridProductCard({ deal, onClick, themeCardClass, onToast, showTimeAgo, isLiveOffer }) {
     return (
         <div className={`border shadow-sm rounded-2xl p-2 flex flex-col hover:scale-[1.02] transition-transform cursor-pointer group ${themeCardClass}`} onClick={onClick}>
             
             <div className="w-full aspect-square bg-white rounded-xl mb-2 relative p-1 overflow-hidden shadow-inner border border-black/5 dark:border-white/50">
                 <img src={deal.image} loading="lazy" decoding="async" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" alt="Product" />
-                
                 {deal.discountPercent && <span className="absolute top-0 left-0 bg-rose-500 text-white text-[10px] font-black px-2 py-1 rounded-br-xl z-10 shadow-md">{deal.discountPercent}</span>}
-                
                 <span className="absolute bottom-0 left-0 bg-slate-900/80 backdrop-blur-sm text-white text-[9px] font-black px-2.5 py-1 rounded-tr-xl z-10 flex items-center gap-1.5">
                     <span>{deal.store || "Exclusive"}</span>
-                    {/* 🕒 TIME AGO OVERLAY */}
                     {showTimeAgo && deal.createdAt && (
                         <span className="flex items-center gap-0.5 border-l border-white/30 pl-1.5 opacity-90">
                             <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -887,24 +1003,13 @@ function GridProductCard({ deal, onClick, themeCardClass, onToast, showTimeAgo }
             
             <p className="text-[11px] font-extrabold line-clamp-2 leading-tight flex-1 mb-2 opacity-90 px-1 drop-shadow-sm">{deal.title}</p>
             
-            {/* 👇 NAYA: Yahan 'targetDate' ki jagah DB ka exact naam 'saleEndTime' pass kiya hai */}
             {deal.saleEndTime && <LiveTimer targetDate={deal.saleEndTime} />}
 
             {deal.couponCode && (
                 <div className="flex items-center justify-between bg-emerald-50/80 border border-emerald-500/40 border-dashed rounded px-1.5 py-1 mb-2 mx-1 shadow-sm">
                     <span className="text-[10px] font-black text-emerald-700 tracking-wider truncate">{deal.couponCode}</span>
-                    <button 
-                        onClick={(e) => { 
-                            e.stopPropagation(); 
-                            navigator.clipboard.writeText(deal.couponCode); 
-                            if(onToast) onToast("Coupon copied!");
-                            
-                            if(onClick) onClick(); 
-                        }} 
-                        className="text-emerald-600 hover:text-emerald-800 text-[10px] font-bold flex items-center gap-0.5 active:scale-95 transition-all ml-2 flex-shrink-0"
-                    >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                        COPY
+                    <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(deal.couponCode); if(onToast) onToast("Coupon copied!"); if(onClick) onClick(); }} className="text-emerald-600 hover:text-emerald-800 text-[10px] font-bold flex items-center gap-0.5 active:scale-95 transition-all ml-2 flex-shrink-0">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> COPY
                     </button>
                 </div>
             )}
@@ -913,10 +1018,11 @@ function GridProductCard({ deal, onClick, themeCardClass, onToast, showTimeAgo }
                 {deal.price ? (
                     <>
                         <span className="text-sm font-black drop-shadow-sm truncate">{deal.price}</span>
-                        <button className="flex-1 bg-emerald-500 text-white text-[11px] font-bold py-1.5 rounded-lg shadow-[0_4px_10px_rgba(16,185,129,0.3)] hover:bg-emerald-600 transition-colors text-center">Shop Now</button>
+                        {/* 👇 NAYA: isLiveOffer true hai toh Get Deal, warna Shop Now */}
+                        <button className="flex-1 bg-emerald-500 text-white text-[11px] font-bold py-1.5 rounded-lg shadow-[0_4px_10px_rgba(16,185,129,0.3)] hover:bg-emerald-600 transition-colors text-center">{isLiveOffer ? "Get Deal" : "Shop Now"}</button>
                     </>
                 ) : (
-                    <button className="w-full bg-emerald-500 text-white text-[11px] font-bold py-1.5 rounded-lg shadow-[0_4px_10px_rgba(16,185,129,0.3)] hover:bg-emerald-600 transition-colors text-center">Shop Now</button>
+                    <button className="w-full bg-emerald-500 text-white text-[11px] font-bold py-1.5 rounded-lg shadow-[0_4px_10px_rgba(16,185,129,0.3)] hover:bg-emerald-600 transition-colors text-center">{isLiveOffer ? "Get Deal" : "Shop Now"}</button>
                 )}
             </div>
         </div>
