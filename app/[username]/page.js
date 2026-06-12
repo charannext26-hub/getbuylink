@@ -182,27 +182,32 @@ export default function CreatorBioPage({ params }) {
   const [isEscapingApp, setIsEscapingApp] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
 
-  // 👇 YAHAN PASTE KIJIYE: Detailed Product Modal States
-  const [detailedDealModal, setDetailedDealModal] = useState({ isOpen: false, deal: null });
+  // 👇 NAYA: Full Page Drawer Stack & Custom Share States
+  const [dealDrawerStack, setDealDrawerStack] = useState([]); // Array use karenge taaki back button smoothly chale
   const [isGeneratingShare, setIsGeneratingShare] = useState(false);
+  const [customShareModal, setCustomShareModal] = useState({ isOpen: false, deal: null, generatedUrl: "" });
 
-  // 👇 YAHAN PASTE KIJIYE: Back Button se Modal Close karne ka Logic
+  const activeDeal = dealDrawerStack.length > 0 ? dealDrawerStack[dealDrawerStack.length - 1] : null;
+
+  // 👇 NAYA: Mobile Back Button Logic (Stack Pop System)
   useEffect(() => {
       const handlePopState = () => {
-          if (detailedDealModal.isOpen) {
-              setDetailedDealModal({ isOpen: false, deal: null });
+          if (customShareModal.isOpen) {
+              setCustomShareModal({ isOpen: false, deal: null, generatedUrl: "" });
+          } else if (dealDrawerStack.length > 0) {
+              setDealDrawerStack(prev => prev.slice(0, -1));
           }
       };
       window.addEventListener('popstate', handlePopState);
       return () => window.removeEventListener('popstate', handlePopState);
-  }, [detailedDealModal.isOpen]);
+  }, [dealDrawerStack, customShareModal.isOpen]);
 
   const openDetailedModal = (deal) => {
       window.history.pushState({ modalOpen: true }, ''); 
-      setDetailedDealModal({ isOpen: true, deal });
+      setDealDrawerStack(prev => [...prev, deal]);
   };
 
-  const handleShareDetailedDeal = async (deal) => {
+  const handleShareClick = async (deal) => {
       setIsGeneratingShare(true);
       try {
           let finalUrl = deal.expandedUrl || deal.originalUrl;
@@ -215,15 +220,9 @@ export default function CreatorBioPage({ params }) {
               const data = await res.json();
               if (data.success && data.shortCode) finalUrl = `${window.location.origin}/go/${data.shortCode}`;
           }
-          
-          const shareText = `🔥 ${deal.title}\n\n🛒 Store: ${deal.store}\n💰 Price: ${deal.price || 'Best Price'}\n\nGrab the deal here: `;
-          
-          if (navigator.share) {
-              navigator.share({ title: deal.title, text: shareText, url: finalUrl }).catch(()=>{});
-          } else {
-              navigator.clipboard.writeText(shareText + finalUrl);
-              triggerToast("Link & Details Copied!");
-          }
+          // Open Custom Share Modal instead of native popup
+          window.history.pushState({ shareModalOpen: true }, '');
+          setCustomShareModal({ isOpen: true, deal: deal, generatedUrl: finalUrl });
       } catch (e) {
           triggerToast("Failed to generate share link");
       } finally {
@@ -850,71 +849,151 @@ export default function CreatorBioPage({ params }) {
         </div>
       )}
 
-      {/* 🚀 YAHAN AAYEGA DETAILED PRODUCT MODAL */}
-      {detailedDealModal.isOpen && detailedDealModal.deal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => { window.history.back(); }}>
-            
-            <div className={`w-full max-w-md ${currentTheme.bg} rounded-[2rem] overflow-hidden shadow-2xl border border-white/20 animate-in zoom-in-95 duration-300 flex flex-col max-h-[85vh] relative mb-12`} onClick={e => e.stopPropagation()}>
-                {/* Scrollable Area */}
-                <div className="overflow-y-auto [&::-webkit-scrollbar]:hidden flex-1 pb-24">
-                    <div className="w-full aspect-square bg-white relative p-4 flex items-center justify-center shadow-inner">
-                        <img src={detailedDealModal.deal.image} className="w-full h-full object-contain mix-blend-multiply" alt="Product" />
-                        <div className="absolute top-4 left-4 bg-black/80 text-white text-[10px] font-black px-3 py-1.5 rounded-full backdrop-blur-md shadow-md">
-                            {detailedDealModal.deal.store || "Exclusive"}
-                        </div>
-                        {detailedDealModal.deal.discountPercent && (
-                            <div className="absolute top-4 right-4 bg-rose-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-md animate-pulse">
-                                {detailedDealModal.deal.discountPercent}
-                            </div>
-                        )}
-                    </div>
+      {/* 🚀 NAYA: FULL PAGE PRODUCT DRAWER (App Style) */}
+      <div className={`fixed inset-0 z-[200] ${activeDeal ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-out flex flex-col ${currentTheme.bg}`}>
+          {activeDeal && (
+              <>
+                  {/* Sticky Top Header with Back Arrow */}
+                  <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-3 bg-black/20 backdrop-blur-xl border-b border-white/10 shadow-sm">
+                      <button onClick={() => window.history.back()} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                      </button>
+                      <span className={`font-black text-lg truncate opacity-90 ${currentTheme.text}`}>Product Details</span>
+                  </div>
 
-                    <div className={`p-5 ${currentTheme.text}`}>
-                        <h2 className="text-lg font-black leading-tight mb-3 opacity-95">{detailedDealModal.deal.title}</h2>
-                        
-                        <div className="flex items-center gap-3 mb-4">
-                            {detailedDealModal.deal.price && <span className="text-3xl font-black text-emerald-500">{detailedDealModal.deal.price}</span>}
-                        </div>
+                  {/* Scrollable Body */}
+                  <div className="flex-1 overflow-y-auto pb-28 [&::-webkit-scrollbar]:hidden scroll-smooth">
+                      {/* Product Image Box */}
+                      <div className="w-full aspect-[4/5] bg-white relative p-4 flex items-center justify-center shadow-inner">
+                          <img src={activeDeal.image} className="w-full h-full object-contain mix-blend-multiply" alt="Product" />
+                          <div className="absolute top-4 left-4 bg-black/80 text-white text-[11px] font-black px-3 py-1.5 rounded-full backdrop-blur-md shadow-md">
+                              {activeDeal.store || "Exclusive"}
+                          </div>
+                          {activeDeal.discountPercent && (
+                              <div className="absolute top-4 right-4 bg-rose-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-md animate-pulse">
+                                  {activeDeal.discountPercent}
+                              </div>
+                          )}
+                      </div>
 
-                        {detailedDealModal.deal.description && (
-                            <div className="bg-white/5 border border-white/10 p-4 rounded-2xl mb-4 text-sm font-medium leading-relaxed opacity-90 shadow-sm">
-                                {detailedDealModal.deal.description}
-                            </div>
-                        )}
+                      {/* Details Section */}
+                      <div className={`p-5 ${currentTheme.text}`}>
+                          <h2 className="text-xl md:text-2xl font-black leading-tight mb-3 opacity-95">{activeDeal.title}</h2>
+                          
+                          <div className="flex items-center gap-3 mb-4">
+                              {activeDeal.price && <span className="text-4xl font-black text-emerald-500">{activeDeal.price}</span>}
+                          </div>
 
-                        {detailedDealModal.deal.saleEndTime && (
-                            <div className="mb-4 bg-red-500/10 border border-red-500/20 p-3 rounded-2xl">
-                                <LiveTimer targetDate={detailedDealModal.deal.saleEndTime} />
-                            </div>
-                        )}
+                          {activeDeal.saleEndTime && (
+                              <div className="mb-4 bg-red-500/10 border border-red-500/20 p-3 rounded-2xl">
+                                  <LiveTimer targetDate={activeDeal.saleEndTime} />
+                              </div>
+                          )}
 
-                        {detailedDealModal.deal.couponCode && (
-                            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 border-dashed rounded-xl px-4 py-3 mb-2">
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-0.5">Use Coupon Code</span>
-                                    <span className="text-lg font-black text-emerald-500 tracking-wider">{detailedDealModal.deal.couponCode}</span>
-                                </div>
-                                <button onClick={() => { navigator.clipboard.writeText(detailedDealModal.deal.couponCode); triggerToast("Coupon copied!"); }} className="bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md active:scale-95 transition-all">COPY</button>
-                            </div>
-                        )}
-                    </div>
+                          {activeDeal.couponCode && (
+                              <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 border-dashed rounded-xl px-4 py-3 mb-4">
+                                  <div className="flex flex-col">
+                                      <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-0.5">Use Coupon Code</span>
+                                      <span className="text-xl font-black text-emerald-500 tracking-wider">{activeDeal.couponCode}</span>
+                                  </div>
+                                  <button onClick={() => { navigator.clipboard.writeText(activeDeal.couponCode); triggerToast("Coupon copied!"); }} className="bg-emerald-500 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md active:scale-95 transition-all">COPY</button>
+                              </div>
+                          )}
+
+                          {/* AI Description (Point-wise with transparent background) */}
+                          {activeDeal.description && (
+                              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl mb-6 shadow-sm">
+                                  <h3 className="font-extrabold text-sm mb-3 flex items-center gap-2 opacity-90">
+                                      <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                      Why buy this?
+                                  </h3>
+                                  <div className="text-sm font-medium leading-relaxed opacity-80 space-y-2">
+                                      {/* String ko split karke points mein dikhana */}
+                                      {activeDeal.description.split('\n').filter(line => line.trim() !== '').map((point, i) => (
+                                          <p key={i} className="flex items-start gap-2">
+                                              <span className="text-emerald-500 mt-0.5">❖</span>
+                                              <span>{point.replace(/[-*]/g, '').trim()}</span>
+                                          </p>
+                                      ))}
+                                  </div>
+                              </div>
+                          )}
+
+                          {/* Similar Products Category Section */}
+                          {activeDeal.category && activeDeal.category !== "Other" && (
+                              <div className="mt-8">
+                                  <h3 className="font-black text-lg mb-4 flex items-center gap-2">
+                                      Similar in {activeDeal.category} <span className="text-emerald-400 text-xl">🔥</span>
+                                  </h3>
+                                  <div className="columns-2 gap-3 space-y-3">
+                                      {creatorDeals
+                                          .filter(d => d.category === activeDeal.category && d._id !== activeDeal._id)
+                                          .sort((a, b) => (b.totalClicks || 0) - (a.totalClicks || 0))
+                                          .slice(0, 6) // Top 6 similar deals
+                                          .map((relatedDeal, idx) => (
+                                              <div key={idx} className="break-inside-avoid relative">
+                                                  {/* Clicking this pushes a new deal into the drawer stack! */}
+                                                  <GridProductCard deal={relatedDeal} onClick={() => openDetailedModal(relatedDeal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
+                                              </div>
+                                          ))
+                                      }
+                                  </div>
+                              </div>
+                          )}
+                      </div>
+                  </div>
+
+                  {/* Fixed Bottom Action Bar */}
+                  <div className="absolute bottom-0 left-0 w-full p-4 bg-black/40 backdrop-blur-2xl border-t border-white/10 flex items-center gap-3 pb-6">
+                      <button onClick={() => handleShareClick(activeDeal)} disabled={isGeneratingShare} className="w-14 h-14 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl flex items-center justify-center text-white shrink-0 transition-all active:scale-95 shadow-lg">
+                          {isGeneratingShare ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>}
+                      </button>
+                      <button onClick={() => handleDealClick(activeDeal)} className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg rounded-2xl shadow-[0_4px_20px_rgba(16,185,129,0.4)] flex items-center justify-center transition-all active:scale-95">
+                          Buy on {activeDeal.store || "Store"}
+                      </button>
+                  </div>
+              </>
+          )}
+      </div>
+
+      {/* 📤 CUSTOM SHARE MODAL */}
+      {customShareModal.isOpen && customShareModal.deal && (
+        <div className="fixed inset-0 z-[250] flex items-end justify-center bg-black/60 backdrop-blur-md px-4 pb-4" onClick={() => window.history.back()}>
+            <div className={`w-full max-w-md ${currentTheme.bg} rounded-[2rem] p-6 animate-in slide-in-from-bottom duration-300 shadow-2xl backdrop-blur-xl border border-white/20 relative`} onClick={e => e.stopPropagation()}>
+                <div className="w-12 h-1.5 bg-slate-400/50 rounded-full mx-auto mb-5"></div>
+                
+                <h3 className={`text-xl font-black mb-2 leading-tight ${currentTheme.text} line-clamp-2`}>{customShareModal.deal.title}</h3>
+                
+                {/* Link Box */}
+                <div className="flex items-center justify-between bg-white/10 border border-white/20 rounded-xl p-3 mb-6">
+                    <span className={`text-xs font-medium truncate opacity-70 ${currentTheme.text} mr-3`}>{customShareModal.generatedUrl}</span>
+                    <button onClick={() => { navigator.clipboard.writeText(`🔥 ${customShareModal.deal.title}\n\nGrab the deal here: ${customShareModal.generatedUrl}`); triggerToast("Copied to clipboard!"); window.history.back(); }} className="bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md active:scale-95 flex-shrink-0">Copy</button>
                 </div>
 
-                {/* Fixed Bottom Action Bar */}
-                <div className="absolute bottom-0 left-0 w-full p-4 bg-black/40 backdrop-blur-xl border-t border-white/10 flex items-center gap-3">
-                    <button onClick={() => handleShareDetailedDeal(detailedDealModal.deal)} disabled={isGeneratingShare} className="w-14 h-14 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl flex items-center justify-center text-white shrink-0 transition-all active:scale-95">
-                        {isGeneratingShare ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>}
-                    </button>
-                    <button onClick={() => handleDealClick(detailedDealModal.deal)} className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg rounded-2xl shadow-[0_4px_20px_rgba(16,185,129,0.4)] flex items-center justify-center transition-all active:scale-95">
-                        Buy on {detailedDealModal.deal.store || "Store"}
+                {/* Social Icons Grid */}
+                <div className="grid grid-cols-4 gap-4 mb-4">
+                    {/* WhatsApp */}
+                    <a href={`https://wa.me/?text=${encodeURIComponent('🔥 ' + customShareModal.deal.title + '\n\nGrab the deal here: ' + customShareModal.generatedUrl)}`} target="_blank" className="flex flex-col items-center gap-2 group">
+                        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-all text-white"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
+                        <span className={`text-[9px] font-bold ${currentTheme.text} opacity-80`}>WhatsApp</span>
+                    </a>
+                    {/* Telegram */}
+                    <a href={`https://t.me/share/url?url=${encodeURIComponent(customShareModal.generatedUrl)}&text=${encodeURIComponent('🔥 ' + customShareModal.deal.title)}`} target="_blank" className="flex flex-col items-center gap-2 group">
+                        <div className="w-12 h-12 bg-[#0088cc] rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-all text-white"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm6.81 7.228-2.333 11.002c-.179.807-.655 1.006-1.328.625l-3.673-2.709-1.77 1.705c-.196.196-.361.36-.74.36l.263-3.743 6.817-6.155c.296-.264-.065-.41-.459-.153l-8.423 5.303-3.633-1.139c-.79-.247-.806-.79.165-1.17l14.218-5.48c.658-.246 1.233.15.895 1.554z"/></svg></div>
+                        <span className={`text-[9px] font-bold ${currentTheme.text} opacity-80`}>Telegram</span>
+                    </a>
+                    {/* Facebook */}
+                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(customShareModal.generatedUrl)}`} target="_blank" className="flex flex-col items-center gap-2 group">
+                        <div className="w-12 h-12 bg-[#1877F2] rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-all text-white"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg></div>
+                        <span className={`text-[9px] font-bold ${currentTheme.text} opacity-80`}>Facebook</span>
+                    </a>
+                    {/* Other (Native Share Fallback) */}
+                    <button onClick={() => { if(navigator.share) { navigator.share({ title: customShareModal.deal.title, url: customShareModal.generatedUrl }).catch(()=>{}); } }} className="flex flex-col items-center gap-2 group">
+                        <div className="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-all text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 12h14M12 5l7 7-7 7"></path></svg></div>
+                        <span className={`text-[9px] font-bold ${currentTheme.text} opacity-80`}>More</span>
                     </button>
                 </div>
             </div>
-
-            {/* Floating Close Button */}
-            <button onClick={() => { window.history.back(); }} className="absolute bottom-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-white/20 backdrop-blur-xl border border-white/30 text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-white/40 transition-all z-[210]">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
         </div>
       )}
 
