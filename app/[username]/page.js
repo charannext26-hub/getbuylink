@@ -1086,17 +1086,36 @@ export default function CreatorBioPage({ params }) {
                                           
                                           return (
                                               <div className="text-[13px] font-medium leading-relaxed opacity-85 space-y-4">
-                                                  {mainText && <p>{mainText.replace(/^[-*]/g, '').trim()}</p>}
+                                                  {/* BUG FIXED: Paragraphs ko alag-alag line mein split karna aur ** hatana */}
+                                                  {mainText && (
+                                                      <div className="space-y-2">
+                                                          {mainText.split(/\n+/).filter(p => p.trim() !== '').map((para, idx) => (
+                                                              <p key={idx}>{para.replace(/\*\*/g, '').replace(/^[-*]/g, '').trim()}</p>
+                                                          ))}
+                                                      </div>
+                                                  )}
+
                                                   {bulletsText && (
-                                                      <div className="bg-emerald-50/50 border border-emerald-500/20 p-3.5 rounded-xl shadow-sm">
+                                                      <div className="bg-emerald-50/50 border border-emerald-500/20 p-3.5 rounded-xl shadow-sm mt-4">
                                                           <span className="font-black text-emerald-700 mb-2 block uppercase tracking-widest text-[11px]">Why buy this? 👇</span>
                                                           <div className="space-y-2.5">
-                                                              {bulletsText.split('\n').filter(line => line.trim() !== '').map((point, i) => (
-                                                                  <p key={i} className="flex items-start gap-2">
-                                                                      <span className="text-emerald-600 mt-0.5 text-[12px]">❖</span>
-                                                                      <span className="font-semibold text-slate-700 opacity-95 text-[13px]">{point.replace(/^[-*]/g, '').trim()}</span>
-                                                                  </p>
-                                                              ))}
+                                                              {bulletsText.split('\n').filter(line => line.trim() !== '').map((point, i) => {
+                                                                  // Clean the point from markdown and leading dashes
+                                                                  const cleanPoint = point.replace(/\*\*/g, '').replace(/^[-*]/g, '').trim();
+                                                                  // Agar point mein coupon likha hai toh usko highlight kar denge
+                                                                  const isCouponPoint = cleanPoint.toLowerCase().includes('coupon');
+                                                                  
+                                                                  return (
+                                                                      <p key={i} className="flex items-start gap-2">
+                                                                          <span className={`mt-0.5 text-[12px] ${isCouponPoint ? 'text-rose-500' : 'text-emerald-600'}`}>
+                                                                              {isCouponPoint ? '🎁' : '❖'}
+                                                                          </span>
+                                                                          <span className={`text-[13px] opacity-95 ${isCouponPoint ? 'font-black text-rose-700' : 'font-semibold text-slate-700'}`}>
+                                                                              {cleanPoint}
+                                                                          </span>
+                                                                      </p>
+                                                                  );
+                                                              })}
                                                           </div>
                                                       </div>
                                                   )}
