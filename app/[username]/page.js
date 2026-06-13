@@ -941,7 +941,7 @@ export default function CreatorBioPage({ params }) {
                   </div>
               )} 
               
-                {activeTab === "categories" && (
+               {activeTab === "categories" && (
                     <div className="space-y-6 pb-6 mt-2">
                         {Object.keys(categoryGroups).length === 0 && !isFetchingMore && !hasMore ? <p className="text-center opacity-60 font-bold p-8">No categories found.</p> : 
                             Object.keys(categoryGroups).map((catName, idx) => (
@@ -955,7 +955,8 @@ export default function CreatorBioPage({ params }) {
                                     <div className="flex overflow-x-auto gap-3 pb-2 [&::-webkit-scrollbar]:hidden snap-x">
                                         {categoryGroups[catName].slice(0, 10).map(deal => (
                                             <div key={deal._id} className="w-[145px] flex-shrink-0 snap-start">
-                                                <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
+                                                {/* 🚀 BUG FIXED: Yahan wapas handleDealClick lagaya hai taaki click karne par direct link khule, drawer nahi! */}
+                                                <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
                                             </div>
                                         ))}
                                     </div>

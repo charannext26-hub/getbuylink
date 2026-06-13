@@ -120,18 +120,22 @@ export async function POST(req) {
               generationConfig: { responseMimeType: "application/json" }
           }); 
 
+          // 🔥 NAYA: Current Time pass kar rahe hain taaki AI exact expiry date nikal sake
+          const currentIsoTime = new Date().toISOString();
+
           const prompt = `
             Analyze this e-commerce deal carefully.
             TELEGRAM POST: "${text}"
             SCRAPED TITLE: "${ogTitle}"
+            CURRENT TIME: "${currentIsoTime}"
             
             1. catchyTitle: Clean, short title. No emojis.
             2. category: Strictly pick ONE from this list: ${JSON.stringify(BROAD_CATEGORIES)}.
             3. price: Extract ONLY the final price number from text. If none, return "".
             4. discountPercent: Extract discount (e.g. "50% OFF") from text. If none, return "".
             5. couponCode: Extract promo code from text. If none, return "".
-            6. description: Write a highly engaging, sales-driven 3-line product description. End with a "Why buy this?" section containing 2 short bullet points.
-            7. saleEndTime: If a specific expiry time, date, or "valid till" is mentioned, extract it. Otherwise, return "".
+            6. description: Act like a friendly creator recommending a product to their close audience. Write 2 to 3 short, engaging paragraphs to avoid boredom. Then, add the exact phrase "Why buy this?" followed by 3 to 4 bullet points. IMPORTANT: If the telegram post mentions a coupon (e.g., "Apply 50% coupon"), make the final bullet point bold reminding them to use it at checkout (e.g., "**Don't forget to apply the 50% coupon on the store!**").
+            7. saleEndTime: If an expiry time, date, or duration (e.g., "ends in 4 hours", "valid till tonight") is mentioned, calculate the exact future expiry date using the CURRENT TIME provided. Return it STRICTLY in standard ISO 8601 format (e.g., "2026-06-15T12:00:00.000Z"). If no expiry is mentioned, return null.
             
             Respond ONLY with a valid JSON object matching these 7 keys.
           `;
