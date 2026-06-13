@@ -202,6 +202,13 @@ export default function CreatorBioPage({ params }) {
   const [isEscapingApp, setIsEscapingApp] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
 
+  // 👇 NAYA: Pagination (Infinite Scroll) States
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const loaderRef = useRef(null); // Scroll track karne ke liye
+  const [allTimeTrending, setAllTimeTrending] = useState([]);
+
   // 👇 NAYA: Full Page Drawer Stack & Custom Share States
   const [dealDrawerStack, setDealDrawerStack] = useState([]); // Array use karenge taaki back button smoothly chale
   const [isGeneratingShare, setIsGeneratingShare] = useState(false);
@@ -305,29 +312,80 @@ export default function CreatorBioPage({ params }) {
     }
   }, []);
 
+ // ============================================================================
+  // 🚀 1. FETCH CREATOR PROFILE (Sirf pehli baar load hoga)
+  // ============================================================================
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const creatorRes = await fetch(`/api/user/get-by-username?username=${username}`);
-        const creatorData = await creatorRes.json();
-        
-        if (creatorData.success) {
-          setCreator(creatorData.user);
-          setIsCreatorLoading(false); 
-
-          const dealsRes = await fetch(`/api/deals/get-all?email=${creatorData.user.email}`);
-          const dealsData = await dealsRes.json();
-          if (dealsData.success) setDeals(dealsData.deals);
-        }
-      } catch (error) { 
-          console.error(error); 
-      } finally { 
-          setIsCreatorLoading(false);
-          setIsDealsLoading(false); 
+      async function getCreator() {
+          const cachedCreator = sessionStorage.getItem(`creator_${username}`);
+          if (cachedCreator) {
+              setCreator(JSON.parse(cachedCreator));
+              setIsCreatorLoading(false);
+          }
+          try {
+              const res = await fetch(`/api/user/get-by-username?username=${username}`);
+              const data = await res.json();
+              if (data.success) {
+                  setCreator(data.user);
+                  sessionStorage.setItem(`creator_${username}`, JSON.stringify(data.user));
+              }
+          } catch (err) { console.error(err); } 
+          finally { setIsCreatorLoading(false); }
       }
-    }
-    if (username) fetchData();
+      if (username) getCreator();
   }, [username]);
+
+  // ============================================================================
+  // 🚀 2. FETCH DEALS BASED ON TAB (Jab tab badlega, naya data aayega)
+  // ============================================================================
+  useEffect(() => {
+      if (!creator) return;
+      async function fetchTabDeals() {
+          setIsDealsLoading(true);
+          setPage(1); // Naye tab ke liye page 1 se start
+          try {
+              // API ko activeTab bhej rahe hain taaki wo wahi data filter karke de
+              const res = await fetch(`/api/deals/get-all?email=${creator.email}&page=1&limit=20&tab=${activeTab}`);
+              const data = await res.json();
+              if (data.success) {
+                  setDeals(data.deals);
+                  setHasMore(data.hasMore);
+              }
+          } catch (err) { console.error(err); } 
+          finally { setIsDealsLoading(false); }
+      }
+      fetchTabDeals();
+  }, [activeTab, creator]);
+
+  // ============================================================================
+  // 🚀 3. INFINITE SCROLL (Scroll karne par agla page layega)
+  // ============================================================================
+  const loadMoreDeals = async () => {
+      if (!creator || !hasMore || isFetchingMore) return;
+      setIsFetchingMore(true);
+      try {
+          const nextPage = page + 1;
+          const res = await fetch(`/api/deals/get-all?email=${creator.email}&page=${nextPage}&limit=20&tab=${activeTab}`);
+          const data = await res.json();
+          if (data.success) {
+              setDeals(prev => [...prev, ...data.deals]); // Purane data mein naya data jod do
+              setPage(nextPage);
+              setHasMore(data.hasMore);
+          }
+      } catch (error) { console.error(error); } 
+      finally { setIsFetchingMore(false); }
+  };
+
+  useEffect(() => {
+      const observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting && hasMore && !isFetchingMore && !isDealsLoading) {
+              loadMoreDeals();
+          }
+      }, { threshold: 0.1 }); 
+      
+      if (loaderRef.current) observer.observe(loaderRef.current);
+      return () => observer.disconnect();
+  }, [hasMore, isFetchingMore, isDealsLoading, page, creator, activeTab]);
 
   useEffect(() => {
       if (!creator?.banners?.length || creator.banners.length <= 1) return;
@@ -401,32 +459,35 @@ export default function CreatorBioPage({ params }) {
     }
   };
 
-  const creatorDeals = deals.filter(d => d.source === "creator");
-  const telegramDeals = deals.filter(d => d.source === "telegram" && creator?.autodeal_active !== false && (!creator?.autoDealCategories?.length || creator.autoDealCategories.includes(d.category)));
-
+  // ============================================================================
+  // 🚀 4. DATA PROCESSING (Frontend filtering removed, using API data directly)
+  // ============================================================================
   const masterFeed = [];
   const processedBatches = new Set();
-  creatorDeals.forEach(deal => {
-      if (!deal.batchId) masterFeed.push({ type: 'single', deal: deal });
-      else if (!processedBatches.has(deal.batchId)) {
+  
+  // Collections aur Videos ko group karne ka logic
+  deals.forEach(deal => {
+      if (!deal.batchId) {
+          masterFeed.push({ type: 'single', deal: deal });
+      } else if (!processedBatches.has(deal.batchId)) {
           processedBatches.add(deal.batchId);
-          const batch = creatorDeals.filter(d => d.batchId === deal.batchId);
+          const batch = deals.filter(d => d.batchId === deal.batchId);
           const hasVid = batch.find(d => d.videoUrl);
           masterFeed.push({ type: hasVid ? 'video' : 'collection', batchId: deal.batchId, videoUrl: hasVid?.videoUrl, title: deal.collectionName || hasVid?.title || "Collection", deals: batch });
       }
   });
 
-  const trendingDeals = [...creatorDeals].sort((a, b) => (b.totalClicks || 0) - (a.totalClicks || 0));
+  // Category grouping
   const categoryGroups = {};
-  creatorDeals.forEach(deal => {
+  deals.forEach(deal => {
       const cat = deal.category || "Others";
       if (!categoryGroups[cat]) categoryGroups[cat] = [];
       categoryGroups[cat].push(deal);
   });
 
+  // Masonry arrays (Taki UI kharab na ho)
   const orderedMasterFeed = applyMasonryOrder(masterFeed);
-  const orderedTrendingDeals = applyMasonryOrder(trendingDeals);
-  const orderedTelegramDeals = applyMasonryOrder(telegramDeals);
+  const orderedDeals = applyMasonryOrder(deals);
 
   // -------------------------------------------------------------
   // ✨ PAGE SKELETON (Before Creator Loads) & THEME DEFINITION
@@ -811,7 +872,7 @@ export default function CreatorBioPage({ params }) {
             <>
                {activeTab === "home" && (
                   <div className="columns-2 gap-3 space-y-3">
-                      {masterFeed.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No posts yet.</p> : 
+                      {masterFeed.length === 0 && !isFetchingMore && !hasMore ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No posts yet.</p> : 
                           orderedMasterFeed.map((item, idx) => renderFeedItem(item, idx))
                       }
                   </div>
@@ -819,10 +880,10 @@ export default function CreatorBioPage({ params }) {
 
               {activeTab === "trending" && (
                   <div className="columns-2 gap-3 space-y-3">
-                      {trendingDeals.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No trending deals yet.</p> : 
-                          orderedTrendingDeals.map((deal, idx) => ( 
-                              <div key={idx} className="break-inside-avoid relative"> 
-                                  <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
+                      {orderedDeals.length === 0 && !isFetchingMore && !hasMore ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No trending deals yet.</p> : 
+                          orderedDeals.map((deal, idx) => ( 
+                              <div key={idx} className="break-inside-avoid relative transform-gpu"> 
+                                  <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
                               </div>
                           ))
                       }
@@ -831,19 +892,19 @@ export default function CreatorBioPage({ params }) {
 
               {activeTab === "liveoffer" && (
                   <div className="columns-2 gap-3 space-y-3">
-                      {telegramDeals.length === 0 ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No live deals right now.</p> : 
-                          orderedTelegramDeals.map((deal, idx) => ( 
-                              <div key={idx} className="break-inside-avoid"> 
-                                  {/* 👇 NAYA: onClick = openDetailedModal, aur isLiveOffer={true} */}
+                      {orderedDeals.length === 0 && !isFetchingMore && !hasMore ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No live deals right now.</p> : 
+                          orderedDeals.map((deal, idx) => ( 
+                              <div key={idx} className="break-inside-avoid transform-gpu"> 
                                   <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} showTimeAgo={true} isLiveOffer={true} />
                               </div>
                           ))
                       }
                   </div>
               )} 
+              
                 {activeTab === "categories" && (
                     <div className="space-y-6 pb-6 mt-2">
-                        {Object.keys(categoryGroups).length === 0 ? <p className="text-center opacity-60 font-bold p-8">No categories found.</p> : 
+                        {Object.keys(categoryGroups).length === 0 && !isFetchingMore && !hasMore ? <p className="text-center opacity-60 font-bold p-8">No categories found.</p> : 
                             Object.keys(categoryGroups).map((catName, idx) => (
                                 <div key={idx} className="space-y-3">
                                     <div className="flex justify-between items-center px-1">
@@ -855,13 +916,30 @@ export default function CreatorBioPage({ params }) {
                                     <div className="flex overflow-x-auto gap-3 pb-2 [&::-webkit-scrollbar]:hidden snap-x">
                                         {categoryGroups[catName].slice(0, 10).map(deal => (
                                             <div key={deal._id} className="w-[145px] flex-shrink-0 snap-start">
-                                                <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
+                                                <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             ))
                         }
+                    </div>
+                )}
+
+                {/* 🌀 NAYA: Scroll Tracker & Loader Spinner */}
+                {hasMore && !isDealsLoading && (
+                    <div ref={loaderRef} className="w-full flex justify-center py-8 mt-2">
+                        <div className="flex items-center gap-2.5 px-5 py-2.5 bg-white/5 backdrop-blur-md rounded-full border border-white/10 shadow-lg">
+                            <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-[11px] font-extrabold opacity-80 uppercase tracking-widest">Loading more...</span>
+                        </div>
+                    </div>
+                )}
+                
+                {/* Agar saare products khatam ho gaye */}
+                {!hasMore && deals.length > 0 && !isDealsLoading && (
+                    <div className="w-full text-center py-10 opacity-30">
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-white/5 px-4 py-2 rounded-full border border-white/5">End of Results</span>
                     </div>
                 )}
             </>
