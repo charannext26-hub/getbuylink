@@ -208,6 +208,8 @@ export default function CreatorBioPage({ params }) {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const loaderRef = useRef(null); // Scroll track karne ke liye
   const [allTimeTrending, setAllTimeTrending] = useState([]);
+  const [similarDeals, setSimilarDeals] = useState([]);
+  const [isSimilarLoading, setIsSimilarLoading] = useState(false);
 
   // 👇 NAYA: Full Page Drawer Stack & Custom Share States
   const [dealDrawerStack, setDealDrawerStack] = useState([]); // Array use karenge taaki back button smoothly chale
@@ -342,20 +344,54 @@ export default function CreatorBioPage({ params }) {
       if (!creator) return;
       async function fetchTabDeals() {
           setIsDealsLoading(true);
-          setPage(1); // Naye tab ke liye page 1 se start
+          setPage(1); 
+
+          // 🧠 SMART CACHE: Har tab ka data apne alag dibbe (cache) mein save hoga
+          const cacheKey = `deals_${username}_${activeTab}`;
+          const cachedTabDeals = sessionStorage.getItem(cacheKey);
+          
+          if (cachedTabDeals) {
+              setDeals(JSON.parse(cachedTabDeals));
+              setIsDealsLoading(false); // Cache mil gaya toh loader hata do
+          }
+
           try {
-              // API ko activeTab bhej rahe hain taaki wo wahi data filter karke de
               const res = await fetch(`/api/deals/get-all?email=${creator.email}&page=1&limit=20&tab=${activeTab}`);
               const data = await res.json();
               if (data.success) {
                   setDeals(data.deals);
                   setHasMore(data.hasMore);
+                  // Naye data ko usi tab ke cache mein save karo
+                  sessionStorage.setItem(cacheKey, JSON.stringify(data.deals)); 
               }
           } catch (err) { console.error(err); } 
           finally { setIsDealsLoading(false); }
       }
       fetchTabDeals();
   }, [activeTab, creator]);
+
+  // ============================================================================
+  // 🚀 NAYA: FETCH SIMILAR DEALS FOR DRAWER (BUG FIXED: Added tab context & Loading)
+  // ============================================================================
+  useEffect(() => {
+      if (activeDeal && activeDeal.category && activeDeal.category !== "Other") {
+          setIsSimilarLoading(true); // Spinner ON
+          setSimilarDeals([]); // Purana data clear
+
+          // FIX: URL mein tab=${activeTab} add kiya hai taaki liveoffer hai toh liveoffer mein hi dhoondhe
+          fetch(`/api/deals/get-all?email=${creator?.email}&page=1&limit=15&tab=${activeTab}&category=${encodeURIComponent(activeDeal.category)}`)
+          .then(res => res.json())
+          .then(data => {
+              if (data.success && data.deals) {
+                  // Khud ko hata kar baaki mix kardo
+                  const filtered = data.deals.filter(d => d._id !== activeDeal._id).sort(() => 0.5 - Math.random());
+                  setSimilarDeals(filtered);
+              }
+          })
+          .catch(err => console.error(err))
+          .finally(() => setIsSimilarLoading(false)); // Spinner OFF
+      }
+  }, [activeDeal, creator, activeTab]);
 
   // ============================================================================
   // 🚀 3. INFINITE SCROLL (Scroll karne par agla page layega)
@@ -477,12 +513,15 @@ export default function CreatorBioPage({ params }) {
       }
   });
 
-  // Category grouping
+  // Category grouping (BUG FIXED: Double security to prevent Telegram deals from showing in Categories)
   const categoryGroups = {};
   deals.forEach(deal => {
-      const cat = deal.category || "Others";
-      if (!categoryGroups[cat]) categoryGroups[cat] = [];
-      categoryGroups[cat].push(deal);
+      // 👇 Sirf creator ki deals ko hi category tab mein allow karo
+      if (deal.source === "creator") {
+          const cat = deal.category || "Others";
+          if (!categoryGroups[cat]) categoryGroups[cat] = [];
+          categoryGroups[cat].push(deal);
+      }
   });
 
   // Masonry arrays (Taki UI kharab na ho)
@@ -1066,28 +1105,35 @@ export default function CreatorBioPage({ params }) {
                                   </div>
                               )}
 
-                              {/* Similar Category Products (BUG FIXED: Changed columns-2 to grid for lag-free rendering) */}
+                            {/* Similar Category Products (BUG FIXED: Loading State & Graceful Hide) */}
                               {activeDeal.category && activeDeal.category !== "Other" && (
-                                  <div className="mt-8 border-t border-white/10 pt-6">
-                                      <h3 className="font-black text-[15px] mb-4 uppercase tracking-wide opacity-90">
-                                          Similar in {activeDeal.category}
-                                      </h3>
-                                      <div className="grid grid-cols-2 gap-3">
-                                          {deals
-                                              .filter(d => d.category === activeDeal.category && d._id !== activeDeal._id)
-                                              .sort(() => 0.5 - Math.random())
-                                              .slice(0, 8) 
-                                              .map((relatedDeal, idx) => (
-                                                  <div key={idx} className="w-full">
-                                                      <GridProductCard deal={relatedDeal} onClick={() => openDetailedModal(relatedDeal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
-                                                  </div>
-                                              ))
-                                          }
-                                      </div>
-                                  </div>
+                                  <>
+                                      {/* Agar Loading chal rahi hai toh spinner dikhao */}
+                                      {isSimilarLoading && (
+                                          <div className="mt-8 border-t border-white/10 pt-8 flex justify-center">
+                                              <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                                          </div>
+                                      )}
+
+                                      {/* Agar loading khatam aur products mil gaye toh list dikhao */}
+                                      {!isSimilarLoading && similarDeals.length > 0 && (
+                                          <div className="mt-8 border-t border-white/10 pt-6">
+                                              <h3 className="font-black text-[15px] mb-4 uppercase tracking-wide opacity-90">
+                                                  Similar in {activeDeal.category}
+                                              </h3>
+                                              <div className="grid grid-cols-2 gap-3">
+                                                  {similarDeals.slice(0, 8).map((relatedDeal, idx) => (
+                                                      <div key={idx} className="w-full">
+                                                          <GridProductCard deal={relatedDeal} onClick={() => openDetailedModal(relatedDeal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
+                                                      </div>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                      )}
+                                  </>
                               )}
-                          </div>
-                      </div>
+                              </div>
+                            </div>  
 
                       {/* Fixed Bottom Action Bar (BUG FIXED: Solid color background to stop rendering lag) */}
                       <div className="absolute bottom-0 left-0 w-full px-4 py-3 bg-slate-900 border-t border-white/10 flex items-center gap-3 pb-6 z-[100]">

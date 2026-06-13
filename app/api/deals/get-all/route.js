@@ -18,13 +18,19 @@ export async function GET(req) {
     let matchQuery = { $or: [{ creatorId: email, source: "creator" }, { source: "telegram" }] };
     let sortQuery = { createdAt: -1 };
 
-    if (tab === "home") {
-        matchQuery = { creatorId: email, source: "creator" };
-    } else if (tab === "liveoffer") {
-        matchQuery = { source: "telegram" };
+    if (tab === "home" || tab === "categories") {
+        matchQuery = { creatorId: email, source: "creator" }; // Sirf Creator ki deals
     } else if (tab === "trending") {
-        // Trending mein saare deals aayenge, par clicks ke hisaab se sort honge
+        matchQuery = { creatorId: email, source: "creator" }; // Trending bhi sirf Creator ka
         sortQuery = { totalClicks: -1 }; 
+    } else if (tab === "liveoffer") {
+        matchQuery = { source: "telegram" }; // Sirf Telegram / Live deals
+    }
+
+    // 🚀 NAYA: Drawer ke Similar Products ke liye Category Filter
+    const categoryFilter = searchParams.get("category");
+    if (categoryFilter && categoryFilter !== "null") {
+        matchQuery.category = categoryFilter;
     }
 
     const deals = await GlobalDeal.aggregate([
