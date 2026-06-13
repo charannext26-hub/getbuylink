@@ -728,7 +728,7 @@ export default function CreatorBioPage({ params }) {
               </div>
 
               {/* Classic Side Buttons */}
-              <div className="flex flex-col gap-3 flex-shrink-0 mt-1">
+              <div className="flex flex-col gap-3 flex-shrink-0 mt-1">l
                   <button onClick={() => setIsShareDrawerOpen(true)} className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center shadow-sm border border-slate-500/20 bg-white/10 hover:bg-white/20 transition-colors">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
                   </button>
@@ -875,20 +875,22 @@ export default function CreatorBioPage({ params }) {
               
               {activeDeal && (
                   <>
-                      {/* Compact Sticky Header (BUG FIXED: flex-shrink-0 se height compress nahi hogi) */}
-                      <div className="sticky top-0 z-50 flex items-center gap-3 px-3 py-2 bg-black/20 backdrop-blur-xl border-b border-white/10 shadow-sm flex-shrink-0 min-h-[50px] transform-gpu">
+                      {/* Compact Sticky Header (BUG FIXED: Reduced blur intensity for 60fps scroll) */}
+                      <div className="sticky top-0 z-50 flex items-center gap-3 px-3 py-2 bg-black/40 backdrop-blur-md border-b border-white/10 shadow-sm flex-shrink-0 min-h-[50px]">
                           <button onClick={() => window.history.back()} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                           </button>
-                          <span className={`font-black text-base truncate opacity-90 ${currentTheme.text}`}>Product Details</span>
+                          <span className={`font-black text-base truncate opacity-90 ${currentTheme.text}`}>Deal Details</span>
                       </div>
 
-                      {/* Scrollable Body (BUG FIXED: Removed scroll-smooth, added overscroll-contain & transform-gpu for 60fps scrolling) */}
-                      <div className="flex-1 overflow-y-auto pb-28 [&::-webkit-scrollbar]:hidden overscroll-contain transform-gpu">
+                      {/* Scrollable Body (BUG FIXED: Momentum Scrolling & GPU Acceleration added) */}
+                      <div 
+                          className="flex-1 overflow-y-auto pb-28 [&::-webkit-scrollbar]:hidden overscroll-y-contain"
+                          style={{ WebkitOverflowScrolling: 'touch', willChange: 'scroll-position' }}
+                      >
                           
                           {/* Compact Square Image Box */}
                           <div className="w-full aspect-square bg-white relative p-2 shadow-inner flex items-center justify-center">
-                              {/* NOTE: Removed loading="lazy" here to prevent loading lag when drawer opens */}
                               <img src={activeDeal.image} className="w-full h-full object-contain mix-blend-multiply" alt="Product" />
                               
                               <div className="absolute bottom-0 left-0 bg-slate-900/85 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-1.5 rounded-tr-2xl z-10 flex items-center gap-2 shadow-lg">
@@ -905,11 +907,11 @@ export default function CreatorBioPage({ params }) {
                           <div className={`p-4 ${currentTheme.text}`}>
                               <h2 className="text-base font-extrabold leading-snug mb-3 opacity-95 line-clamp-3">{activeDeal.title}</h2>
                               
-                              {/* Smart Pricing Block (NEW: Comma formatted prices) */}
+                              {/* Smart Pricing Block */}
                               {(activeDeal.price || activeDeal.discountPercent) && (
-                                  <div className="bg-white/5 backdrop-blur-md rounded-xl px-3 py-2 mb-4 inline-flex items-end gap-2 border border-white/10 shadow-sm">
+                                  <div className="bg-white/5 backdrop-blur-sm rounded-xl px-3 py-2 mb-4 inline-flex items-end gap-2 border border-white/10 shadow-sm">
                                       {activeDeal.price && (
-                                          <span className="text-3xl font-black text-emerald-500 leading-none">{formatIndianPrice(activeDeal.price)}</span>
+                                          <span className="text-2xl font-black text-emerald-500 leading-none">{formatIndianPrice(activeDeal.price)}</span>
                                       )}
                                       {calculateMRP(activeDeal.price, activeDeal.discountPercent) && (
                                           <span className="text-sm font-bold text-slate-400 line-through decoration-slate-500 mb-0.5">
@@ -917,7 +919,7 @@ export default function CreatorBioPage({ params }) {
                                           </span>
                                       )}
                                       {activeDeal.discountPercent && (
-                                          <span className={`font-black text-emerald-500 ${activeDeal.price ? 'text-sm mb-0.5 ml-1' : 'text-3xl leading-none'}`}>
+                                          <span className={`font-black text-emerald-500 ${activeDeal.price ? 'text-sm mb-0.5 ml-1' : 'text-2xl leading-none'}`}>
                                               {activeDeal.discountPercent}
                                           </span>
                                       )}
@@ -926,7 +928,7 @@ export default function CreatorBioPage({ params }) {
 
                               {/* Compact Coupon Block */}
                               {activeDeal.couponCode && (
-                                  <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 border-dashed rounded-lg px-3 py-2 mb-4">
+                                  <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 border-dashed rounded-lg px-3 py-2 mb-4 transform-gpu">
                                       <div className="flex flex-col">
                                           <span className="text-[9px] font-bold opacity-70 uppercase tracking-widest leading-none mb-1">Coupon Code</span>
                                           <span className="text-base font-black text-emerald-500 tracking-wider leading-none">{activeDeal.couponCode}</span>
@@ -937,34 +939,31 @@ export default function CreatorBioPage({ params }) {
 
                               {/* Description Box with Smart Formatting */}
                               {activeDeal.description && (
-                                  <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-4 rounded-2xl mb-6 shadow-sm">
+                                  <div className="bg-white/5 border border-white/10 p-4 rounded-2xl mb-6 shadow-sm transform-gpu">
                                       <h3 className="font-black text-sm mb-3 flex items-center gap-1.5 opacity-90 border-b border-white/10 pb-2">
                                           <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                           About this Product
                                       </h3>
                                       
-                                      {/* Smart Text Parser */}
                                       {(() => {
                                           const rawDesc = activeDeal.description;
-                                          // "Why buy this?" ko dhoondh kar paragraph todena
                                           const parts = rawDesc.split(/Why buy this\??/i);
                                           const mainText = parts[0].trim();
                                           const bulletsText = parts.length > 1 ? parts[1].trim() : "";
                                           
                                           return (
                                               <div className="text-[13px] font-medium leading-relaxed opacity-85 space-y-4">
-                                                  {/* Upar ka Main Paragraph */}
                                                   {mainText && <p>{mainText.replace(/^[-*]/g, '').trim()}</p>}
-                                                  
-                                                  {/* Niche ke Bullet Points */}
                                                   {bulletsText && (
-                                                      <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                                          <span className="font-black text-emerald-400 mb-2 block uppercase tracking-wider text-[10px]">Why buy this? 👇</span>
-                                                          <div className="space-y-2">
+                                                      <div className="bg-emerald-50/50 border border-emerald-500/20 p-3.5 rounded-xl shadow-sm">
+                                                          <span className="font-black text-emerald-700 mb-2 block uppercase tracking-widest text-[11px]">
+                                                              Why buy this? 👇
+                                                          </span>
+                                                          <div className="space-y-2.5">
                                                               {bulletsText.split('\n').filter(line => line.trim() !== '').map((point, i) => (
                                                                   <p key={i} className="flex items-start gap-2">
-                                                                      <span className="text-emerald-500 mt-0.5 text-[10px]">❖</span>
-                                                                      <span>{point.replace(/^[-*]/g, '').trim()}</span>
+                                                                      <span className="text-emerald-600 mt-0.5 text-[12px]">❖</span>
+                                                                      <span className="font-semibold text-slate-700 opacity-95 text-[13px]">{point.replace(/^[-*]/g, '').trim()}</span>
                                                                   </p>
                                                               ))}
                                                           </div>
@@ -976,7 +975,7 @@ export default function CreatorBioPage({ params }) {
                                   </div>
                               )}
 
-                              {/* Similar Category Products (BUG FIXED: Random Shuffle Logic Added) */}
+                              {/* Similar Category Products */}
                               {activeDeal.category && activeDeal.category !== "Other" && (
                                   <div className="mt-8 border-t border-white/10 pt-6">
                                       <h3 className="font-black text-[15px] mb-4 uppercase tracking-wide opacity-90">
@@ -985,12 +984,10 @@ export default function CreatorBioPage({ params }) {
                                       <div className="columns-2 gap-3 space-y-3">
                                           {deals
                                               .filter(d => d.category === activeDeal.category && d._id !== activeDeal._id)
-                                              // 👇 NAYA LOGIC: Ye line array ko har baar randomly mix (shuffle) kar degi
                                               .sort(() => 0.5 - Math.random())
-                                              // 👇 6 ki jagah 8 kar diya hai taaki explore karne mein aur maza aaye
                                               .slice(0, 8) 
                                               .map((relatedDeal, idx) => (
-                                                  <div key={idx} className="break-inside-avoid relative">
+                                                  <div key={idx} className="break-inside-avoid relative transform-gpu">
                                                       <GridProductCard deal={relatedDeal} onClick={() => openDetailedModal(relatedDeal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
                                                   </div>
                                               ))
@@ -1001,8 +998,8 @@ export default function CreatorBioPage({ params }) {
                           </div>
                       </div>
 
-                      {/* Fixed Bottom Action Bar (BUG FIXED: Added z-[100] to prevent overlap) */}
-                      <div className="absolute bottom-0 left-0 w-full px-4 py-3 bg-black/70 backdrop-blur-xl border-t border-white/10 flex items-center gap-3 pb-6 z-[100]">
+                      {/* Fixed Bottom Action Bar (BUG FIXED: Blur optimized) */}
+                      <div className="absolute bottom-0 left-0 w-full px-4 py-3 bg-black/80 backdrop-blur-md border-t border-white/10 flex items-center gap-3 pb-6 z-[100] transform-gpu">
                           <button onClick={() => handleShareClick(activeDeal)} disabled={isGeneratingShare} className="w-12 h-12 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl flex items-center justify-center text-white shrink-0 transition-all active:scale-95 shadow-md">
                               {isGeneratingShare ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>}
                           </button>
