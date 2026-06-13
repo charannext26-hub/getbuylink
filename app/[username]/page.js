@@ -98,14 +98,22 @@ const timeAgo = (date) => {
     return "just now";
 };
 
-// 🧮 SMART PRICE CALCULATOR (Original MRP nikalne ke liye)
+// 🧮 SMART INDIAN PRICE FORMATTER
+const formatIndianPrice = (priceStr) => {
+    if (!priceStr) return "";
+    const num = parseFloat(priceStr.toString().replace(/[^\d.]/g, ''));
+    if (isNaN(num)) return priceStr;
+    return `₹${num.toLocaleString('en-IN')}`;
+};
+
+// 🧮 SMART PRICE CALCULATOR (With Commas)
 const calculateMRP = (offerPrice, discountPercent) => {
     if (!offerPrice || !discountPercent) return null;
     const price = parseFloat(offerPrice.toString().replace(/[^\d.]/g, ''));
     const discount = parseFloat(discountPercent.toString().replace(/[^\d.]/g, ''));
     if (price > 0 && discount > 0 && discount < 100) {
         const mrp = Math.round(price / (1 - (discount / 100)));
-        return `₹${mrp}`;
+        return `₹${mrp.toLocaleString('en-IN')}`;
     }
     return null;
 };
@@ -724,7 +732,7 @@ export default function CreatorBioPage({ params }) {
                   <button onClick={() => setIsShareDrawerOpen(true)} className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center shadow-sm border border-slate-500/20 bg-white/10 hover:bg-white/20 transition-colors">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
                   </button>
-                  <button onClick={() => alert("Notifications coming soon!")} className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center shadow-sm border border-emerald-500/30 bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">
+                  <button onClick={() => alert("Notifications Feature coming soon!")} className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center shadow-sm border border-emerald-500/30 bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                   </button>
               </div>
@@ -867,22 +875,22 @@ export default function CreatorBioPage({ params }) {
               
               {activeDeal && (
                   <>
-                      {/* Compact Sticky Header */}
-                      <div className="sticky top-0 z-50 flex items-center gap-3 px-3 py-2 bg-black/20 backdrop-blur-xl border-b border-white/10 shadow-sm">
+                      {/* Compact Sticky Header (BUG FIXED: flex-shrink-0 se height compress nahi hogi) */}
+                      <div className="sticky top-0 z-50 flex items-center gap-3 px-3 py-2 bg-black/20 backdrop-blur-xl border-b border-white/10 shadow-sm flex-shrink-0 min-h-[50px] transform-gpu">
                           <button onClick={() => window.history.back()} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                           </button>
-                          <span className={`font-black text-base truncate opacity-90 ${currentTheme.text}`}>Deal Details</span>
+                          <span className={`font-black text-base truncate opacity-90 ${currentTheme.text}`}>Product Details</span>
                       </div>
 
-                      {/* Scrollable Body (Smooth & Lag-free) */}
-                      <div className="flex-1 overflow-y-auto pb-28 [&::-webkit-scrollbar]:hidden scroll-smooth">
+                      {/* Scrollable Body (BUG FIXED: Removed scroll-smooth, added overscroll-contain & transform-gpu for 60fps scrolling) */}
+                      <div className="flex-1 overflow-y-auto pb-28 [&::-webkit-scrollbar]:hidden overscroll-contain transform-gpu">
                           
                           {/* Compact Square Image Box */}
                           <div className="w-full aspect-square bg-white relative p-2 shadow-inner flex items-center justify-center">
+                              {/* NOTE: Removed loading="lazy" here to prevent loading lag when drawer opens */}
                               <img src={activeDeal.image} className="w-full h-full object-contain mix-blend-multiply" alt="Product" />
                               
-                              {/* Bottom Left Store & Timer Overlay */}
                               <div className="absolute bottom-0 left-0 bg-slate-900/85 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-1.5 rounded-tr-2xl z-10 flex items-center gap-2 shadow-lg">
                                   <span>{activeDeal.store || "Exclusive"}</span>
                                   {activeDeal.saleEndTime && (
@@ -897,29 +905,22 @@ export default function CreatorBioPage({ params }) {
                           <div className={`p-4 ${currentTheme.text}`}>
                               <h2 className="text-base font-extrabold leading-snug mb-3 opacity-95 line-clamp-3">{activeDeal.title}</h2>
                               
-                              {/* Smart Pricing Block (BUG FIXED: Handles missing price but available discount) */}
+                              {/* Smart Pricing Block (NEW: Comma formatted prices) */}
                               {(activeDeal.price || activeDeal.discountPercent) && (
-                                  <div className="bg-white/20 backdrop-blur-md rounded-xl px-3 py-2 mb-4 inline-flex items-end gap-2 border border-white/20 shadow-sm">
-                                      
-                                      {/* Agar Price hai toh dikhao */}
+                                  <div className="bg-white/5 backdrop-blur-md rounded-xl px-3 py-2 mb-4 inline-flex items-end gap-2 border border-white/10 shadow-sm">
                                       {activeDeal.price && (
-                                          <span className="text-2xl font-black text-emerald-500 leading-none">{activeDeal.price}</span>
+                                          <span className="text-3xl font-black text-emerald-500 leading-none">{formatIndianPrice(activeDeal.price)}</span>
                                       )}
-                                      
-                                      {/* Agar Price aur Discount dono hain, toh MRP calculate karke dikhao */}
                                       {calculateMRP(activeDeal.price, activeDeal.discountPercent) && (
                                           <span className="text-sm font-bold text-slate-400 line-through decoration-slate-500 mb-0.5">
                                               {calculateMRP(activeDeal.price, activeDeal.discountPercent)}
                                           </span>
                                       )}
-                                      
-                                      {/* Agar Discount hai, toh dikhao (Agar price nahi hai, toh discount ko bada (3xl) kardo) */}
                                       {activeDeal.discountPercent && (
-                                          <span className={`font-black text-emerald-500 ${activeDeal.price ? 'text-sm mb-0.5 ml-1' : 'text-2xl leading-none'}`}>
+                                          <span className={`font-black text-emerald-500 ${activeDeal.price ? 'text-sm mb-0.5 ml-1' : 'text-3xl leading-none'}`}>
                                               {activeDeal.discountPercent}
                                           </span>
                                       )}
-                                      
                                   </div>
                               )}
 
@@ -1159,7 +1160,7 @@ function GridProductCard({ deal, onClick, themeCardClass, onToast, showTimeAgo, 
             <div className="flex items-center gap-2 mt-auto pt-2 border-t border-slate-500/10 dark:border-white/10 px-1">
                 {deal.price ? (
                     <>
-                        <span className="text-sm font-black drop-shadow-sm truncate">{deal.price}</span>
+                        <span className="text-sm font-black drop-shadow-sm truncate">{formatIndianPrice(deal.price)}</span>
                         {/* 👇 NAYA: isLiveOffer true hai toh Get Deal, warna Shop Now */}
                         <button className="flex-1 bg-emerald-500 text-white text-[11px] font-bold py-1.5 rounded-lg shadow-[0_4px_10px_rgba(16,185,129,0.3)] hover:bg-emerald-600 transition-colors text-center">{isLiveOffer ? "Get Deal" : "Shop Now"}</button>
                     </>
