@@ -423,6 +423,38 @@ export default function CreatorBioPage({ params }) {
       return () => observer.disconnect();
   }, [hasMore, isFetchingMore, isDealsLoading, page, creator, activeTab]);
 
+  // 🚀 NAYA: Dynamic Manifest (Add to Home Screen) Injector
+    useEffect(() => {
+        // Next.js latest rule: params ek Promise hai, isliye usko pehle unwrap karna zaroori hai
+        const getManifest = async () => {
+            // Agar params directly available nahi hai, toh React.use() ya await ka use karein
+            // Note: useEffect ke andar hum Promise.resolve use karke safely value nikal sakte hain
+            const resolvedParams = await Promise.resolve(params);
+            const username = resolvedParams?.username;
+
+            if (username) {
+                // Hamari nayi dynamic API ka URL
+                const dynamicManifestUrl = `/api/manifest?username=${username}`;
+                
+                // Pata lagao ki kya pehle se koi manifest tag hai HTML mein
+                let manifestLink = document.querySelector('link[rel="manifest"]');
+                
+                if (manifestLink) {
+                    // Agar hai, toh usko hamare dynamic wale se replace kar do
+                    manifestLink.href = dynamicManifestUrl;
+                } else {
+                    // Agar nahi hai, toh ek naya tag banakar Head mein daal do
+                    manifestLink = document.createElement('link');
+                    manifestLink.rel = 'manifest';
+                    manifestLink.href = dynamicManifestUrl;
+                    document.head.appendChild(manifestLink);
+                }
+            }
+        };
+
+        getManifest();
+    }, [params]); // Dependency mein sirf params rakha hai
+
   useEffect(() => {
       if (!creator?.banners?.length || creator.banners.length <= 1) return;
       const interval = setInterval(() => {
@@ -901,7 +933,7 @@ export default function CreatorBioPage({ params }) {
           </div>
       </div>
 
-      {/* ----------------- FEED SECTIONS ----------------- */}
+     {/* ----------------- FEED SECTIONS ----------------- */}
       <div className="px-3 pt-3">
         {isDealsLoading ? (
             <div className="columns-2 gap-3 space-y-3 mt-1">
@@ -909,41 +941,64 @@ export default function CreatorBioPage({ params }) {
             </div>
         ) : (
             <>
-               {activeTab === "home" && (
-                  <div className="columns-2 gap-3 space-y-3">
-                      {masterFeed.length === 0 && !isFetchingMore && !hasMore ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No posts yet.</p> : 
-                          orderedMasterFeed.map((item, idx) => renderFeedItem(item, idx))
-                      }
-                  </div>
-              )}
+               {activeTab === "home" ? (
+                   masterFeed.length === 0 && !isFetchingMore && !hasMore ? (
+                       <div className="w-full flex flex-col items-center justify-center p-8 mt-2 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl bg-slate-50/50 dark:bg-white/5 mx-1">
+                           <svg className="w-12 h-12 text-slate-400 dark:text-white/40 mb-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                           <h4 className="text-[14px] font-black tracking-wide opacity-80">No Posts Yet</h4>
+                           <p className="text-[12px] font-medium opacity-50 mt-1 text-center">Creator hasn't added any deals here.</p>
+                       </div>
+                   ) : (
+                       <div className="columns-2 gap-3 space-y-3">
+                           {orderedMasterFeed.map((item, idx) => renderFeedItem(item, idx))}
+                       </div>
+                   )
+               ) : null}
 
-              {activeTab === "trending" && (
-                  <div className="columns-2 gap-3 space-y-3">
-                      {orderedDeals.length === 0 && !isFetchingMore && !hasMore ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No trending deals yet.</p> : 
-                          orderedDeals.map((deal, idx) => ( 
-                              <div key={idx} className="break-inside-avoid relative transform-gpu"> 
-                                  <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
-                              </div>
-                          ))
-                      }
-                  </div>
-              )}
+               {activeTab === "trending" ? (
+                   orderedDeals.length === 0 && !isFetchingMore && !hasMore ? (
+                       <div className="w-full flex flex-col items-center justify-center p-8 mt-2 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl bg-slate-50/50 dark:bg-white/5 mx-1">
+                           <svg className="w-12 h-12 text-slate-400 dark:text-white/40 mb-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                           <h4 className="text-[14px] font-black tracking-wide opacity-80">No Trending Deals</h4>
+                           <p className="text-[12px] font-medium opacity-50 mt-1 text-center">Check back later for viral offers.</p>
+                       </div>
+                   ) : (
+                       <div className="columns-2 gap-3 space-y-3">
+                           {orderedDeals.map((deal, idx) => ( 
+                               <div key={idx} className="break-inside-avoid relative transform-gpu"> 
+                                   <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
+                               </div>
+                           ))}
+                       </div>
+                   )
+               ) : null}
 
-              {activeTab === "liveoffer" && (
-                  <div className="columns-2 gap-3 space-y-3">
-                      {orderedDeals.length === 0 && !isFetchingMore && !hasMore ? <p className="text-center opacity-60 font-bold p-8 col-span-2">No live deals right now.</p> : 
-                          orderedDeals.map((deal, idx) => ( 
-                              <div key={idx} className="break-inside-avoid transform-gpu"> 
-                                  <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} showTimeAgo={true} isLiveOffer={true} />
-                              </div>
-                          ))
-                      }
-                  </div>
-              )} 
-              
-               {activeTab === "categories" && (
+               {activeTab === "liveoffer" ? (
+                   orderedDeals.length === 0 && !isFetchingMore && !hasMore ? (
+                       <div className="w-full flex flex-col items-center justify-center p-8 mt-2 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl bg-slate-50/50 dark:bg-white/5 mx-1">
+                           <svg className="w-12 h-12 text-slate-400 dark:text-white/40 mb-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                           <h4 className="text-[14px] font-black tracking-wide opacity-80">No Live Deals Right Now</h4>
+                           <p className="text-[12px] font-medium opacity-50 mt-1 text-center">We are hunting for new exclusive drops.</p>
+                       </div>
+                   ) : (
+                       <div className="columns-2 gap-3 space-y-3">
+                           {orderedDeals.map((deal, idx) => ( 
+                               <div key={idx} className="break-inside-avoid transform-gpu"> 
+                                   <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} showTimeAgo={true} isLiveOffer={true} />
+                               </div>
+                           ))}
+                       </div>
+                   )
+               ) : null} 
+               
+               {activeTab === "categories" ? (
                     <div className="space-y-6 pb-6 mt-2">
-                        {Object.keys(categoryGroups).length === 0 && !isFetchingMore && !hasMore ? <p className="text-center opacity-60 font-bold p-8">No categories found.</p> : 
+                        {Object.keys(categoryGroups).length === 0 && !isFetchingMore && !hasMore ? (
+                           <div className="w-full flex flex-col items-center justify-center p-8 mt-2 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl bg-slate-50/50 dark:bg-white/5 mx-1">
+                               <svg className="w-12 h-12 text-slate-400 dark:text-white/40 mb-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                               <h4 className="text-[14px] font-black tracking-wide opacity-80">No Categories Found</h4>
+                           </div>
+                        ) : (
                             Object.keys(categoryGroups).map((catName, idx) => (
                                 <div key={idx} className="space-y-3">
                                     <div className="flex justify-between items-center px-1">
@@ -955,16 +1010,15 @@ export default function CreatorBioPage({ params }) {
                                     <div className="flex overflow-x-auto gap-3 pb-2 [&::-webkit-scrollbar]:hidden snap-x">
                                         {categoryGroups[catName].slice(0, 10).map(deal => (
                                             <div key={deal._id} className="w-[145px] flex-shrink-0 snap-start">
-                                                {/* 🚀 BUG FIXED: Yahan wapas handleDealClick lagaya hai taaki click karne par direct link khule, drawer nahi! */}
                                                 <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             ))
-                        }
+                        )}
                     </div>
-                )}
+               ) : null}
 
                 {/* 🌀 NAYA: Scroll Tracker & Loader Spinner */}
                 {hasMore && !isDealsLoading && (
