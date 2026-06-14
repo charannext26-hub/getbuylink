@@ -999,7 +999,12 @@ export default function CreatorBioPage({ params }) {
                                <h4 className="text-[14px] font-black tracking-wide opacity-80">No Categories Found</h4>
                            </div>
                         ) : (
-                            Object.keys(categoryGroups).map((catName, idx) => (
+                            // 🚀 NAYA LOGIC: Others ko last mein bhejne ka array manipulation
+                            Object.keys(categoryGroups).sort((a, b) => {
+                                if (a.toLowerCase() === "others") return 1;  // Others ko niche (1) bhejo
+                                if (b.toLowerCase() === "others") return -1; // Dusro ko upar (-1) bhejo
+                                return a.localeCompare(b); // Baaki categories ko A-Z sort karo
+                            }).map((catName, idx) => (
                                 <div key={idx} className="space-y-3">
                                     <div className="flex justify-between items-center px-1">
                                         <h3 className="font-black text-sm uppercase tracking-wide opacity-90">{catName}</h3>
