@@ -293,7 +293,7 @@ function LandingContent() {
                {/* Premium Glowing Blob Image Area */}
                <div className="w-full flex justify-center relative my-8 sm:my-12 px-2">
                  <img 
-                   src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNmEyMDMyOGFkZGI4ODE5MTgzZDUwZjQ0Mzk4YmNiZDU6ZmlsZV8wMDAwMDAwMGRhYTg3MWZhYjhmODljZmRlYWI5ZDY5MiIsInRzIjoiMjA2MDciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjdjNDk2OWE0YmY2OTU1MWU1NGI4MDYwYjI5N2NiZjJlZTUwOTgwYTk1NTllMWY2NzAyODRmODA0NTdmM2Q5YWYiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" 
+                   src="https://i.postimg.cc/wxS41X87/file-00000000daa871fab8f89cfdeab9d692-(1).png" 
                    className="w-full max-w-3xl h-auto object-cover animate-ai-glow transition-all duration-700 hover:scale-[1.02] border border-slate-700/50" 
                    alt="Auto Post Workflow"
                  />
@@ -455,7 +455,7 @@ function LandingContent() {
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative" style={{ animationDelay: '400ms' }}>
                       <img src="https://cdn.corenexis.com/files/c/2332815720.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Publish" />
                     </div>
-                    <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">3. Publish To Page & Earn</h3>
+                    <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">3. Publish Link & Earn</h3>
                     <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Post link to your storefront or share with your audience and earn</p>
                   </div>
                 </RevealOnScroll>
