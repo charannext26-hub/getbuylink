@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+import connectToDatabase from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
@@ -7,10 +7,8 @@ import crypto from "crypto";
 
 export async function POST(req) {
   try {
-    // 1. Database Connect Karein
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_URI);
-    }
+    // 🚀 BUG FIXED: Mongoose direct connect ki jagah optimized file use ki
+    await connectToDatabase();
 
     const { name, email, password } = await req.json();
 
