@@ -106,17 +106,6 @@ const formatIndianPrice = (priceStr) => {
     return `₹${num.toLocaleString('en-IN')}`;
 };
 
-// 🧮 SMART PRICE CALCULATOR (With Commas)
-const calculateMRP = (offerPrice, discountPercent) => {
-    if (!offerPrice || !discountPercent) return null;
-    const price = parseFloat(offerPrice.toString().replace(/[^\d.]/g, ''));
-    const discount = parseFloat(discountPercent.toString().replace(/[^\d.]/g, ''));
-    if (price > 0 && discount > 0 && discount < 100) {
-        const mrp = Math.round(price / (1 - (discount / 100)));
-        return `₹${mrp.toLocaleString('en-IN')}`;
-    }
-    return null;
-};
 
 // 🌟 SMART Colored SVG Logos
 const SVGS = {
@@ -298,7 +287,7 @@ export default function CreatorBioPage({ params }) {
             setIsEscapingApp(true);
             const currentUrl = window.location.href.replace(/^https?:\/\//, '');
             const intentUrl = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-            setTimeout(() => { window.location.replace(intentUrl); }, 55);
+            setTimeout(() => { window.location.replace(intentUrl); }, 0);
         }
         // iOS ke liye yahan koi rok-tok nahi
     }
@@ -903,8 +892,8 @@ export default function CreatorBioPage({ params }) {
       {/* ----------------- STICKY HEADER & TABS BAR (Reduced Height) ----------------- */}
       <div className={`sticky top-0 z-40 px-3 pt-2 pb-0 ${currentTheme.tabBg} border-b backdrop-blur-xl shadow-sm transition-all duration-300`}>
           
-          {/* Twitter Style Sticky Info: Appears on scroll */}
-          <div className={`flex justify-between items-center px-1 overflow-hidden transition-all duration-300 ${isScrolled ? 'h-8 opacity-100 mb-1.5' : 'h-0 opacity-0 mb-0 pointer-events-none'}`}>
+          {/* Twitter Style Sticky Info: Appears on scroll (GPU Optimized) */}
+<div className={`flex justify-between items-center px-1 overflow-hidden transition-all duration-300 ease-out transform-gpu will-change-[max-height,opacity,transform] ${isScrolled ? 'max-h-10 opacity-100 mb-1.5 translate-y-0' : 'max-h-0 opacity-0 mb-0 -translate-y-2 pointer-events-none'}`}>
               <div className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20">
                       {creator.image ? <img src={creator.image} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-slate-300"></div>}
@@ -934,9 +923,9 @@ export default function CreatorBioPage({ params }) {
       </div>
 
      {/* ----------------- FEED SECTIONS ----------------- */}
-      <div className="px-3 pt-3">
+      <div className="px-2 pt-2">
         {isDealsLoading ? (
-            <div className="columns-2 gap-3 space-y-3 mt-1">
+            <div className="columns-2 gap-2 space-y-2 mt-1">
                 {[1,2,3,4].map(i => <div key={i} className="w-full h-48 bg-slate-300/30 animate-pulse rounded-2xl border border-white/10"></div>)}
             </div>
         ) : (
@@ -1082,7 +1071,7 @@ export default function CreatorBioPage({ params }) {
                           
                           {/* Compact Square Image Box */}
                           <div className="w-full aspect-square bg-white relative p-2 shadow-inner flex items-center justify-center">
-                              <img src={activeDeal.image} className="w-full h-full object-contain mix-blend-multiply" alt="Product" />
+                              <img src={activeDeal.image} className="w-full h-full object-contain mix-blend-multiply pointer-events-none select-none" alt="Product" draggable="false" onContextMenu={(e) => e.preventDefault()} style={{ WebkitTouchCallout: 'none' }} />
                               
                               {/* Bottom Left Store & Timer Overlay */}
                               <div className="absolute bottom-0 left-0 bg-slate-900/90 text-white text-[10px] font-black px-2.5 py-1.5 rounded-tr-2xl z-10 flex items-center gap-2 shadow-lg">
@@ -1099,24 +1088,27 @@ export default function CreatorBioPage({ params }) {
                           <div className={`p-4 ${currentTheme.text}`}>
                               <h2 className="text-base font-extrabold leading-snug mb-3 opacity-95 line-clamp-3">{activeDeal.title}</h2>
                               
-                              {/* Smart Pricing Block */}
-                              {(activeDeal.price || activeDeal.discountPercent) && (
-                                  <div className="bg-white/5 rounded-xl px-3 py-2 mb-4 inline-flex items-end gap-2 border border-white/10 shadow-sm">
-                                      {activeDeal.price && (
-                                          <span className="text-2xl font-black text-emerald-500 leading-none">{formatIndianPrice(activeDeal.price)}</span>
-                                      )}
-                                      {calculateMRP(activeDeal.price, activeDeal.discountPercent) && (
-                                          <span className="text-sm font-bold text-slate-400 line-through decoration-slate-500 mb-0.5">
-                                              {calculateMRP(activeDeal.price, activeDeal.discountPercent)}
-                                          </span>
-                                      )}
-                                      {activeDeal.discountPercent && (
-                                          <span className={`font-black text-emerald-500 ${activeDeal.price ? 'text-sm mb-0.5 ml-1' : 'text-2xl leading-none'}`}>
-                                              {activeDeal.discountPercent}
-                                          </span>
-                                      )}
-                                  </div>
-                              )}
+                              {/* Smart Pricing Block (Direct from DB) */}
+{(activeDeal.price || activeDeal.discountPercent || activeDeal.mrp) && (
+    <div className="bg-white/5 rounded-xl px-3 py-2 mb-4 inline-flex items-end gap-2 border border-white/10 shadow-sm">
+        {activeDeal.price && (
+            <span className="text-2xl font-black text-emerald-500 leading-none">{formatIndianPrice(activeDeal.price)}</span>
+        )}
+        
+        {/* NAYA: Seedha DB se MRP show kar raha hai */}
+        {activeDeal.mrp && (
+            <span className="text-sm font-bold text-slate-400 line-through decoration-slate-500 mb-0.5">
+                {formatIndianPrice(activeDeal.mrp)}
+            </span>
+        )}
+        
+        {activeDeal.discountPercent && (
+            <span className={`font-black text-emerald-500 ${activeDeal.price ? 'text-sm mb-0.5 ml-1' : 'text-2xl leading-none'}`}>
+                {activeDeal.discountPercent}
+            </span>
+        )}
+    </div>
+)}
 
                               {/* Compact Coupon Block */}
                               {activeDeal.couponCode && (
@@ -1341,10 +1333,10 @@ function LiveTimer({ targetDate }) {
 // 👇 NAYA: isLiveOffer add kiya
 function GridProductCard({ deal, onClick, themeCardClass, onToast, showTimeAgo, isLiveOffer }) {
     return (
-        <div className={`border shadow-sm rounded-2xl p-2 flex flex-col hover:scale-[1.02] transition-transform cursor-pointer group ${themeCardClass}`} onClick={onClick}>
+        <div className={`border shadow-sm rounded-xl p-1.5 flex flex-col hover:scale-[1.02] transition-transform cursor-pointer group ${themeCardClass}`} onClick={onClick}>
             
             <div className="w-full aspect-square bg-white rounded-xl mb-2 relative p-1 overflow-hidden shadow-inner border border-black/5 dark:border-white/50">
-                <img src={deal.image} loading="lazy" decoding="async" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" alt="Product" />
+                <img src={deal.image} loading="lazy" decoding="async" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500 pointer-events-none select-none" alt="Product" draggable="false" onContextMenu={(e) => e.preventDefault()} style={{ WebkitTouchCallout: 'none' }} />
                 {deal.discountPercent && <span className="absolute top-0 left-0 bg-rose-500 text-white text-[10px] font-black px-2 py-1 rounded-br-xl z-10 shadow-md">{deal.discountPercent}</span>}
                 <span className="absolute bottom-0 left-0 bg-slate-900/80 backdrop-blur-sm text-white text-[9px] font-black px-2.5 py-1 rounded-tr-xl z-10 flex items-center gap-1.5">
                     <span>{deal.store || "Exclusive"}</span>

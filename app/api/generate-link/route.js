@@ -4,7 +4,7 @@ import GlobalDeal from "@/lib/models/GlobalDeal";
 import LinkPerformance from "@/lib/models/LinkPerformance";
 import User from "@/lib/models/User"; 
 
-// 🚨 MASTER TRICK: The URL Cleaner
+// 🚨 MASTER TRICK: The URL Cleaner (Aur zyada strict kar diya gaya hai)
 function cleanProductUrl(rawUrl) {
   try {
     const urlObj = new URL(rawUrl);
@@ -12,10 +12,15 @@ function cleanProductUrl(rawUrl) {
       'tag', 'linkCode', 'linkId', 'ref_', 'ascsubtag', 
       'affid', 'cmpid', 'affExtParam1', 'affExtParam2', 
       'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 
-      'subid', 'clickId', 'igshid', 'mibextid' 
+      'subid', 'clickId', 'igshid', 'mibextid', 'pid', 'lid' // Flipkart ke extra params clean karne se bachein agar zaroori na ho, but tracking params hata diye.
     ];
     
-    paramsToRemove.forEach(param => urlObj.searchParams.delete(param));
+    // Flipkart ke pid/lid safe rakhne hain, but deals site ke utm parameters hata do
+    const pureTrackingParams = [
+      'tag', 'affid', 'ascsubtag', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'subid', 'gclid'
+    ];
+    
+    pureTrackingParams.forEach(param => urlObj.searchParams.delete(param));
     return urlObj.toString();
   } catch (e) {
     return rawUrl; 
@@ -41,10 +46,13 @@ export async function POST(req) {
     const deal = await GlobalDeal.findById(dealId);
     if (!deal) return NextResponse.json({ success: false, message: "Deal not found" });
 
-    const rawTargetUrl = (deal.expandedUrl || deal.originalUrl || "").trim();
+    // 🚀 MASTER STRATEGY UPGRADE: Cascade Priority Logic
+    // Sabse pehle rawAffiliateLink dekhega, agar nahi mila toh expandedUrl, aakhiri mein originalUrl
+    const rawTargetUrl = (deal.rawAffiliateLink || deal.expandedUrl || deal.originalUrl || "").trim();
+    
     if (!rawTargetUrl) return NextResponse.json({ success: false, message: "Product URL missing" });
 
-    // CLEANING THE LINK
+    // CLEANING THE LINK (Fresh Product Link banega)
     const targetProductUrl = cleanProductUrl(rawTargetUrl);
 
     // Username ko safe banao
@@ -90,7 +98,7 @@ export async function POST(req) {
     // ==========================================
     
     if (isAmazonLink && creatorTag) {
-        // ROUTE 1: AMAZON
+        // ROUTE 1: AMAZON DIRECT
         try {
             const amzUrl = new URL(targetProductUrl);
             amzUrl.searchParams.set('tag', creatorTag); 
@@ -100,12 +108,12 @@ export async function POST(req) {
         }
     } 
     else if (sankmoCampaigns[finalStoreName]) {
-        // ROUTE 2: SANKMO (Deep-linking integration for Telegram auto-post traffic)
+        // ROUTE 2: SANKMO (Shopsy, Flipkart, Myntra, etc.)
         const campId = sankmoCampaigns[finalStoreName];
         affiliateUrl = `https://sankmo.in/track/click?pub_id=${SANKMO_PUB_ID}&camp_id=${campId}&subid=${safeSubId}&subid1=${newShortCode}&source=telegram_auto_post&dl=${encodeURIComponent(targetProductUrl)}`;
     } 
     else {
-        // ROUTE 3: CUELINKS (Fallback)
+        // ROUTE 3: CUELINKS (Fallback for others like Croma, Ajio if not in Sankmo, etc.)
         const pubId = (process.env.CUELINKS_PUB_ID || "246005").trim();
         affiliateUrl = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeSubId}&subid2=${newShortCode}&subid3=telegram&url=${encodeURIComponent(targetProductUrl)}`;
     }
@@ -118,7 +126,7 @@ export async function POST(req) {
       globalDealId: dealId,
       shortCode: newShortCode,
       subId: safeSubId,
-      originalUrl: targetProductUrl, 
+      originalUrl: targetProductUrl, // Ab yahan ekdum CLEAN, RAW link save hoga
       affiliateUrl: affiliateUrl, 
       title: deal.title,
       store: finalStoreName,
