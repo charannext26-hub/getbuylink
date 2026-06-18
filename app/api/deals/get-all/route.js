@@ -1,47 +1,50 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import GlobalDeal from "@/lib/models/GlobalDeal";
-import User from "@/lib/models/User"; // 🚀 NAYA: Creator ka data check karne ke liye User model import kiya
+import User from "@/lib/models/User"; 
 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const email = searchParams.get("email"); 
+    
+    // 🚀 INCOMING TUNING: Frontend ab username bhejega, email nahi
+    const username = searchParams.get("username"); 
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 20; 
     const skip = (page - 1) * limit;
     const tab = searchParams.get("tab") || "home"; 
 
-    if (!email) return NextResponse.json({ success: false }, { status: 400 });
+    if (!username) return NextResponse.json({ success: false, message: "Username required" }, { status: 400 });
     if (mongoose.connection.readyState === 0) await mongoose.connect(process.env.MONGODB_URI);
 
-    // 🚀 NAYA: Creator ka DB profile fetch karna
-    const creatorProfile = await User.findOne({ email: email });
+    // 🖧 THE INVISIBLE BRIDGE: Username se creator ka internal check nikalna
+    const creatorProfile = await User.findOne({ username: new RegExp(`^${username}$`, "i") }).lean();
+    if (!creatorProfile) return NextResponse.json({ success: false, message: "Creator profile mismatch" }, { status: 404 });
 
-    // Tab ke hisaab se Query Engine
+    // Hacking match token: Data logic match karne ke liye internal email variable nikal liya
+    const email = creatorProfile.email;
+
+    // Tab ke hisaab se Query Engine (Remains 100% untouched & perfectly mapped)
     let matchQuery = { $or: [{ creatorId: email, source: "creator" }, { source: "telegram" }] };
     let sortQuery = { createdAt: -1 };
 
     if (tab === "home" || tab === "categories") {
-        matchQuery = { creatorId: email, source: "creator" }; // Sirf Creator ki deals
+        matchQuery = { creatorId: email, source: "creator" }; 
     } else if (tab === "trending") {
-        matchQuery = { creatorId: email, source: "creator" }; // Trending bhi sirf Creator ka
+        matchQuery = { creatorId: email, source: "creator" }; 
         sortQuery = { totalClicks: -1 }; 
     } else if (tab === "liveoffer") {
-        // 🚀 BUG FIXED: Database keys 'autodeal_active' aur 'autoDealCategories' ko strictly map kiya
-        if (!creatorProfile || creatorProfile.autodeal_active === false) {
-            matchQuery = { _id: null }; // Toggle OFF hai, toh 0 result bhejo
+        if (creatorProfile.autodeal_active === false) {
+            matchQuery = { _id: null }; 
         } else {
-            matchQuery = { source: "telegram" }; // Toggle ON hai, toh telegram deals laao
+            matchQuery = { source: "telegram" }; 
             
-            // Agar specific categories select ki hain
             if (creatorProfile.autoDealCategories && creatorProfile.autoDealCategories.length > 0) {
                 matchQuery.category = { $in: creatorProfile.autoDealCategories };
             }
         }
     }
 
-    // Drawer ke Similar Products ke liye Category Filter
     const categoryFilter = searchParams.get("category");
     if (categoryFilter && categoryFilter !== "null") {
         matchQuery.category = categoryFilter;
@@ -54,7 +57,8 @@ export async function GET(req) {
       { $sort: sortQuery },
       { $skip: skip },
       { $limit: limit },
-      { $project: { performanceData: 0 } }
+      // 🔒 DEEP SECURITY PROJECT: Sensitive database values response se vanish kar di gayi hain
+      { $project: { performanceData: 0, creatorId: 0, rawAffiliateLink: 0, originalUrl: 0, expandedUrl: 0 } }
     ]);
 
     return NextResponse.json({ success: true, deals, page, hasMore: deals.length === limit }, { status: 200 });

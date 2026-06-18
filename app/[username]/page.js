@@ -228,7 +228,7 @@ export default function CreatorBioPage({ params }) {
   const handleShareClick = async (deal) => {
       setIsGeneratingShare(true);
       try {
-          let finalUrl = deal.expandedUrl || deal.originalUrl;
+          let finalUrl = `${window.location.origin}/`; // Default fallback
           if (creator) {
               const res = await fetch('/api/generate-link', {
                   method: 'POST',
@@ -236,9 +236,15 @@ export default function CreatorBioPage({ params }) {
                   body: JSON.stringify({ dealId: deal._id, creatorUsername: creator.username, triggerSource: "detailed_share" })
               });
               const data = await res.json();
-              if (data.success && data.shortCode) finalUrl = `${window.location.origin}/go/${data.shortCode}`;
+              if (data.success && data.shortCode) {
+                  finalUrl = `${window.location.origin}/go/${data.shortCode}`;
+              } else {
+                  triggerToast("Could not generate share link.");
+                  setIsGeneratingShare(false);
+                  return; // 🔒 NAYA: Agar fail ho jaye toh modal open mat karo
+              }
           }
-          // Open Custom Share Modal instead of native popup
+          // Open Custom Share Modal
           window.history.pushState({ shareModalOpen: true }, '');
           setCustomShareModal({ isOpen: true, deal: deal, generatedUrl: finalUrl });
       } catch (e) {
@@ -327,36 +333,58 @@ export default function CreatorBioPage({ params }) {
   }, [username]);
 
   // ============================================================================
-  // 🚀 2. FETCH DEALS BASED ON TAB (Jab tab badlega, naya data aayega)
+  // 🚀 2. FETCH DEALS BASED ON TAB (Ultra-Optimized Strict Cache + Page Memory)
   // ============================================================================
   useEffect(() => {
       if (!creator) return;
+      
+      let ignore = false; 
+
       async function fetchTabDeals() {
+          const cacheKey = `deals_${creator.username}_${activeTab}`;
+          const cachedStr = sessionStorage.getItem(cacheKey);
+          
+          // 🛡️ STRICT CACHE LOGIC WITH PAGE MEMORY
+          if (cachedStr) {
+              try {
+                  const cachedData = JSON.parse(cachedStr);
+                  // Check karega ki naya format (Object) hai ya purana (Array)
+                  if (!Array.isArray(cachedData) && cachedData.deals) {
+                      if (!ignore) {
+                          setDeals(cachedData.deals);
+                          setPage(cachedData.page);
+                          setHasMore(cachedData.hasMore);
+                          setIsDealsLoading(false);
+                      }
+                      return; // 🛑 Yahan se wapas! Koi API call nahi!
+                  }
+              } catch(e) {} // Agar purana kachra cache hai toh ignore karo
+          }
+
           setIsDealsLoading(true);
           setPage(1); 
 
-          // 🧠 SMART CACHE: Har tab ka data apne alag dibbe (cache) mein save hoga
-          const cacheKey = `deals_${username}_${activeTab}`;
-          const cachedTabDeals = sessionStorage.getItem(cacheKey);
-          
-          if (cachedTabDeals) {
-              setDeals(JSON.parse(cachedTabDeals));
-              setIsDealsLoading(false); // Cache mil gaya toh loader hata do
-          }
-
           try {
-              const res = await fetch(`/api/deals/get-all?email=${creator.email}&page=1&limit=20&tab=${activeTab}`);
+              const res = await fetch(`/api/deals/get-all?username=${creator.username}&page=1&limit=20&tab=${activeTab}`);
               const data = await res.json();
-              if (data.success) {
+              
+              if (!ignore && data.success) {
                   setDeals(data.deals);
+                  setPage(1);
                   setHasMore(data.hasMore);
-                  // Naye data ko usi tab ke cache mein save karo
-                  sessionStorage.setItem(cacheKey, JSON.stringify(data.deals)); 
+                  // 📦 Cache mein Deals ke sath Page bhi save karo
+                  sessionStorage.setItem(cacheKey, JSON.stringify({ deals: data.deals, page: 1, hasMore: data.hasMore })); 
               }
-          } catch (err) { console.error(err); } 
-          finally { setIsDealsLoading(false); }
+          } catch (err) { 
+              console.error(err); 
+          } finally { 
+              if (!ignore) setIsDealsLoading(false); 
+          }
       }
+      
       fetchTabDeals();
+
+      return () => { ignore = true; };
   }, [activeTab, creator]);
 
   // ============================================================================
@@ -368,7 +396,7 @@ export default function CreatorBioPage({ params }) {
           setSimilarDeals([]); // Purana data clear
 
           // FIX: URL mein tab=${activeTab} add kiya hai taaki liveoffer hai toh liveoffer mein hi dhoondhe
-          fetch(`/api/deals/get-all?email=${creator?.email}&page=1&limit=15&tab=${activeTab}&category=${encodeURIComponent(activeDeal.category)}`)
+          fetch(`/api/deals/get-all?username=${creator?.username}&page=1&limit=15&tab=${activeTab}&category=${encodeURIComponent(activeDeal.category)}`)
           .then(res => res.json())
           .then(data => {
               if (data.success && data.deals) {
@@ -383,17 +411,30 @@ export default function CreatorBioPage({ params }) {
   }, [activeDeal, creator, activeTab]);
 
   // ============================================================================
-  // 🚀 3. INFINITE SCROLL (Scroll karne par agla page layega)
+  // 🚀 3. INFINITE SCROLL (Scroll karne par agla page + Duplicate Check Fix)
   // ============================================================================
   const loadMoreDeals = async () => {
       if (!creator || !hasMore || isFetchingMore) return;
       setIsFetchingMore(true);
       try {
           const nextPage = page + 1;
-          const res = await fetch(`/api/deals/get-all?email=${creator.email}&page=${nextPage}&limit=20&tab=${activeTab}`);
+          const res = await fetch(`/api/deals/get-all?username=${creator.username}&page=${nextPage}&limit=20&tab=${activeTab}`);
           const data = await res.json();
           if (data.success) {
-              setDeals(prev => [...prev, ...data.deals]); // Purane data mein naya data jod do
+              setDeals(prev => {
+                  // 🛡️ THE FIX: Check karega ki naya product pehle se list mein hai ya nahi
+                  const existingIds = new Set(prev.map(d => d._id));
+                  const newUniqueDeals = data.deals.filter(d => !existingIds.has(d._id));
+                  
+                  // Sirf UNIQUE deals ko hi purani list mein jodega
+                  const updatedDeals = [...prev, ...newUniqueDeals];
+                  
+                  // Cache update karega
+                  const cacheKey = `deals_${creator.username}_${activeTab}`;
+                  sessionStorage.setItem(cacheKey, JSON.stringify({ deals: updatedDeals, page: nextPage, hasMore: data.hasMore }));
+                  
+                  return updatedDeals;
+              });
               setPage(nextPage);
               setHasMore(data.hasMore);
           }
@@ -497,47 +538,60 @@ export default function CreatorBioPage({ params }) {
 
   const handleDealClick = async (deal) => {
     if (!creator) return;
-    if (deal.source === "creator" && deal.shortCode) return window.open(`/go/${deal.shortCode}`, '_blank');
-    if (deal.linkType === "own") {
-        const urlToOpen = deal.expandedUrl || deal.originalUrl;
-        if (urlToOpen) return window.open(urlToOpen, '_blank');
+    
+    // Agar creator ki khud ki deal hai aur pehle se shortCode mojood hai
+    if (deal.source === "creator" && deal.shortCode) {
+        return window.open(`/go/${deal.shortCode}`, '_blank');
     }
 
     try {
+      // API ko sirf dealId bhejenge, baaki backend khud sambhalega
       const res = await fetch('/api/generate-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dealId: deal._id, creatorUsername: creator.username, triggerSource: "bio_page" })
       });
       const data = await res.json();
-      window.open(data.success && data.shortCode ? `/go/${data.shortCode}` : (deal.expandedUrl || deal.originalUrl), '_blank');
+      
+      if (data.success && data.shortCode) {
+          window.open(`/go/${data.shortCode}`, '_blank');
+      } else {
+          triggerToast("Deal is currently unavailable!"); // 🔒 NAYA: Fallback error handle
+      }
     } catch (err) { 
-      window.open(deal.expandedUrl || deal.originalUrl, '_blank'); 
+      triggerToast("Connection error! Please try again.");
     }
   };
 
   // ============================================================================
-  // 🚀 4. DATA PROCESSING (Frontend filtering removed, using API data directly)
+  // 🚀 4. DATA PROCESSING (With Master Deduplication Shield)
   // ============================================================================
+  
+  // 🛡️ THE MASTER FILTER: Agar koi duplicate ID aa gayi hai, toh usko filter kar do
+  const uniqueDealsMap = new Map();
+  deals.forEach(deal => {
+      if (deal && deal._id) uniqueDealsMap.set(deal._id, deal);
+  });
+  const cleanDeals = Array.from(uniqueDealsMap.values());
+
   const masterFeed = [];
   const processedBatches = new Set();
   
-  // Collections aur Videos ko group karne ka logic
-  deals.forEach(deal => {
+  // Collections aur Videos ko group karne ka logic (Ab hum deals ki jagah cleanDeals use karenge)
+  cleanDeals.forEach(deal => {
       if (!deal.batchId) {
           masterFeed.push({ type: 'single', deal: deal });
       } else if (!processedBatches.has(deal.batchId)) {
           processedBatches.add(deal.batchId);
-          const batch = deals.filter(d => d.batchId === deal.batchId);
+          const batch = cleanDeals.filter(d => d.batchId === deal.batchId);
           const hasVid = batch.find(d => d.videoUrl);
           masterFeed.push({ type: hasVid ? 'video' : 'collection', batchId: deal.batchId, videoUrl: hasVid?.videoUrl, title: deal.collectionName || hasVid?.title || "Collection", deals: batch });
       }
   });
 
-  // Category grouping (BUG FIXED: Double security to prevent Telegram deals from showing in Categories)
+  // Category grouping
   const categoryGroups = {};
-  deals.forEach(deal => {
-      // 👇 Sirf creator ki deals ko hi category tab mein allow karo
+  cleanDeals.forEach(deal => {
       if (deal.source === "creator") {
           const cat = deal.category || "Others";
           if (!categoryGroups[cat]) categoryGroups[cat] = [];
@@ -1002,10 +1056,10 @@ export default function CreatorBioPage({ params }) {
                                         )}
                                     </div>
                                     <div className="flex overflow-x-auto gap-3 pb-2 [&::-webkit-scrollbar]:hidden snap-x">
-                                        {categoryGroups[catName].slice(0, 10).map(deal => (
-                                            <div key={deal._id} className="w-[145px] flex-shrink-0 snap-start">
-                                                <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
-                                            </div>
+                                        {categoryGroups[catName].slice(0, 10).map((deal, idx) => (
+                                        <div key={`${deal._id}-${idx}`} className="w-[145px] flex-shrink-0 snap-start">
+                                        <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
+                                          </div>
                                         ))}
                                     </div>
                                 </div>
