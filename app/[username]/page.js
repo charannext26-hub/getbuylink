@@ -742,7 +742,7 @@ useEffect(() => {
       {/* ⚠️ OFFER TAB DISCLAIMER POPUP */}
       {activeTab === 'liveoffer' && isDisclaimerVisible && (
           <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md z-[150] pointer-events-none px-4 flex justify-end">
-              <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 p-1.5 pl-3 rounded-full shadow-2xl flex items-center gap-2 pointer-events-auto animate-in slide-in-from-right fade-in duration-300">
+              <div className="bg-[#0f172a] border border-slate-700 p-1.5 pl-3 rounded-full shadow-xl flex items-center gap-2 pointer-events-auto animate-in slide-in-from-right fade-in duration-300 transform-gpu">
                   <div onClick={() => setIsDisclaimerDrawerOpen(true)} className="flex items-center gap-1.5 cursor-pointer">
                       <span className="text-[10px] font-bold text-white flex items-center gap-1">
                           <span className="text-yellow-400">⚠️</span> Price & Stock
@@ -1043,7 +1043,7 @@ useEffect(() => {
                    ) : (
                        <div className="columns-2 gap-3 space-y-3">
                            {orderedDeals.map((deal, idx) => ( 
-                               <div key={`${activeTab}-live-${deal._id}-${idx}`} className="break-inside-avoid transform-gpu"> 
+                               <div key={`${activeTab}-live-${deal._id}-${idx}`} className="break-inside-avoid relative transform-gpu will-change-transform"> 
                                    <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} showTimeAgo={true} isLiveOffer={true} />
                                </div>
                            ))}
@@ -1382,18 +1382,16 @@ function LiveTimer({ targetDate }) {
 
     return (
         // 👇 NAYA DESIGN: Full width match karne ke liye px-1 aur justify-center
-        <div className="w-full flex items-center justify-center px-1 mb-1.5 animate-pulse">
-            <div className="flex items-center justify-center gap-1 w-full">
-                <svg className="w-3.5 h-3.5 text-red-600 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span 
-                    className="text-[8px] font-black text-red-600 tracking-widest"
-                    style={{ 
-                        // 👇 MAGIC STROKE: White outline + Black shadow. Background koi bhi ho, ye hamesha clear dikhega!
-                        textShadow: "1px 1px 0px rgba(255,255,255,0.9), -1px -1px 0px rgba(255,255,255,0.9), 1px -1px 0px rgba(255,255,255,0.9), -1px 1px 0px rgba(255,255,255,0.9), 0px 3px 4px rgba(0,0,0,0.5)" 
-                    }}
-                >
+        <div className="w-full flex items-center justify-center px-1 mb-1.5">
+            <div className="flex items-center justify-center gap-1 w-full bg-rose-50/80 dark:bg-rose-500/10 border border-rose-200/50 dark:border-rose-500/20 py-0.5 rounded-full shadow-sm">
+                
+                {/* Ping Animation sirf chhote dot par lagaya hai, poore text par nahi! */}
+                <span className="relative flex h-1.5 w-1.5 ml-1">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-600"></span>
+                </span>
+                
+                <span className="text-[9px] font-black text-rose-600 dark:text-rose-400 tracking-wider mr-1">
                     {timeLeft}
                 </span>
             </div>
@@ -1409,7 +1407,7 @@ function GridProductCard({ deal, onClick, themeCardClass, onToast, showTimeAgo, 
             <div className="w-full aspect-square bg-white rounded-xl mb-2 relative p-1 overflow-hidden shadow-inner border border-black/5 dark:border-white/50">
                 <img src={deal.image} loading="lazy" decoding="async" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500 pointer-events-none select-none" alt="Product" draggable="false" onContextMenu={(e) => e.preventDefault()} style={{ WebkitTouchCallout: 'none' }} />
                 {deal.discountPercent && <span className="absolute top-0 left-0 bg-rose-500 text-white text-[10px] font-black px-2 py-1 rounded-br-xl z-10 shadow-md">{deal.discountPercent}</span>}
-                <span className="absolute bottom-0 left-0 bg-slate-900/80 backdrop-blur-sm text-white text-[9px] font-black px-2.5 py-1 rounded-tr-xl z-10 flex items-center gap-1.5">
+                <span className="absolute bottom-0 left-0 bg-slate-900/95 text-white text-[9px] font-black px-2.5 py-1 rounded-tr-xl z-10 flex items-center gap-1.5 max-w-[90%] overflow-hidden whitespace-nowrap">
                     <span>{deal.store || "Exclusive"}</span>
                     {showTimeAgo && deal.createdAt && (
                         <span className="flex items-center gap-0.5 border-l border-white/30 pl-1.5 opacity-90">
