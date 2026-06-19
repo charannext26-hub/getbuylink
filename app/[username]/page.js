@@ -348,21 +348,25 @@ export default function CreatorBioPage({ params }) {
           if (cachedStr) {
               try {
                   const cachedData = JSON.parse(cachedStr);
-                  // Check karega ki naya format (Object) hai ya purana (Array)
                   if (!Array.isArray(cachedData) && cachedData.deals) {
                       if (!ignore) {
+                          // 🚀 NAYA: Cache se data set karne se pehle purani state mita do
+                          setDeals([]); 
+                          
                           setDeals(cachedData.deals);
                           setPage(cachedData.page);
                           setHasMore(cachedData.hasMore);
                           setIsDealsLoading(false);
                       }
-                      return; // 🛑 Yahan se wapas! Koi API call nahi!
+                      return; 
                   }
-              } catch(e) {} // Agar purana kachra cache hai toh ignore karo
+              } catch(e) {}
           }
 
+          // Agar cache nahi hai toh default clean reset
+          setDeals([]); 
           setIsDealsLoading(true);
-          setPage(1); 
+          setPage(1);
 
           try {
               const res = await fetch(`/api/deals/get-all?username=${creator.username}&page=1&limit=20&tab=${activeTab}`);
@@ -993,7 +997,7 @@ export default function CreatorBioPage({ params }) {
                        </div>
                    ) : (
                        <div className="columns-2 gap-3 space-y-3">
-                           {orderedMasterFeed.map((item, idx) => renderFeedItem(item, idx))}
+                           {orderedMasterFeed.map((item, idx) => renderFeedItem(item, `${activeTab}-feed-${idx}`))}
                        </div>
                    )
                ) : null}
@@ -1008,7 +1012,7 @@ export default function CreatorBioPage({ params }) {
                    ) : (
                        <div className="columns-2 gap-3 space-y-3">
                            {orderedDeals.map((deal, idx) => ( 
-                               <div key={idx} className="break-inside-avoid relative transform-gpu"> 
+                               <div key={`${activeTab}-trending-${deal._id}-${idx}`} className="break-inside-avoid relative transform-gpu"> 
                                    <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
                                </div>
                            ))}
@@ -1026,7 +1030,7 @@ export default function CreatorBioPage({ params }) {
                    ) : (
                        <div className="columns-2 gap-3 space-y-3">
                            {orderedDeals.map((deal, idx) => ( 
-                               <div key={idx} className="break-inside-avoid transform-gpu"> 
+                               <div key={`${activeTab}-live-${deal._id}-${idx}`} className="break-inside-avoid transform-gpu"> 
                                    <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} showTimeAgo={true} isLiveOffer={true} />
                                </div>
                            ))}
