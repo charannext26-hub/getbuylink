@@ -267,16 +267,29 @@ export default function CreatorBioPage({ params }) {
       return () => { document.body.style.overflow = 'unset'; };
   }, [dealDrawerStack.length, customShareModal.isOpen]);
 
-  // 👇 NAYA: Passive Scroll Listener (For Smooth Scrolling)
-  useEffect(() => {
-      const handleScroll = () => {
-          setIsScrolled(window.scrollY > 200);
-      };
-      // { passive: true } browser ko smooth scroll karne ki permission deta hai
-      window.addEventListener("scroll", handleScroll, { passive: true });
-      return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  // 👇 NAYA: Throttled Scroll Listener (Zero Lag)
+useEffect(() => {
+    let isPastThreshold = false; // Internal flag (React state ko bypass karne ke liye)
 
+    const handleScroll = () => {
+        const currentScroll = window.scrollY > 150; 
+        
+        // 🛡️ THE FIX: React state sirf tabhi update hogi jab "hide" se "show" hoga. 
+        // Baar-baar scroll karne par faltu updates nahi aayenge!
+        if (currentScroll !== isPastThreshold) {
+            isPastThreshold = currentScroll;
+            
+            // requestAnimationFrame browser ko batata hai ki next frame par hi paint kare (Butter Smooth)
+            requestAnimationFrame(() => {
+                setIsScrolled(currentScroll);
+            });
+        }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+      
   // 👇 YAHAN NAYA CODE ADD HUA HAI (STEP 2: App Escaper Logic)
   useEffect(() => {
       if (typeof window === 'undefined') return;
@@ -948,10 +961,10 @@ export default function CreatorBioPage({ params }) {
       </div>
 
       {/* ----------------- STICKY HEADER & TABS BAR (Reduced Height) ----------------- */}
-      <div className={`sticky top-0 z-40 px-3 pt-2 pb-0 ${currentTheme.tabBg} border-b backdrop-blur-xl shadow-sm transition-all duration-300`}>
+      <div className={`sticky top-0 z-40 px-3 pt-2 pb-0 ${currentTheme.tabBg} border-b backdrop-blur-md shadow-sm transform-gpu will-change-transform`}>
           
           {/* Twitter Style Sticky Info: Appears on scroll (GPU Optimized) */}
-<div className={`flex justify-between items-center px-1 overflow-hidden transition-all duration-300 ease-out transform-gpu will-change-[max-height,opacity,transform] ${isScrolled ? 'max-h-10 opacity-100 mb-1.5 translate-y-0' : 'max-h-0 opacity-0 mb-0 -translate-y-2 pointer-events-none'}`}>
+       <div className={`flex justify-between items-center px-1 overflow-hidden transition-[max-height,opacity,transform,margin] duration-300 ease-out transform-gpu will-change-[max-height,opacity,transform] ${isScrolled ? 'max-h-10 opacity-100 mb-1.5 translate-y-0' : 'max-h-0 opacity-0 mb-0 -translate-y-2 pointer-events-none'}`}>
               <div className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20">
                       {creator.image ? <img src={creator.image} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-slate-300"></div>}
