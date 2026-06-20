@@ -175,7 +175,7 @@ export default function CreatorBioPage({ params }) {
   const [theatreMode, setTheatreMode] = useState({ isOpen: false, videoUrl: "", relatedDeals: [] });
   const [collectionMode, setCollectionMode] = useState({ isOpen: false, title: "", relatedDeals: [] });
   const [isHomeDrawerOpen, setIsHomeDrawerOpen] = useState(false);
-  const [categoryDrawer, setCategoryDrawer] = useState({ isOpen: false, title: "", relatedDeals: [], isLoading: false }); 
+  const [categoryDrawer, setCategoryDrawer] = useState({ isOpen: false, title: "", relatedDeals: [] }); 
   
   const [isShareDrawerOpen, setIsShareDrawerOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -206,40 +206,6 @@ export default function CreatorBioPage({ params }) {
   const [customShareModal, setCustomShareModal] = useState({ isOpen: false, deal: null, generatedUrl: "" });
 
   const activeDeal = dealDrawerStack.length > 0 ? dealDrawerStack[dealDrawerStack.length - 1] : null;
-
-  // ============================================================================
-  // 🚀 NAYA: "SEE ALL" SMART FETCH (Netflix Style Lazy Loading)
-  // ============================================================================
-  const handleSeeAllCategory = async (catName, existingDeals) => {
-      // 1. Drawer turant khol do existing deals ke sath, aur loader on kar do
-      setCategoryDrawer({ isOpen: true, title: catName, relatedDeals: existingDeals, isLoading: true });
-
-      const cacheKey = `full_category_${creator.username}_${catName}`;
-      const cachedStr = sessionStorage.getItem(cacheKey);
-
-      // 2. Agar is category ka full data pehle se cache mein hai, toh API mat bulao!
-      if (cachedStr) {
-          try {
-              setCategoryDrawer({ isOpen: true, title: catName, relatedDeals: JSON.parse(cachedStr), isLoading: false });
-              return;
-          } catch(e) {}
-      }
-
-      // 3. Agar data nahi hai, toh API se is specific category ke 40-50 products mangwa lo
-      try {
-          const res = await fetch(`/api/deals/get-all?username=${creator.username}&category=${encodeURIComponent(catName)}&limit=50`);
-          const data = await res.json();
-          
-          if (data.success && data.deals) {
-              sessionStorage.setItem(cacheKey, JSON.stringify(data.deals));
-              // Drawer update karo naye data ke sath
-              setCategoryDrawer(prev => prev.title === catName ? { ...prev, relatedDeals: data.deals, isLoading: false } : prev);
-          }
-      } catch (error) {
-          console.error("Failed to fetch full category", error);
-          setCategoryDrawer(prev => ({ ...prev, isLoading: false }));
-      }
-  };
 
   // 👇 NAYA: Mobile Back Button Logic (Stack Pop System)
   useEffect(() => {
@@ -547,15 +513,14 @@ useEffect(() => {
 
   useEffect(() => {
       const observer = new IntersectionObserver((entries) => {
-          // 🛑 THE FIX: deals.length > 0 lagaya taaki pehli baar khali page par double API call na ho!
-          if (entries[0].isIntersecting && hasMore && !isFetchingMore && !isDealsLoading && deals.length > 0) {
+          if (entries[0].isIntersecting && hasMore && !isFetchingMore && !isDealsLoading) {
               loadMoreDeals();
           }
       }, { threshold: 0.1 }); 
       
       if (loaderRef.current) observer.observe(loaderRef.current);
       return () => observer.disconnect();
-  }, [hasMore, isFetchingMore, isDealsLoading, page, creator, activeTab, deals.length]);
+  }, [hasMore, isFetchingMore, isDealsLoading, page, creator, activeTab]);
 
   // 🚀 NAYA: Dynamic Manifest (Add to Home Screen) Injector
     useEffect(() => {
@@ -757,12 +722,8 @@ useEffect(() => {
   cleanDeals.forEach(deal => {
       if (deal.source === "creator") {
           const cat = deal.category || "Others";
-          
-          // 🛑 THE FIX: "Others" aur "Other" ko category tab se permanently hata diya gaya hai!
-          if (cat.toLowerCase() !== "others" && cat.toLowerCase() !== "other") {
-              if (!categoryGroups[cat]) categoryGroups[cat] = [];
-              categoryGroups[cat].push(deal);
-          }
+          if (!categoryGroups[cat]) categoryGroups[cat] = [];
+          categoryGroups[cat].push(deal);
       }
   });
 
@@ -1044,16 +1005,6 @@ useEffect(() => {
                     </h2>
                 </div>
 
-                {/* 🚀 NAYA: Drawer ke andar Loading Indicator */}
-                {categoryDrawer.isOpen && categoryDrawer.isLoading && (
-                    <div className="w-full flex justify-center py-2 bg-slate-900 border-b border-white/5">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                            <span className="text-[10px] font-bold text-white opacity-70 uppercase tracking-widest">Loading more...</span>
-                        </div>
-                    </div>
-                )}
-
                 {/* 🛑 FIX 4: Native Smooth Scrolling (WebkitOverflowScrolling) add kiya lag hatane ke liye */}
                 <div 
                     className="p-4 overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden overscroll-y-contain bg-inherit"
@@ -1266,9 +1217,7 @@ useEffect(() => {
                                     <div className="flex justify-between items-center px-1">
                                         <h3 className="font-black text-sm uppercase tracking-wide opacity-90">{catName}</h3>
                                         {categoryGroups[catName].length > 4 && (
-                                            <button onClick={() => handleSeeAllCategory(catName, categoryGroups[catName])} className="text-[10px] font-bold opacity-70 hover:opacity-100 flex items-center gap-1 bg-white/5 px-2 py-1 rounded border border-white/10 shadow-sm">
-                                                See All ➔
-                                             </button>
+                                            <button onClick={() => setCategoryDrawer({ isOpen: true, title: catName, relatedDeals: categoryGroups[catName] })} className="text-[10px] font-bold opacity-70 hover:opacity-100 flex items-center gap-1 bg-white/5 px-2 py-1 rounded border border-white/10 shadow-sm">See All ➔</button>
                                         )}
                                     </div>
                                     <div className="flex overflow-x-auto gap-3 pb-2 [&::-webkit-scrollbar]:hidden snap-x">
@@ -1284,11 +1233,11 @@ useEffect(() => {
                     </div>
                ) : null}
 
-                {/* 🌀 SMART AUTO-LOADER (Sabhi tabs ke liye wapas chalu) */}
+                {/* 🌀 NAYA: Scroll Tracker & Loader Spinner */}
                 {hasMore && !isDealsLoading && (
                     <div ref={loaderRef} className="w-full flex justify-center py-8 mt-2">
-                        <div className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full border shadow-md ${currentTheme.card} ${currentTheme.text}`}>
-                            <div className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${currentTheme.name === 'Minimal Light' ? 'border-slate-900' : 'border-emerald-500'}`}></div>
+                        <div className="flex items-center gap-2.5 px-5 py-2.5 bg-white/5 backdrop-blur-md rounded-full border border-white/10 shadow-lg">
+                            <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
                             <span className="text-[11px] font-extrabold opacity-80 uppercase tracking-widest">Loading more...</span>
                         </div>
                     </div>
