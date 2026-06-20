@@ -58,7 +58,30 @@ export async function GET(req) {
       { $skip: skip },
       { $limit: limit },
       // 🔒 DEEP SECURITY PROJECT: Sensitive database values response se vanish kar di gayi hain
-      { $project: { performanceData: 0, creatorId: 0, rawAffiliateLink: 0, originalUrl: 0, expandedUrl: 0 } }
+      { $project: { performanceData: 0, creatorId: 0, rawAffiliateLink: 0 } },
+      
+      // 🛡️ STEP 2: Custom/Inclusion Projection (Master Shield Logic)
+      { $project: { 
+          source: 1, batchId: 1, linkType: 1, store: 1, shortCode: 1, title: 1, 
+          image: 1, mrp: 1, price: 1, discountPercent: 1, couponCode: 1, 
+          category: 1, collectionName: 1, videoUrl: 1, description: 1, 
+          saleEndTime: 1, isExpired: 1, createdAt: 1, updatedAt: 1, totalClicks: 1,
+          
+          originalUrl: { 
+              $cond: { 
+                  if: { $and: [ { $eq: ["$source", "creator"] }, { $eq: ["$linkType", "own"] } ] }, 
+                  then: "$originalUrl", 
+                  else: "$$REMOVE" 
+              } 
+          },
+          expandedUrl: { 
+              $cond: { 
+                  if: { $and: [ { $eq: ["$source", "creator"] }, { $eq: ["$linkType", "own"] } ] }, 
+                  then: "$expandedUrl", 
+                  else: "$$REMOVE" 
+              } 
+          }
+      } }
     ]);
 
     return NextResponse.json({ success: true, deals, page, hasMore: deals.length === limit }, { status: 200 });

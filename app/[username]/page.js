@@ -228,23 +228,49 @@ export default function CreatorBioPage({ params }) {
   const handleShareClick = async (deal) => {
       setIsGeneratingShare(true);
       try {
-          let finalUrl = `${window.location.origin}/`; // Default fallback
-          if (creator) {
+          let finalUrl = `${window.location.origin}/`; 
+
+          // 🛑 THE FIX 1: Agar shortCode pehle se hai, toh seedha use karo (No API Call)
+          if (deal.shortCode) {
+              finalUrl = `${window.location.origin}/go/${deal.shortCode}`;
+          } 
+          // 🛑 THE FIX 2: Agar own link hai ya tab liveoffer nahi hai
+          else if (deal.linkType === "own" || activeTab !== "liveoffer") {
+              finalUrl = deal.expandedUrl || deal.originalUrl;
+          } 
+          // 🔄 API CALL: Sirf tab chalegi jab link platform ka ho aur pehli baar share ho raha ho
+          else if (creator) {
               const res = await fetch('/api/generate-link', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ dealId: deal._id, creatorUsername: creator.username, triggerSource: "detailed_share" })
               });
               const data = await res.json();
+              
               if (data.success && data.shortCode) {
                   finalUrl = `${window.location.origin}/go/${data.shortCode}`;
+                  
+                  // 🚀 MEMORY LOCK: Link ko state aur cache mein save kar lo (Taaki dobara API call na ho)
+                  deal.shortCode = data.shortCode;
+                  setDealDrawerStack(prevStack => prevStack.map(d => d._id === deal._id ? { ...d, shortCode: data.shortCode } : d));
+                  setDeals(prevDeals => prevDeals.map(d => d._id === deal._id ? { ...d, shortCode: data.shortCode } : d));
+                  
+                  const cacheKey = `deals_${creator.username}_${activeTab}`;
+                  const cachedStr = sessionStorage.getItem(cacheKey);
+                  if (cachedStr) {
+                      const cachedData = JSON.parse(cachedStr);
+                      if (cachedData.deals) {
+                          const updatedCachedDeals = cachedData.deals.map(d => d._id === deal._id ? { ...d, shortCode: data.shortCode } : d);
+                          sessionStorage.setItem(cacheKey, JSON.stringify({ ...cachedData, deals: updatedCachedDeals }));
+                      }
+                  }
               } else {
                   triggerToast("Could not generate share link.");
                   setIsGeneratingShare(false);
-                  return; // 🔒 NAYA: Agar fail ho jaye toh modal open mat karo
+                  return; 
               }
           }
-          // Open Custom Share Modal
+
           window.history.pushState({ shareModalOpen: true }, '');
           setCustomShareModal({ isOpen: true, deal: deal, generatedUrl: finalUrl });
       } catch (e) {
@@ -313,17 +339,32 @@ useEffect(() => {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-        const urlParams = new URLSearchParams(window.location.search);
-        const tab = urlParams.get("tab");
-        if (tab && ["home", "trending", "liveoffer", "categories"].includes(tab)) {
-            setActiveTab(tab);
-        }
-    }
+      if (typeof window !== "undefined") {
+          const urlParams = new URLSearchParams(window.location.search);
+          const tab = urlParams.get("tab");
+          if (tab && ["home", "trending", "liveoffer", "categories"].includes(tab)) {
+              setActiveTab(tab);
+          }
+      }
   }, []);
 
- // ============================================================================
-  // 🚀 1. FETCH CREATOR PROFILE (Sirf pehli baar load hoga)
+  // ============================================================================
+  // 🚀 1.5 SMART CACHE BUSTER (Page Refresh par purana kachra saaf karega)
+  // ============================================================================
+  useEffect(() => {
+      if (typeof window !== "undefined" && window.performance) {
+          const navEntries = window.performance.getEntriesByType("navigation");
+          // Agar user ne refresh button dabaya, toh saare tabs ka cache uda do
+          if (navEntries.length > 0 && navEntries[0].type === "reload") {
+              Object.keys(sessionStorage).forEach(key => {
+                  if (key.startsWith("deals_")) sessionStorage.removeItem(key);
+              });
+          }
+      }
+  }, []); // Sirf pehli baar chalega
+
+  // ============================================================================
+  // 🚀 1. FETCH CREATOR PROFILE (Ye galti se delete ho gaya tha!)
   // ============================================================================
   useEffect(() => {
       async function getCreator() {
@@ -346,37 +387,33 @@ useEffect(() => {
   }, [username]);
 
   // ============================================================================
-  // 🚀 2. FETCH DEALS BASED ON TAB (Ultra-Optimized Strict Cache + Page Memory)
+  // 🚀 2. FETCH DEALS BASED ON TAB (STRICT CACHE - 0 API Calls on Tab Switch)
   // ============================================================================
   useEffect(() => {
       if (!creator) return;
-      
       let ignore = false; 
 
       async function fetchTabDeals() {
           const cacheKey = `deals_${creator.username}_${activeTab}`;
           const cachedStr = sessionStorage.getItem(cacheKey);
-          
-          // 🛡️ STRICT CACHE LOGIC WITH PAGE MEMORY
+
+          // 1️⃣ INSTANT LOAD FROM CACHE
           if (cachedStr) {
               try {
                   const cachedData = JSON.parse(cachedStr);
                   if (!Array.isArray(cachedData) && cachedData.deals) {
                       if (!ignore) {
-                          // 🚀 NAYA: Cache se data set karne se pehle purani state mita do
-                          setDeals([]); 
-                          
                           setDeals(cachedData.deals);
                           setPage(cachedData.page);
                           setHasMore(cachedData.hasMore);
                           setIsDealsLoading(false);
                       }
-                      return; 
+                      return; // 🛑 THE STRICT LOCK: Cache mil gaya toh function yahi khatam! Koi API call nahi!
                   }
               } catch(e) {}
           }
 
-          // Agar cache nahi hai toh default clean reset
+          // Agar cache nahi hai (First time tab open), tabhi API jayegi
           setDeals([]); 
           setIsDealsLoading(true);
           setPage(1);
@@ -389,43 +426,37 @@ useEffect(() => {
                   setDeals(data.deals);
                   setPage(1);
                   setHasMore(data.hasMore);
-                  // 📦 Cache mein Deals ke sath Page bhi save karo
                   sessionStorage.setItem(cacheKey, JSON.stringify({ deals: data.deals, page: 1, hasMore: data.hasMore })); 
               }
-          } catch (err) { 
-              console.error(err); 
-          } finally { 
-              if (!ignore) setIsDealsLoading(false); 
-          }
+          } catch (err) { console.error(err); } 
+          finally { if (!ignore) setIsDealsLoading(false); }
       }
       
       fetchTabDeals();
-
       return () => { ignore = true; };
   }, [activeTab, creator]);
 
   // ============================================================================
-  // 🚀 NAYA: FETCH SIMILAR DEALS FOR DRAWER (BUG FIXED: Added tab context & Loading)
+  // 🚀 NAYA: FETCH SIMILAR DEALS FOR DRAWER (Fixed Re-fetching Bug)
   // ============================================================================
   useEffect(() => {
       if (activeDeal && activeDeal.category && activeDeal.category !== "Other") {
-          setIsSimilarLoading(true); // Spinner ON
-          setSimilarDeals([]); // Purana data clear
+          setIsSimilarLoading(true);
+          setSimilarDeals([]); 
 
-          // FIX: URL mein tab=${activeTab} add kiya hai taaki liveoffer hai toh liveoffer mein hi dhoondhe
           fetch(`/api/deals/get-all?username=${creator?.username}&page=1&limit=15&tab=${activeTab}&category=${encodeURIComponent(activeDeal.category)}`)
           .then(res => res.json())
           .then(data => {
               if (data.success && data.deals) {
-                  // Khud ko hata kar baaki mix kardo
                   const filtered = data.deals.filter(d => d._id !== activeDeal._id).sort(() => 0.5 - Math.random());
                   setSimilarDeals(filtered);
               }
           })
           .catch(err => console.error(err))
-          .finally(() => setIsSimilarLoading(false)); // Spinner OFF
+          .finally(() => setIsSimilarLoading(false)); 
       }
-  }, [activeDeal, creator, activeTab]);
+  // 🛑 THE FIX: Pura 'activeDeal' use karne ki jagah sirf '_id' use kiya hai taaki shortCode update hone par API dubara call na ho!
+  }, [activeDeal?._id, activeDeal?.category, creator?.username, activeTab]);
 
   // ============================================================================
   // 🚀 3. INFINITE SCROLL (Scroll karne par agla page + Duplicate Check Fix)
@@ -446,9 +477,9 @@ useEffect(() => {
                   // Sirf UNIQUE deals ko hi purani list mein jodega
                   const updatedDeals = [...prev, ...newUniqueDeals];
                   
-                  // Cache update karega
+                  // Cache update karega WITH TIMESTAMP
                   const cacheKey = `deals_${creator.username}_${activeTab}`;
-                  sessionStorage.setItem(cacheKey, JSON.stringify({ deals: updatedDeals, page: nextPage, hasMore: data.hasMore }));
+                  sessionStorage.setItem(cacheKey, JSON.stringify({ deals: updatedDeals, page: nextPage, hasMore: data.hasMore, timestamp: Date.now() }));
                   
                   return updatedDeals;
               });
@@ -556,13 +587,20 @@ useEffect(() => {
   const handleDealClick = async (deal) => {
     if (!creator) return;
     
-    // Agar creator ki khud ki deal hai aur pehle se shortCode mojood hai
-    if (deal.source === "creator" && deal.shortCode) {
+    // 🛑 AGAR LINK PEHLE SE MAUJOOD HAI (State ya DB mein), TOH DIRECT KHOL DO!
+    // Ye line ensure karegi ki dubara API call na ho.
+    if (deal.shortCode) {
         return window.open(`/go/${deal.shortCode}`, '_blank');
     }
 
+    if (deal.linkType === "own" || activeTab !== "liveoffer") {
+        const targetUrl = deal.shortCode ? `/go/${deal.shortCode}` : (deal.expandedUrl || deal.originalUrl);
+        if (targetUrl) return window.open(targetUrl, '_blank');
+        return triggerToast("Link not available");
+    }
+
     try {
-      // API ko sirf dealId bhejenge, baaki backend khud sambhalega
+      // 🔄 PEHLI BAAR CLICK: Sirf tabhi API chalegi
       const res = await fetch('/api/generate-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -571,9 +609,36 @@ useEffect(() => {
       const data = await res.json();
       
       if (data.success && data.shortCode) {
+          
+          // 🚀 THE ULTIMATE FIX 1: Direct Memory Lock (Double click rokne ke liye)
+          deal.shortCode = data.shortCode; 
+          
+          // 🚀 THE ULTIMATE FIX 2: Drawer Stack ko update karo (Yahi API baar-baar call karwa raha tha!)
+          setDealDrawerStack(prevStack => prevStack.map(d => 
+              d._id === deal._id ? { ...d, shortCode: data.shortCode } : d
+          ));
+
+          // Main Deals List update karo
+          setDeals(prevDeals => prevDeals.map(d => 
+              d._id === deal._id ? { ...d, shortCode: data.shortCode } : d
+          ));
+          
+          // 📦 THE CACHE MAGIC: Cache ke andar bhi update kar do
+          const cacheKey = `deals_${creator.username}_${activeTab}`;
+          const cachedStr = sessionStorage.getItem(cacheKey);
+          if (cachedStr) {
+              const cachedData = JSON.parse(cachedStr);
+              if (cachedData.deals) {
+                  const updatedCachedDeals = cachedData.deals.map(d => 
+                      d._id === deal._id ? { ...d, shortCode: data.shortCode } : d
+                  );
+                  sessionStorage.setItem(cacheKey, JSON.stringify({ ...cachedData, deals: updatedCachedDeals }));
+              }
+          }
+
           window.open(`/go/${data.shortCode}`, '_blank');
       } else {
-          triggerToast("Deal is currently unavailable!"); // 🔒 NAYA: Fallback error handle
+          triggerToast("Deal is currently unavailable!"); 
       }
     } catch (err) { 
       triggerToast("Connection error! Please try again.");
