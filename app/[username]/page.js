@@ -10,7 +10,7 @@ const THEMES = {
       text: "text-white", 
       card: "bg-white/10 border-white/20 shadow-md", 
       tab: "bg-white text-purple-400", 
-      tabBg: "bg-black/60 border-white/10 backdrop-blur-md" 
+      tabBg: "bg-slate-900 border-white/10" 
   },
   // 2. Gold
   gold: { 
@@ -46,7 +46,7 @@ const THEMES = {
       text: "text-slate-900", 
       card: "bg-white border-slate-200 shadow-sm", 
       tab: "bg-slate-900 text-white", 
-      tabBg: "bg-white/90 border-slate-200" 
+      tabBg: "bg-white border-slate-200" 
   },
   // 6. Fashion (Last 1)
   fashion: { 
@@ -437,10 +437,29 @@ useEffect(() => {
   }, [activeTab, creator]);
 
   // ============================================================================
-  // 🚀 NAYA: FETCH SIMILAR DEALS FOR DRAWER (Fixed Re-fetching Bug)
+  // 🚀 NAYA: FETCH SIMILAR DEALS FOR DRAWER (With Smart Category Cache to Save APIs)
   // ============================================================================
   useEffect(() => {
       if (activeDeal && activeDeal.category && activeDeal.category !== "Other") {
+          
+          // 🛑 THE FIX: Check karega ki kya is category ka similar data pehle se fetch kiya hua hai?
+          const similarCacheKey = `similar_${creator?.username}_${activeTab}_${activeDeal.category}`;
+          const cachedSimilarStr = sessionStorage.getItem(similarCacheKey);
+          
+          if (cachedSimilarStr) {
+              try {
+                  const cachedSimilarDeals = JSON.parse(cachedSimilarStr);
+                  // 🚀 THE MAGIC: Cache se data uthao, aur har baar usko naye tareeqe se Shuffle kar do!
+                  const shuffledDeals = cachedSimilarDeals
+                      .filter(d => d._id !== activeDeal._id)
+                      .sort(() => 0.5 - Math.random()); // Ye line har baar order badal degi
+                  
+                  setSimilarDeals(shuffledDeals);
+                  setIsSimilarLoading(false);
+                  return; 
+              } catch(e) {}
+          }
+
           setIsSimilarLoading(true);
           setSimilarDeals([]); 
 
@@ -448,6 +467,9 @@ useEffect(() => {
           .then(res => res.json())
           .then(data => {
               if (data.success && data.deals) {
+                  // 📦 Cache Save: Ek baar data aa gaya toh usko category ke naam se save kar lo
+                  sessionStorage.setItem(similarCacheKey, JSON.stringify(data.deals));
+                  
                   const filtered = data.deals.filter(d => d._id !== activeDeal._id).sort(() => 0.5 - Math.random());
                   setSimilarDeals(filtered);
               }
@@ -455,7 +477,6 @@ useEffect(() => {
           .catch(err => console.error(err))
           .finally(() => setIsSimilarLoading(false)); 
       }
-  // 🛑 THE FIX: Pura 'activeDeal' use karne ki jagah sirf '_id' use kiya hai taaki shortCode update hone par API dubara call na ho!
   }, [activeDeal?._id, activeDeal?.category, creator?.username, activeTab]);
 
   // ============================================================================
@@ -544,6 +565,31 @@ useEffect(() => {
       }, 4000);
       return () => clearInterval(interval);
   }, [creator?.banners]);
+
+   // ============================================================================
+  // 🚀 DRAWER HISTORY MANAGER: Hardware Back Button ke liye (All Drawers)
+  // ============================================================================
+  useEffect(() => {
+      // Jab bhi koi Drawer ya Theatre mode khule, history mein ek step add karo
+      if (collectionMode.isOpen || categoryDrawer.isOpen || theatreMode.isOpen) {
+          window.history.pushState({ drawerOpen: true }, '');
+      }
+  }, [collectionMode.isOpen, categoryDrawer.isOpen, theatreMode.isOpen]);
+
+  useEffect(() => {
+      // Jab user Phone ka Back Button dabaye, toh open wala drawer close kar do
+      const handlePopState = () => {
+          if (theatreMode.isOpen) {
+              setTheatreMode({ isOpen: false, videoUrl: "", relatedDeals: [] });
+          } else if (collectionMode.isOpen) {
+              setCollectionMode({ isOpen: false, title: "", relatedDeals: [] });
+          } else if (categoryDrawer.isOpen) {
+              setCategoryDrawer({ isOpen: false, title: "", relatedDeals: [] });
+          }
+      };
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+  }, [collectionMode.isOpen, categoryDrawer.isOpen, theatreMode.isOpen]);
 
   useEffect(() => {
       if (!creator || !creator.salesBoosterActive) return;
@@ -891,31 +937,48 @@ useEffect(() => {
 
       <div className={`w-full max-w-md min-h-screen relative pb-20 shadow-xl ${currentTheme.bg} ${currentTheme.text}`}>
       
-      {/* 🎥 THEATRE MODE */}
+      {/* 🎥 THEATRE MODE (App-Style Sticky Arrow & Smooth Scroll) */}
       {theatreMode.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/95 backdrop-blur-md">
-            <div className="w-full max-w-md relative h-[100dvh] overflow-y-auto overflow-x-hidden scroll-smooth [&::-webkit-scrollbar]:hidden">
-                <button onClick={() => setTheatreMode({ isOpen: false, videoUrl: "", relatedDeals: [] })} className="absolute top-4 right-4 z-50 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white font-bold backdrop-blur-md transition-all">✕</button>
-                <div className="sticky top-0 h-[100dvh] w-full flex items-center justify-center z-0 bg-black">
-                    {getYouTubeID(theatreMode.videoUrl) ? (
-                       <iframe className="w-full h-full object-cover scale-[1.05]" src={`https://www.youtube.com/embed/${getYouTubeID(theatreMode.videoUrl)}?autoplay=1&controls=1&modestbranding=1&rel=0&playsinline=1&fs=0`} frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen={true}></iframe>
-                    ) : getFacebookEmbedUrl(theatreMode.videoUrl) ? (
-                        <iframe className="w-full h-full bg-black object-cover scale-[1.05]" src={getFacebookEmbedUrl(theatreMode.videoUrl)} scrolling="no" frameBorder="0" allowtransparency="true" allowFullScreen={true}></iframe>
-                    ) : getInstagramEmbedUrl(theatreMode.videoUrl) ? (
-                       <iframe className="w-full h-full bg-black object-cover scale-[1.05]" src={getInstagramEmbedUrl(theatreMode.videoUrl)} frameBorder="0" scrolling="no" allowtransparency="true"></iframe>
-                    ) : (
-                        <div className="text-white text-center p-8 z-50 relative"><p className="mb-4 text-slate-300 text-sm">Cannot embed this video directly.</p><a href={theatreMode.videoUrl} target="_blank" className="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-full font-bold text-sm inline-flex items-center gap-2 shadow-lg transition-colors">Watch Original Video ↗</a></div>
-                    )}
+        // 🛑 FIX 1: Background click par ab seedha window.history.back() call hoga
+        <div className="fixed inset-0 z-[100] flex justify-center bg-black" onClick={() => window.history.back()}>
+            <div className="w-full max-w-md relative h-[100dvh] flex flex-col bg-black transform-gpu" onClick={e => e.stopPropagation()}>
+                
+                {/* 🛑 FIX 2: Sticky Top Bar with Back Arrow (Scroll karne par hide NAHI hoga) */}
+                <div className="absolute top-0 left-0 w-full z-50 p-4 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+                    <button onClick={() => window.history.back()} className="w-10 h-10 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors pointer-events-auto shadow-md border border-white/10 backdrop-blur-sm">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </button>
                 </div>
-                <div className={`relative mt-[-25dvh] ${currentTheme.bg} ${currentTheme.text} rounded-t-3xl p-5 min-h-[50dvh] shadow-[0_-20px_40px_rgba(0,0,0,0.6)] z-20 pb-20`}>
-                    <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4"></div>
-                    <h3 className="font-black text-lg mb-4">Shop This Look 👇</h3>
-                    <div className="columns-2 gap-3 space-y-3">
-                        {applyMasonryOrder(theatreMode.relatedDeals).map((deal, idx) => (
-                            <div key={idx} className="break-inside-avoid">
-                                <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
-                            </div>
-                        ))}
+
+                {/* 🛑 FIX 3: Native Smooth Scrolling & transform-gpu (Lag Free) */}
+                <div 
+                    className="flex-1 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden overscroll-y-contain"
+                    style={{ WebkitOverflowScrolling: 'touch', willChange: 'transform' }}
+                >
+                    {/* Video Container */}
+                    <div className="sticky top-0 h-[100dvh] w-full flex items-center justify-center z-0 bg-black">
+                        {getYouTubeID(theatreMode.videoUrl) ? (
+                           <iframe className="w-full h-full object-cover scale-[1.05]" src={`https://www.youtube.com/embed/${getYouTubeID(theatreMode.videoUrl)}?autoplay=1&controls=1&modestbranding=1&rel=0&playsinline=1&fs=0`} frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen={true}></iframe>
+                        ) : getFacebookEmbedUrl(theatreMode.videoUrl) ? (
+                            <iframe className="w-full h-full bg-black object-cover scale-[1.05]" src={getFacebookEmbedUrl(theatreMode.videoUrl)} scrolling="no" frameBorder="0" allowtransparency="true" allowFullScreen={true}></iframe>
+                        ) : getInstagramEmbedUrl(theatreMode.videoUrl) ? (
+                           <iframe className="w-full h-full bg-black object-cover scale-[1.05]" src={getInstagramEmbedUrl(theatreMode.videoUrl)} frameBorder="0" scrolling="no" allowtransparency="true"></iframe>
+                        ) : (
+                            <div className="text-white text-center p-8 z-50 relative"><p className="mb-4 text-slate-300 text-sm">Cannot embed this video directly.</p><a href={theatreMode.videoUrl} target="_blank" className="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-full font-bold text-sm inline-flex items-center gap-2 shadow-lg transition-colors">Watch Original Video ↗</a></div>
+                        )}
+                    </div>
+
+                    {/* Products Drawer (Video ke upar slide hoga) */}
+                    <div className={`relative mt-[-25dvh] ${currentTheme.bg} ${currentTheme.text} rounded-t-3xl p-5 min-h-[50dvh] shadow-[0_-20px_40px_rgba(0,0,0,0.8)] z-20 pb-20 transform-gpu`}>
+                        <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4"></div>
+                        <h3 className="font-black text-lg mb-4">Shop This Look 👇</h3>
+                        <div className="columns-2 gap-3 space-y-3">
+                            {applyMasonryOrder(theatreMode.relatedDeals).map((deal, idx) => (
+                                <div key={idx} className="break-inside-avoid transform-gpu">
+                                    <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -924,16 +987,33 @@ useEffect(() => {
 
       {/* 📁 COLLECTION / CATEGORY DRAWER */}
       {(collectionMode.isOpen || categoryDrawer.isOpen) && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={() => { setCollectionMode({isOpen:false, title:"", relatedDeals:[]}); setCategoryDrawer({isOpen:false, title:"", relatedDeals:[]}); }}>
-            <div className={`w-full max-w-md ${currentTheme.bg} ${currentTheme.text} rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] max-h-[85vh] flex flex-col animate-in slide-in-from-bottom border-t border-white/10`} onClick={e => e.stopPropagation()}>
-                <div className={`p-4 border-b border-white/10 flex justify-between items-center rounded-t-3xl sticky top-0 z-10 backdrop-blur-xl ${currentTheme.bg}`}>
-                    <h2 className="font-extrabold text-lg flex items-center gap-2">📁 {collectionMode.isOpen ? collectionMode.title : categoryDrawer.title}</h2>
-                    <button onClick={() => { setCollectionMode({isOpen:false, title:"", relatedDeals:[]}); setCategoryDrawer({isOpen:false, title:"", relatedDeals:[]}); }} className="w-8 h-8 bg-white/10 rounded-full font-bold flex items-center justify-center hover:bg-white/20">✕</button>
+        // 🛑 FIX 1: Background click par ab seedha window.history.back() call hoga
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={() => window.history.back()}>
+            
+            {/* 🛑 FIX 2: transform-gpu lagaya taaki drawer makhan ki tarah slide ho */}
+            <div className={`w-full max-w-md ${currentTheme.bg} ${currentTheme.text} rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] max-h-[85vh] flex flex-col animate-in slide-in-from-bottom border-t border-white/10 transform-gpu`} onClick={e => e.stopPropagation()}>
+                
+                {/* 🛑 FIX 3: Blur hataya, Solid bg lagaya, aur Arrow icon left mein lagaya */}
+                <div className="p-3 border-b border-white/10 flex items-center gap-3 rounded-t-3xl sticky top-0 z-10 bg-slate-900 shadow-sm">
+                    {/* Back Arrow Button */}
+                    <button onClick={() => window.history.back()} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </button>
+                    {/* Title */}
+                    <h2 className="font-extrabold text-[16px] flex items-center gap-2 truncate opacity-95 text-white">
+                        📁 {collectionMode.isOpen ? collectionMode.title : categoryDrawer.title}
+                    </h2>
                 </div>
-                <div className="p-4 overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden">
+
+                {/* 🛑 FIX 4: Native Smooth Scrolling (WebkitOverflowScrolling) add kiya lag hatane ke liye */}
+                <div 
+                    className="p-4 overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden overscroll-y-contain bg-inherit"
+                    style={{ WebkitOverflowScrolling: 'touch', willChange: 'transform' }}
+                >
                     <div className="columns-2 gap-3 space-y-3">
                         {applyMasonryOrder(collectionMode.isOpen ? collectionMode.relatedDeals : categoryDrawer.relatedDeals).map((deal, idx) => (
-                            <div key={idx} className="break-inside-avoid">
+                            // transform-gpu har item par bhi lagaya
+                            <div key={idx} className="break-inside-avoid transform-gpu">
                                 <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
                             </div>
                         ))}
@@ -1025,19 +1105,23 @@ useEffect(() => {
           )}
       </div>
 
-      {/* ----------------- STICKY HEADER & TABS BAR (Reduced Height) ----------------- */}
-      <div className={`sticky top-0 z-40 px-3 pt-2 pb-0 ${currentTheme.tabBg} border-b backdrop-blur-md shadow-sm transform-gpu will-change-transform`}>
+      {/* ----------------- STICKY HEADER & TABS BAR ----------------- */}
+      <div className={`sticky top-0 z-40 px-3 pt-2 pb-0 ${currentTheme.tabBg} border-b shadow-md`}>
           
-          {/* Twitter Style Sticky Info: Appears on scroll (GPU Optimized) */}
-       <div className={`flex justify-between items-center px-1 overflow-hidden transition-[max-height,opacity,transform,margin] duration-300 ease-out transform-gpu will-change-[max-height,opacity,transform] ${isScrolled ? 'max-h-10 opacity-100 mb-1.5 translate-y-0' : 'max-h-0 opacity-0 mb-0 -translate-y-2 pointer-events-none'}`}>
-              <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20">
-                      {creator.image ? <img src={creator.image} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-slate-300"></div>}
+          {/* 🛡️ THE FIX: Saari animations aur transitions hata di. Ab ye smoothly bina lag ke direct show/hide hoga */}
+          {isScrolled && (
+              <div className="flex justify-between items-center px-1 mb-1.5">
+                  <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20">
+                          {creator.image ? <img src={creator.image} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-slate-300"></div>}
+                      </div>
+                      <h1 className="text-sm font-black truncate">{creator.name}</h1>
                   </div>
-                  <h1 className="text-sm font-black truncate">{creator.name}</h1>
+                  <button onClick={() => setIsShareDrawerOpen(true)} className="w-6 h-6 rounded-full flex items-center justify-center border border-white/10 bg-white/5">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                  </button>
               </div>
-              <button onClick={() => setIsShareDrawerOpen(true)} className="w-6 h-6 rounded-full flex items-center justify-center border border-white/10 bg-white/5"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg></button>
-          </div>
+          )}
 
           <div className="flex justify-between items-end w-full px-1">
               <button onClick={() => setActiveTab("home")} className={`pb-2 text-[10px] md:text-[11px] font-black uppercase tracking-wider border-b-2 transition-all ${activeTab === 'home' ? 'border-emerald-500 text-emerald-500' : 'border-transparent opacity-60 hover:opacity-100'}`}>Shop All</button>
@@ -1046,9 +1130,8 @@ useEffect(() => {
               <button onClick={() => setActiveTab("liveoffer")} className={`pb-2 flex items-center gap-1.5 text-[10px] md:text-[11px] font-black uppercase tracking-wider border-b-2 transition-all ${activeTab === 'liveoffer' ? 'border-emerald-500 text-emerald-500' : 'border-transparent opacity-60 hover:opacity-100'}`}>
                   <span className="bg-rose-100/90 text-rose-600 px-1 py-0.5 rounded flex items-center gap-1 shadow-sm border border-rose-200/50">
                       <span className="relative flex h-1.5 w-1.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-600"></span>
-                      </span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-600"></span>
+                       </span>
                       <span className="text-[7.5px] leading-none mt-[1px]">LIVE</span>
                   </span>
                   Deals
@@ -1409,7 +1492,7 @@ useEffect(() => {
 
 // ----------------- UNIVERSAL PRODUCT CARD -----------------
 
-// ----------------- LIVE TIMER COMPONENT -----------------
+// ----------------- LIVE TIMER COMPONENT (ULTRA OPTIMIZED) -----------------
 function LiveTimer({ targetDate }) {
     const [timeLeft, setTimeLeft] = useState(null);
 
@@ -1424,16 +1507,15 @@ function LiveTimer({ targetDate }) {
             const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
             const m = Math.floor((diff / 1000 / 60) % 60);
             
-            // 👇 NAYA LOGIC: 'Offer Ends in' text aur Minutes (m) add kiya
             if (d > 0) return `Offer Ends in ${d}d ${h}h ${m}m`;
             return `Offer Ends in ${h}h ${m}m`;
         };
 
         const initialTime = calculateTime();
         setTimeLeft(initialTime);
-
         if (initialTime === null) return;
 
+        // Har 1 minute mein ek baar update hoga
         const timer = setInterval(() => {
             const newTime = calculateTime();
             setTimeLeft(newTime);
@@ -1446,14 +1528,13 @@ function LiveTimer({ targetDate }) {
     if (!timeLeft) return null;
 
     return (
-        // 👇 NAYA DESIGN: Full width match karne ke liye px-1 aur justify-center
         <div className="w-full flex items-center justify-center px-1 mb-1.5">
-            <div className="flex items-center justify-center gap-1 w-full bg-rose-50/80 dark:bg-rose-500/10 border border-rose-200/50 dark:border-rose-500/20 py-0.5 rounded-full shadow-sm">
+            {/* 🛡️ THE FIX: Transform-GPU add kiya aur Ping animation hata diya */}
+            <div className="flex items-center justify-center gap-1 w-full bg-rose-50/90 dark:bg-rose-500/10 border border-rose-200/60 dark:border-rose-500/20 py-0.5 rounded-full shadow-sm transform-gpu will-change-transform">
                 
-                {/* Ping Animation sirf chhote dot par lagaya hai, poore text par nahi! */}
+                {/* 🛑 THE FIX: animate-ping hata diya gaya hai. Ab sirf ek solid red dot dikhega jo GPU par zero load dega! */}
                 <span className="relative flex h-1.5 w-1.5 ml-1">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-600"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span>
                 </span>
                 
                 <span className="text-[9px] font-black text-rose-600 dark:text-rose-400 tracking-wider mr-1">
