@@ -198,20 +198,28 @@ export async function GET(req) {
         bestRawLink = bestRawLink.replace(/[\\"'>)}]/g, '');
 
         try {
-            // 1. 🟠 AMAZON CLEANER (Extract ASIN & Kill Garbage Paths)
+           // 1. 🟠 AMAZON CLEANER (Extract ASIN & Handle Group/Search Pages)
             if (bestRawLink.match(/amazon\.|amzn\./i)) {
                 // Amazon ke URL se standard ASIN (10 digit code) nikalna
                 const asinMatch = bestRawLink.match(/\/(?:dp|gp\/product|exec\/obidos\/asin)\/([A-Z0-9]{10})/i);
                 
                 if (asinMatch) {
-                    // Agar ASIN mil gaya, toh baaki saara kachra delete! Sirf ekdum clean link banega.
+                    // Agar Single Product (ASIN) hai, toh ekdum clean link banega.
                     bestRawLink = `https://www.amazon.in/dp/${asinMatch[1]}`;
                 } else {
-                    // Fallback: Agar ASIN pattern match nahi hua, toh ajeeb folders delete karo
+                    // Fallback: Agar Group ya Search page hai (Amazon /s/ ya /deal/ type links)
                     const urlObj = new URL(bestRawLink);
-                    urlObj.search = ""; // Saare tracking parameters uda do
+                    
+                    // Kachra folders delete karo (dealsmagnet.com, pricehistory_app)
                     let cleanPath = urlObj.pathname.split('/').filter(p => !p.includes('.com') && !p.includes('.in') && p !== 'pricehistory_app').join('/');
-                    bestRawLink = `${urlObj.origin}${cleanPath}`;
+                    if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+
+                    // 🛑 THE FIX: Saare parameters delete karne ki jagah, sirf Affiliate aur Tracking IDs ko uda do!
+                    // Isse asli search keywords (jaise ?k=shoes ya ?hidden-keywords) bache rahenge.
+                    ['tag', 'linkCode', 'camp', 'creative', 'ascsubtag', 'utm_source', 'utm_medium', 'utm_campaign', 'aff_id', 'click_id'].forEach(p => urlObj.searchParams.delete(p));
+
+                    // Naya, clean URL wapas bana lo
+                    bestRawLink = `${urlObj.origin}${cleanPath}${urlObj.search}`;
                 }
             }
             
