@@ -183,11 +183,10 @@ export async function GET(req) {
         } 
     }
 
-    // 🧹 URL CLEANER (Myntra/Ajio Linkredirect Bypass)
+    // 🧹 BULLETPROOF URL CLEANER (Myntra/Ajio Linkredirect Bypass + Amazon/Flipkart Sanitizer)
     if (bestRawLink && (bestRawLink.includes("dl=http") || bestRawLink.includes("url=http"))) {
         try {
             const parsedUrl = new URL(bestRawLink);
-            // Ajio/Myntra links 'url=' parameter me hote hain, Flipkart 'dl=' me
             const secretParam = parsedUrl.searchParams.get("dl") || parsedUrl.searchParams.get("url");
             if (secretParam) {
                 bestRawLink = decodeURIComponent(secretParam);
@@ -195,7 +194,53 @@ export async function GET(req) {
         } catch(e) {}
     }
     
-    if (bestRawLink) bestRawLink = bestRawLink.replace(/[\\"'>)}]/g, '');
+    if (bestRawLink) {
+        bestRawLink = bestRawLink.replace(/[\\"'>)}]/g, '');
+
+        try {
+            // 1. 🟠 AMAZON CLEANER (Extract ASIN & Kill Garbage Paths)
+            if (bestRawLink.match(/amazon\.|amzn\./i)) {
+                // Amazon ke URL se standard ASIN (10 digit code) nikalna
+                const asinMatch = bestRawLink.match(/\/(?:dp|gp\/product|exec\/obidos\/asin)\/([A-Z0-9]{10})/i);
+                
+                if (asinMatch) {
+                    // Agar ASIN mil gaya, toh baaki saara kachra delete! Sirf ekdum clean link banega.
+                    bestRawLink = `https://www.amazon.in/dp/${asinMatch[1]}`;
+                } else {
+                    // Fallback: Agar ASIN pattern match nahi hua, toh ajeeb folders delete karo
+                    const urlObj = new URL(bestRawLink);
+                    urlObj.search = ""; // Saare tracking parameters uda do
+                    let cleanPath = urlObj.pathname.split('/').filter(p => !p.includes('.com') && !p.includes('.in') && p !== 'pricehistory_app').join('/');
+                    bestRawLink = `${urlObj.origin}${cleanPath}`;
+                }
+            }
+            
+            // 2. 🔵 FLIPKART CLEANER (Keep only PID, remove affiliate tracking)
+            else if (bestRawLink.includes("flipkart.com")) {
+                const urlObj = new URL(bestRawLink);
+                const pid = urlObj.searchParams.get("pid");
+                
+                if (pid) {
+                    // Flipkart mein Product ID (pid) sabse zaroori hai, baaki sab kachra hai
+                    bestRawLink = `${urlObj.origin}${urlObj.pathname}?pid=${pid}`;
+                } else {
+                    // Remove common affiliate params if pid is missing
+                    ['affid', 'cmpid', 'affExtParam1', 'affExtParam2'].forEach(p => urlObj.searchParams.delete(p));
+                    bestRawLink = urlObj.toString();
+                }
+            }
+            
+            // 3. 🔴 MYNTRA / AJIO / OTHERS (Remove universal tracking parameters)
+            else {
+                const urlObj = new URL(bestRawLink);
+                // In sites se faltu UTM tags aur deal sites ke click_ids nikal do
+                ['utm_source', 'utm_medium', 'utm_campaign', 'aff_id', 'click_id'].forEach(p => urlObj.searchParams.delete(p));
+                bestRawLink = urlObj.toString();
+            }
+        } catch (e) {
+            console.error("URL Sanitizer Error:", e);
+        }
+    }
 
     // Final Offer Array cleanup
     const uniqueOffers = [...new Set(extractedOffers)];

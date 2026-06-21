@@ -204,6 +204,7 @@ export default function CreatorBioPage({ params }) {
   const [dealDrawerStack, setDealDrawerStack] = useState([]); // Array use karenge taaki back button smoothly chale
   const [isGeneratingShare, setIsGeneratingShare] = useState(false);
   const [customShareModal, setCustomShareModal] = useState({ isOpen: false, deal: null, generatedUrl: "" });
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const activeDeal = dealDrawerStack.length > 0 ? dealDrawerStack[dealDrawerStack.length - 1] : null;
 
@@ -1425,13 +1426,34 @@ useEffect(() => {
                               </div>
                             </div>  
 
-                      {/* Fixed Bottom Action Bar (BUG FIXED: Solid color background to stop rendering lag) */}
+                      {/* Fixed Bottom Action Bar (BUG FIXED: Smart Processing Button Added) */}
                       <div className="absolute bottom-0 left-0 w-full px-4 py-3 bg-slate-900 border-t border-white/10 flex items-center gap-3 pb-6 z-[100]">
                           <button onClick={() => handleShareClick(activeDeal)} disabled={isGeneratingShare} className="w-12 h-12 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl flex items-center justify-center text-white shrink-0 transition-all active:scale-95 shadow-md">
                               {isGeneratingShare ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>}
                           </button>
-                          <button onClick={() => handleDealClick(activeDeal)} className="flex-1 h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[15px] rounded-xl shadow-[0_4px_15px_rgba(16,185,129,0.3)] flex items-center justify-center transition-all active:scale-95 tracking-wide">
-                              Buy on {activeDeal.store || "Store"}
+                          
+                          {/* 🚀 SMART BUY BUTTON: Click hote hi Processing mode mein jayega */}
+                          <button 
+                              onClick={async () => {
+                                  setIsRedirecting(true); // Spinner ON
+                                  await handleDealClick(activeDeal); // API Call
+                                  setIsRedirecting(false); // Spinner OFF
+                              }} 
+                              disabled={isRedirecting}
+                              className={`flex-1 h-12 text-white font-black text-[15px] rounded-xl flex items-center justify-center transition-all tracking-wide ${
+                                  isRedirecting 
+                                  ? "bg-emerald-500/60 opacity-80 cursor-not-allowed" // Processing UI
+                                  : "bg-emerald-500 hover:bg-emerald-600 shadow-[0_4px_15px_rgba(16,185,129,0.3)] active:scale-95" // Normal UI
+                              }`}
+                          >
+                              {isRedirecting ? (
+                                  <span className="flex items-center gap-2">
+                                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                      Go to {activeDeal.store || "Store"}...
+                                  </span>
+                              ) : (
+                                  `Buy on ${activeDeal.store || "Store"}`
+                              )}
                           </button>
                       </div>
                   </>
