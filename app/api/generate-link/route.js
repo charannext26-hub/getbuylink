@@ -8,14 +8,6 @@ import User from "@/lib/models/User";
 function cleanProductUrl(rawUrl) {
   try {
     const urlObj = new URL(rawUrl);
-    const paramsToRemove = [
-      'tag', 'linkCode', 'linkId', 'ref_', 'ascsubtag', 
-      'affid', 'cmpid', 'affExtParam1', 'affExtParam2', 
-      'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 
-      'subid', 'clickId', 'igshid', 'mibextid', 'pid', 'lid' // Flipkart ke extra params clean karne se bachein agar zaroori na ho, but tracking params hata diye.
-    ];
-    
-    // Flipkart ke pid/lid safe rakhne hain, but deals site ke utm parameters hata do
     const pureTrackingParams = [
       'tag', 'affid', 'ascsubtag', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'subid', 'gclid'
     ];
@@ -29,13 +21,11 @@ function cleanProductUrl(rawUrl) {
 
 // 🎯 STORE ROUTER DICTIONARY (Sankmo Configuration)
 const sankmoCampaigns = {
-    "Flipkart": "83956760",
-    "Myntra": "16407658",
-    "Ajio": "91411482",
-    "Shopsy": "78454597",
     "Dot&Key": "80483577" 
 };
 const SANKMO_PUB_ID = "xPH2IO4";
+// Apni asli site ka base URL yahan rakhein
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://favylink.com";
 
 export async function POST(req) {
   try {
@@ -46,40 +36,25 @@ export async function POST(req) {
     const deal = await GlobalDeal.findById(dealId);
     if (!deal) return NextResponse.json({ success: false, message: "Deal not found" });
 
-    // 🚀 MASTER STRATEGY UPGRADE: Cascade Priority Logic
-    // Sabse pehle rawAffiliateLink dekhega, agar nahi mila toh expandedUrl, aakhiri mein originalUrl
     const rawTargetUrl = (deal.rawAffiliateLink || deal.expandedUrl || deal.originalUrl || "").trim();
-    
     if (!rawTargetUrl) return NextResponse.json({ success: false, message: "Product URL missing" });
 
-    // CLEANING THE LINK (Fresh Product Link banega)
+    // CLEANING THE LINK
     const targetProductUrl = cleanProductUrl(rawTargetUrl);
-
-    // Username ko safe banao
     const safeSubId = creatorUsername ? creatorUsername.replace(/[^a-zA-Z0-9]/g, '') : "unknown";
 
-    // 🚨 MASTER PLAN STEP 1: Deal ID se existing link dhundhna
-    let existingLink = await LinkPerformance.findOne({ 
-      creatorId: safeSubId,
-      $or: [
-        { globalDealId: dealId }, 
-        { originalUrl: targetProductUrl } 
-      ]
-    });
-
-    if (existingLink && existingLink.shortCode) {
-      return NextResponse.json({ success: true, shortCode: existingLink.shortCode, message: "Existing link fetched" });
-    }
-
     // ==========================================
-    // AGAR NAHI HAI, TOH New BANAO (First Time)
+    // 🛡️ STEP 1: FETCH USER PERMISSIONS
     // ==========================================
-
     let creatorTag = "";
+    let isAmazonShortlinkEnabled = false;
+
     if (creatorUsername) {
-       const creatorData = await User.findOne({ username: creatorUsername }).select("amazonTag").lean();
-       if (creatorData && creatorData.amazonTag) {
-           creatorTag = creatorData.amazonTag.trim();
+       // Database me naya flag 'isAmazonShortlinkEnabled' check karega (default false hoga)
+       const creatorData = await User.findOne({ username: creatorUsername }).select("amazonTag isAmazonShortlinkEnabled").lean();
+       if (creatorData) {
+           creatorTag = (creatorData.amazonTag || "").trim();
+           isAmazonShortlinkEnabled = !!creatorData.isAmazonShortlinkEnabled;
        }
     }
 
@@ -89,13 +64,42 @@ export async function POST(req) {
         isAmazonLink = checkUrl.hostname.includes('amazon') || checkUrl.hostname.includes('amzn');
     } catch(e) {}
 
-    let affiliateUrl = "";
-    const newShortCode = Math.random().toString(36).substring(2, 8);
-    const finalStoreName = deal.store || (isAmazonLink ? "Amazon" : "Unknown");
+    // 🚀 THE FIX: Ye check karega ki kya sach mein Creator ka Tag lag raha hai?
+    const isAmazonDirectRoute = isAmazonLink && creatorTag;
+
+    // 🚀 THE LOGIC: Raw link sirf tabhi do jab (Product Amazon ka ho + Creator ka Tag ho + Shortlink OFF ho)
+    const shouldProvideRawLink = isAmazonDirectRoute && !isAmazonShortlinkEnabled;
 
     // ==========================================
-    // 🚀 THE MASTER ROUTER ENGINE (Sankmo + Cuelinks)
+    // 🚨 STEP 2: EXISTING LINK CHECK
     // ==========================================
+    let existingLink = await LinkPerformance.findOne({ 
+      creatorId: safeSubId,
+      $or: [{ globalDealId: dealId }, { originalUrl: targetProductUrl }]
+    });
+
+    if (existingLink && existingLink.shortCode) {
+      // Agar link pehle se hai, toh check karo ki kya output dena hai
+      let finalUrlToShare = `${BASE_URL}/go/${existingLink.shortCode}`;
+      if (shouldProvideRawLink) {
+          finalUrlToShare = existingLink.affiliateUrl; // Raw Amazon Link!
+      }
+
+      return NextResponse.json({ 
+          success: true, 
+          shortCode: existingLink.shortCode, // Bio page ke liye zaroori hai
+          finalUrl: finalUrlToShare,         // Share copy karne ke liye (Raw ya Short)
+          isRaw: shouldProvideRawLink,       // Frontend ko batane ke liye
+          message: "Existing link fetched" 
+      });
+    }
+
+    // ==========================================
+    // 🚨 STEP 3: CREATE NEW LINK
+    // ==========================================
+    const newShortCode = Math.random().toString(36).substring(2, 8);
+    const finalStoreName = deal.store || (isAmazonLink ? "Amazon" : "Unknown");
+    let affiliateUrl = "";
     
     if (isAmazonLink && creatorTag) {
         // ROUTE 1: AMAZON DIRECT
@@ -108,34 +112,50 @@ export async function POST(req) {
         }
     } 
     else if (sankmoCampaigns[finalStoreName]) {
-        // ROUTE 2: SANKMO (Shopsy, Flipkart, Myntra, etc.)
+        // ROUTE 2: SANKMO
         const campId = sankmoCampaigns[finalStoreName];
         affiliateUrl = `https://sankmo.in/track/click?pub_id=${SANKMO_PUB_ID}&camp_id=${campId}&subid=${safeSubId}&subid1=${newShortCode}&source=telegram_auto_post&dl=${encodeURIComponent(targetProductUrl)}`;
     } 
     else {
-        // ROUTE 3: CUELINKS (Fallback for others like Croma, Ajio if not in Sankmo, etc.)
+        // ROUTE 3: CUELINKS
         const pubId = (process.env.CUELINKS_PUB_ID || "246005").trim();
         affiliateUrl = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeSubId}&subid2=${newShortCode}&subid3=telegram&url=${encodeURIComponent(targetProductUrl)}`;
     }
     
     const finalSource = triggerSource === "bio_page" ? "telegram" : "auto-post-share";
 
-    // 🚨 MASTER PLAN STEP 2: Save 'globalDealId' in DB
-    await LinkPerformance.create({
-      creatorId: safeSubId,
-      globalDealId: dealId,
-      shortCode: newShortCode,
-      subId: safeSubId,
-      originalUrl: targetProductUrl, // Ab yahan ekdum CLEAN, RAW link save hoga
-      affiliateUrl: affiliateUrl, 
-      title: deal.title,
-      store: finalStoreName,
-      source: finalSource,
-      linkType: "platform",
-      clicks: 0
+    // 💾 SAVE TO DB (Click tracking aur Dashboard ke liye)
+    // 🚀 THE FIX: Agar Raw link dena hai, toh DB mein save mat karo!
+    if (!shouldProvideRawLink) {
+        await LinkPerformance.create({
+            creatorId: safeSubId,
+            globalDealId: dealId,
+            shortCode: newShortCode,
+            subId: safeSubId,
+            originalUrl: targetProductUrl, 
+            affiliateUrl: affiliateUrl, 
+            title: deal.title,
+            store: finalStoreName,
+            source: finalSource,
+            linkType: "platform",
+            clicks: 0
+        });
+    }
+
+    // 📤 FINAL RESPONSE
+    let finalUrlToShare = `${BASE_URL}/go/${newShortCode}`;
+    if (shouldProvideRawLink) {
+        finalUrlToShare = affiliateUrl; // Agar Amazon + Non-verified, toh Raw Link bhejo
+    }
+
+    return NextResponse.json({ 
+        success: true, 
+        shortCode: newShortCode, 
+        finalUrl: finalUrlToShare, 
+        isRaw: shouldProvideRawLink,
+        message: "New link generated" 
     });
 
-    return NextResponse.json({ success: true, shortCode: newShortCode, message: "New link generated" });
   } catch (error) {
     console.error("Link Gen Error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

@@ -31,13 +31,12 @@ function cleanProductUrl(rawUrl) {
 }
 
 // 🎯 STORE ROUTER DICTIONARY (Sankmo Configuration)
-// Yahan manual control hai. Agar store idhar hai, toh Sankmo use hoga.
 const sankmoCampaigns = {
     "Flipkart": "83956760",
     "Myntra": "16407658",
     "Ajio": "91411482",
     "Shopsy": "78454597",
-    "Dot&Key": "80483577" // Aap yahan aur stores add kar sakte hain
+    "Dot&Key": "80483577"
 };
 const SANKMO_PUB_ID = "xPH2IO4";
 
@@ -62,9 +61,13 @@ export async function POST(req) {
     const dbUser = await User.findOne({ email: session.user.email });
     let safeUsername = "creator";
     let creatorTag = ""; 
+    // 🚀 THE FIX 1: Fetching the Amazon Shortlink Preference
+    let isAmazonShortlinkEnabled = false;
+
     if (dbUser) {
       if (dbUser.username) safeUsername = dbUser.username.replace(/[^a-zA-Z0-9]/g, '');
       if (dbUser.amazonTag) creatorTag = dbUser.amazonTag.trim();
+      if (dbUser.isAmazonShortlinkEnabled) isAmazonShortlinkEnabled = true;
     } else {
       safeUsername = session.user.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
     }
@@ -80,10 +83,34 @@ export async function POST(req) {
     let shortCodeToReturn = "";
     let affiliateUrlToUse = "";
     let finalStoreName = deal.storeName || "PlatformDeal";
+    
+    // 🚀 THE FIX 2: Global variables for logic
+    let shouldProvideRawLink = false;
+    let bioPageUrl = "";
+    let finalShortCodeForGlobalDeal = "";
 
+    // Agar pehle se link bana hua hai
     if (existingPerformance) {
       shortCodeToReturn = existingPerformance.shortCode;
       affiliateUrlToUse = existingPerformance.affiliateUrl;
+      
+      let isAmazonLink = false;
+      try {
+          const checkUrl = new URL(cleanedUrl);
+          isAmazonLink = checkUrl.hostname.includes('amazon') || checkUrl.hostname.includes('amzn');
+      } catch(e) {}
+      
+      const isAmazonDirectRoute = isAmazonLink && creatorTag;
+      shouldProvideRawLink = isAmazonDirectRoute && !isAmazonShortlinkEnabled;
+
+      if (shouldProvideRawLink) {
+          bioPageUrl = affiliateUrlToUse; 
+          finalShortCodeForGlobalDeal = "";
+      } else {
+          bioPageUrl = `/go/${shortCodeToReturn}`;
+          finalShortCodeForGlobalDeal = shortCodeToReturn;
+      }
+      
     } else {
       shortCodeToReturn = Math.random().toString(36).substring(2, 8);
 
@@ -100,7 +127,6 @@ export async function POST(req) {
       // ==========================================
       
       if (isAmazonLink && creatorTag) {
-          // ROUTE 1: AMAZON (Direct Associate Tag)
           try {
               const amzUrl = new URL(cleanedUrl);
               amzUrl.searchParams.set('tag', creatorTag);
@@ -110,30 +136,41 @@ export async function POST(req) {
           }
       } 
       else if (sankmoCampaigns[finalStoreName]) {
-          // ROUTE 2: SANKMO (High Conversion Deep-linking)
           const campId = sankmoCampaigns[finalStoreName];
-          // subid = Creator ID, subid1 = Platform Shortcode (Dono database link karne ke kaam aayenge)
           affiliateUrlToUse = `https://sankmo.in/track/click?pub_id=${SANKMO_PUB_ID}&camp_id=${campId}&subid=${safeUsername}&subid1=${shortCodeToReturn}&source=manual&dl=${encodeURIComponent(cleanedUrl)}`;
       } 
       else {
-          // ROUTE 3: CUELINKS (The Ultimate Fallback for other stores)
           const pubId = (process.env.CUELINKS_PUB_ID || "246005").trim();
           affiliateUrlToUse = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeUsername}&subid2=${shortCodeToReturn}&subid3=manual&url=${encodeURIComponent(cleanedUrl)}`;
       }
 
-      // Save Tracking Database
-      await LinkPerformance.create({
-        creatorId: safeUsername,
-        shortCode: shortCodeToReturn,
-        subId: safeUsername,
-        originalUrl: cleanedUrl,
-        affiliateUrl: affiliateUrlToUse,
-        title: deal.title,
-        store: finalStoreName, 
-        source: "manual",
-        linkType: "platform",
-        clicks: 0
-      });
+      // 🛡️ 🚀 THE MAIN FIX: Amazon Shortlink ON/OFF Logic Here
+      const isAmazonDirectRoute = isAmazonLink && creatorTag;
+      shouldProvideRawLink = isAmazonDirectRoute && !isAmazonShortlinkEnabled;
+
+      if (shouldProvideRawLink) {
+          bioPageUrl = affiliateUrlToUse; 
+          finalShortCodeForGlobalDeal = ""; 
+      } else {
+          bioPageUrl = `/go/${shortCodeToReturn}`; 
+          finalShortCodeForGlobalDeal = shortCodeToReturn;
+      }
+
+      // Save Tracking Database (ONLY if not Raw Link)
+      if (!shouldProvideRawLink) {
+          await LinkPerformance.create({
+            creatorId: safeUsername,
+            shortCode: shortCodeToReturn,
+            subId: safeUsername,
+            originalUrl: cleanedUrl,
+            affiliateUrl: affiliateUrlToUse,
+            title: deal.title,
+            store: finalStoreName, 
+            source: "manual",
+            linkType: "platform",
+            clicks: 0
+          });
+      }
     }
 
     if (action === "push") {
@@ -148,8 +185,8 @@ export async function POST(req) {
           source: "creator",
           linkType: "platform",
           originalUrl: deal.originalUrl,
-          expandedUrl: `/go/${shortCodeToReturn}`, 
-          shortCode: shortCodeToReturn, 
+          expandedUrl: bioPageUrl, // 🚀 THE FIX: Use evaluated link
+          shortCode: finalShortCodeForGlobalDeal, // 🚀 THE FIX: Keep empty if Raw
           store: finalStoreName, 
           title: deal.title,
           image: deal.imageUrl,
@@ -163,9 +200,12 @@ export async function POST(req) {
       }
     }
 
+    // 🚀 THE FIX 3: Respond with finalUrl to the frontend
     return NextResponse.json({
       success: true,
-      shortCode: shortCodeToReturn,
+      shortCode: finalShortCodeForGlobalDeal,
+      finalUrl: bioPageUrl,
+      isRaw: shouldProvideRawLink,
       message: action === "copy" ? "Link generated & copied!" : "Added to your Bio Page!"
     });
 

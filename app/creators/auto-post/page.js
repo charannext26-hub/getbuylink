@@ -17,6 +17,7 @@ function AutoPostContent() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false); // Sirf buttons disable karne ke liye 
+  const [sharingDealId, setSharingDealId] = useState(null); // 👈 NAYA: Share button ke spinner ke liye
   const [creatorUsername, setCreatorUsername] = useState("");
   
   const [activeTab, setActiveTab] = useState("auto_deals"); 
@@ -51,6 +52,7 @@ function AutoPostContent() {
   const { data: manualDealsData, mutate: mutateManualDeals } = useSWR(userEmail ? `/api/deals/get-manual-deals?email=${userEmail}` : null, fetcher);
 
   const isActive = userData?.success ? (userData.user.autodeal_active || false) : false;
+  const isAmzShortlinkOn = userData?.success ? (userData.user.isAmazonShortlinkEnabled || false) : false;
   const selectedCats = userData?.success ? (userData.user.autoDealCategories || []) : [];
   
   const deals = dealsData?.success ? dealsData.deals : [];
@@ -119,6 +121,21 @@ function AutoPostContent() {
 
   const shareAffiliateLink = async (deal) => {
     if (!creatorUsername) return showToast("⚠️ Creator username missing!");
+    
+    // 🛑 SMART CACHE: Agar link pehle se generate ho chuka hai (SWR Cache mein hai)
+    let linkToShare = "";
+    if (deal.finalUrl && deal.isRaw) {
+        linkToShare = deal.finalUrl;
+    } else if (deal.shortCode) {
+        linkToShare = `${window.location.origin}/go/${deal.shortCode}`;
+    }
+
+    if (linkToShare) {
+        return executeShare(linkToShare, deal.title);
+    }
+
+    // 🔄 API CALL: Agar link nahi hai, toh API bulayenge aur Spinner ON karenge
+    setSharingDealId(deal._id); // Spinner ON
     try {
       const res = await fetch('/api/generate-link', {
         method: 'POST',
@@ -126,20 +143,42 @@ function AutoPostContent() {
         body: JSON.stringify({ dealId: deal._id, creatorUsername: creatorUsername, triggerSource: "control_room" })
       });
       const data = await res.json();
-      if (data.success) {
-        const platformShortLink = `${window.location.origin}/go/${data.shortCode}`;
-        if (navigator.share) {
-          await navigator.share({
-            title: deal.title,
-            text: `Grab this awesome deal: ${deal.title}`,
-            url: platformShortLink
-          });
+      
+      if (data.success && (data.finalUrl || data.shortCode)) {
+        
+        // 🚀 THE FIX: Check karega ki Raw Amazon Link hai ya FavyLink Shortcode
+        if (data.isRaw) {
+            linkToShare = data.finalUrl;
         } else {
-          navigator.clipboard.writeText(platformShortLink);
-          showToast(`✅ Link Copied to Share!`);
+            linkToShare = `${window.location.origin}/go/${data.shortCode}`;
         }
+
+        // Cache update karenge taaki next time API hit na ho
+        const updatedDeals = deals.map(d => 
+            d._id === deal._id ? { ...d, shortCode: data.shortCode, finalUrl: data.finalUrl, isRaw: data.isRaw } : d
+        );
+        mutateDeals({ success: true, deals: updatedDeals }, false);
+
+        executeShare(linkToShare, deal.title);
+
       } else { showToast("⚠️ Link banane mein problem hui!"); }
     } catch (err) { showToast("⚠️ Error generating short link."); }
+    
+    setSharingDealId(null); // Spinner OFF
+  };
+
+  // Helper function taaki code clean rahe
+  const executeShare = async (url, title) => {
+    if (navigator.share) {
+      await navigator.share({
+        title: title,
+        text: `Grab this awesome deal: ${title}`,
+        url: url
+      }).catch(()=>{});
+    } else {
+      navigator.clipboard.writeText(url);
+      showToast(`✅ Link Copied to Share!`);
+    }
   };
 
   const shareManualLink = async (deal, type) => {
@@ -473,12 +512,18 @@ function AutoPostContent() {
               <h3 className="text-[11px] font-bold text-slate-900 line-clamp-2 leading-tight mb-1">{group.collectionName}</h3>
               <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold">
                 <span>{group.deals.length} Products</span>
-                {type === "platform" && (
-                  <>
-                    <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                    <span className="flex items-center gap-0.5 text-slate-500 bg-slate-100 px-1.5 rounded"><svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> {group.totalClicks || 0}</span>
-                  </>
-                )}
+                {/* 🚀 THE FIX: group.deals[0] ke andar check karega */}
+{type === "platform" && !(group.deals?.[0]?.store?.toLowerCase().includes("amazon") && !isAmzShortlinkOn) && (
+  <>
+    <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+    <span className="flex items-center gap-1 text-slate-500 bg-slate-100 px-1.5 rounded py-0.5 text-[10px]">
+      <svg className="w-2.5 h-2.5 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.303.197-1.591 1.591M21 12h-2.25m-.197 5.303-1.591-1.591M12 21.75V19.5m-5.303-.197 1.591-1.591M3 12h2.25m.197-5.303 1.591 1.591" />
+      </svg> 
+      {group.totalClicks || 0}
+    </span>
+  </>
+)}
               </div>
             </div>
             <div className="flex flex-col items-center gap-1.5 shrink-0">
@@ -497,11 +542,17 @@ function AutoPostContent() {
                  <span className="text-[9px] font-medium text-slate-400">{timeAgo(group.deal.createdAt)}</span>
               </div>
               <h3 className="text-[11px] font-bold text-slate-900 line-clamp-2 leading-tight mb-1">{group.deal.title}</h3>
-              {type === "platform" && (
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold">
-                  <span className="flex items-center gap-0.5 text-slate-500 bg-slate-100 px-1.5 rounded"><svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> {group.deal.clicks || 0}</span>
-                </div>
-              )}
+             {/* 🚀 THE FIX: group.deal ke andar check karega */}
+{type === "platform" && !(group.deal?.store?.toLowerCase().includes("amazon") && !isAmzShortlinkOn) && (
+  <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold">
+    <span className="flex items-center gap-1 text-slate-500 bg-slate-100 px-1.5 rounded py-0.5">
+      <svg className="w-2.5 h-2.5 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.303.197-1.591 1.591M21 12h-2.25m-.197 5.303-1.591-1.591M12 21.75V19.5m-5.303-.197 1.591-1.591M3 12h2.25m.197-5.303 1.591 1.591" />
+      </svg>
+      {group.deal.clicks || 0}
+    </span>
+  </div>
+)}
             </div>
             <div className="flex flex-col items-center gap-1.5 shrink-0">
               <button onClick={() => shareManualLink(group.deal, type)} className="px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-extrabold rounded hover:bg-blue-200 w-full flex items-center gap-1 justify-center">Share</button>
@@ -622,16 +673,31 @@ function AutoPostContent() {
                           </span>
                           {deal.originalPrice && <span className="text-slate-400 line-through text-xs font-semibold">₹{String(deal.originalPrice).replace(/₹/g, '').trim()}</span>}
                           
-                          <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md flex items-center gap-1 ml-auto">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                            {deal.clicks || 0}
-                          </span>
+                       {/* 🚀 THE FIX: Asli Amazon Shortlink variable use kiya */}
+{!(deal.store?.toLowerCase().includes("amazon") && !isAmzShortlinkOn) && (
+  <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md flex items-center gap-1 ml-auto">
+    <svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.303.197-1.591 1.591M21 12h-2.25m-.197 5.303-1.591-1.591M12 21.75V19.5m-5.303-.197 1.591-1.591M3 12h2.25m.197-5.303 1.591 1.591" />
+    </svg>
+    {deal.clicks || 0}
+  </span>
+)}
                         </div>
                       </div>
-                      <button onClick={() => shareAffiliateLink(deal)} className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-extrabold text-sm rounded-xl shadow-md hover:bg-blue-700 whitespace-nowrap flex justify-center items-center gap-2 shrink-0">
+                      <button 
+                       onClick={() => shareAffiliateLink(deal)} 
+                       disabled={sharingDealId === deal._id}
+                       className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-extrabold text-sm rounded-xl shadow-md hover:bg-blue-700 whitespace-nowrap flex justify-center items-center gap-2 shrink-0 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+                     >
+                       {sharingDealId === deal._id ? (
+                       // SPINNER UI
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          ) : (
+                         // NORMAL ICON
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-                        Share
-                      </button>
+                         )}
+                          {sharingDealId === deal._id ? "Generating..." : "Share"}
+                     </button>
                     </div>
                   ))
                 )}
@@ -698,13 +764,15 @@ function AutoPostContent() {
                               <p className="font-extrabold text-sm text-slate-900 truncate">{deal.title}</p>
                               <div className="flex items-center gap-2 mt-1">
                                 <p className="text-xs text-slate-500 font-medium">{deal.store}</p>
-                                {/* 🚨 Click Count for items in Collection (Platform only) */}
-                                {activeTab === "platform_links" && (
-                                  <span className="text-[9px] font-black text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded-md flex items-center gap-1">
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                    {deal.clicks || 0}
-                                  </span>
-                                )}
+                                {/* 🚀 THE FIX: Drawer item ke andar check karega */}
+{activeTab === "platform_links" && !(deal.store?.toLowerCase().includes("amazon") && !isAmzShortlinkOn) && (
+  <span className="text-[9px] font-black text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+    <svg className="w-2.5 h-2.5 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.303.197-1.591 1.591M21 12h-2.25m-.197 5.303-1.591-1.591M12 21.75V19.5m-5.303-.197 1.591-1.591M3 12h2.25m.197-5.303 1.591 1.591" />
+    </svg>
+    {deal.clicks || 0}
+  </span>
+)}
                               </div>
                             </div>
                           </div>

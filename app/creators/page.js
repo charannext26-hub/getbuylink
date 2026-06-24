@@ -137,10 +137,28 @@ function DashboardContent() {
       const data = await res.json();
       
       if (data.success) {
+        // 🚀 THE MAIN FIX: Check karega ki Raw Amazon Link copy karna hai ya Shortlink
+        let linkToShare = "";
+        
+        if (data.isRaw && data.finalUrl) {
+           // Agar backend se Raw Amazon link aaya hai
+           linkToShare = data.finalUrl;
+        } else if (data.shortCode) {
+           // Agar Flipkart/Myntra hai toh FavyLink shortcode banayega
+           linkToShare = `${window.location.origin}/go/${data.shortCode}`;
+        } else if (data.finalUrl) {
+           // Fallback safety ke liye
+           linkToShare = data.finalUrl;
+        }
+
+        // Action Logic
         if (action === "copy") {
-          const shortLink = `${window.location.origin}/go/${data.shortCode}`;
-          navigator.clipboard.writeText(shortLink);
-          showToast(`✅ Link Copied: ${shortLink}`);
+          if (linkToShare) {
+             navigator.clipboard.writeText(linkToShare);
+             showToast(`✅ Link Copied!`);
+          } else {
+             showToast(`⚠️ Link create karne mein error!`);
+          }
         } else {
           showToast(`🚀 Product pushed to your Bio Page!`);
         }

@@ -185,12 +185,29 @@ function AddlinkContent() {
         
         if (result.success) {
           successCount++;
-          if (result.shortCode) {
-            generatedData.push({
-              title: deal.title,
-              url: `${window.location.origin}/go/${result.shortCode}`
-            });
+          
+          // 🚀 THE FIX: Drawer mein link dikhane ka smart logic
+          let finalLinkToShow = "";
+          
+          if (result.finalUrl) {
+              // Agar API ne finalUrl bheja hai (Raw Amazon ya /go/ link)
+              if (result.finalUrl.startsWith('/go/')) {
+                  finalLinkToShow = `${window.location.origin}${result.finalUrl}`;
+              } else {
+                  finalLinkToShow = result.finalUrl; // Amazon Raw Link
+              }
+          } else if (result.shortCode) {
+              // Fallback purane tareeqe ke liye
+              finalLinkToShow = `${window.location.origin}/go/${result.shortCode}`;
+          } else {
+              // Agar "Own" link mode tha
+              finalLinkToShow = deal.originalUrl;
           }
+
+          generatedData.push({
+            title: deal.title,
+            url: finalLinkToShow
+          });
         }
       } catch (error) {
         console.error("Deal save error:", error);

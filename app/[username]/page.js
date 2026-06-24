@@ -231,15 +231,20 @@ export default function CreatorBioPage({ params }) {
       try {
           let finalUrl = `${window.location.origin}/`; 
 
-          // 🛑 THE FIX 1: Agar shortCode pehle se hai, toh seedha use karo (No API Call)
-          if (deal.shortCode) {
-              finalUrl = `${window.location.origin}/go/${deal.shortCode}`;
-          } 
-          // 🛑 THE FIX 2: Agar own link hai ya tab liveoffer nahi hai
-          else if (deal.linkType === "own" || activeTab !== "liveoffer") {
+          // 🚀 Sirf "Own" link bina API ke share hoga
+          if (deal.linkType === "own") {
               finalUrl = deal.expandedUrl || deal.originalUrl;
+              if (finalUrl && finalUrl.startsWith('/go/')) {
+                  finalUrl = `${window.location.origin}${finalUrl}`;
+              }
+          }
+          // 🛑 CACHE CHECK FOR TELEGRAM DEALS
+          else if (deal.finalUrl && deal.isRaw) {
+              finalUrl = deal.finalUrl;
+          } else if (deal.shortCode) {
+              finalUrl = `${window.location.origin}/go/${deal.shortCode}`; 
           } 
-          // 🔄 API CALL: Sirf tab chalegi jab link platform ka ho aur pehli baar share ho raha ho
+          // 🔄 API CALL: Sirf Telegram deals ke liye pehli baar
           else if (creator) {
               const res = await fetch('/api/generate-link', {
                   method: 'POST',
@@ -248,20 +253,26 @@ export default function CreatorBioPage({ params }) {
               });
               const data = await res.json();
               
-              if (data.success && data.shortCode) {
-                  finalUrl = `${window.location.origin}/go/${data.shortCode}`;
+              if (data.success && (data.finalUrl || data.shortCode)) {
+                  if (data.isRaw) {
+                      finalUrl = data.finalUrl;
+                  } else {
+                      finalUrl = `${window.location.origin}/go/${data.shortCode}`;
+                  }
                   
-                  // 🚀 MEMORY LOCK: Link ko state aur cache mein save kar lo (Taaki dobara API call na ho)
                   deal.shortCode = data.shortCode;
-                  setDealDrawerStack(prevStack => prevStack.map(d => d._id === deal._id ? { ...d, shortCode: data.shortCode } : d));
-                  setDeals(prevDeals => prevDeals.map(d => d._id === deal._id ? { ...d, shortCode: data.shortCode } : d));
+                  deal.finalUrl = data.finalUrl;
+                  deal.isRaw = data.isRaw;
+                  
+                  setDealDrawerStack(prevStack => prevStack.map(d => d._id === deal._id ? { ...d, shortCode: data.shortCode, finalUrl: data.finalUrl, isRaw: data.isRaw } : d));
+                  setDeals(prevDeals => prevDeals.map(d => d._id === deal._id ? { ...d, shortCode: data.shortCode, finalUrl: data.finalUrl, isRaw: data.isRaw } : d));
                   
                   const cacheKey = `deals_${creator.username}_${activeTab}`;
                   const cachedStr = sessionStorage.getItem(cacheKey);
                   if (cachedStr) {
                       const cachedData = JSON.parse(cachedStr);
                       if (cachedData.deals) {
-                          const updatedCachedDeals = cachedData.deals.map(d => d._id === deal._id ? { ...d, shortCode: data.shortCode } : d);
+                          const updatedCachedDeals = cachedData.deals.map(d => d._id === deal._id ? { ...d, shortCode: data.shortCode, finalUrl: data.finalUrl, isRaw: data.isRaw } : d);
                           sessionStorage.setItem(cacheKey, JSON.stringify({ ...cachedData, deals: updatedCachedDeals }));
                       }
                   }
@@ -632,64 +643,62 @@ useEffect(() => {
   };
 
   const handleDealClick = async (deal) => {
-    if (!creator) return;
-    
-    // 🛑 AGAR LINK PEHLE SE MAUJOOD HAI (State ya DB mein), TOH DIRECT KHOL DO!
-    // Ye line ensure karegi ki dubara API call na ho.
-    if (deal.shortCode) {
-        return window.open(`/go/${deal.shortCode}`, '_blank');
-    }
+      if (!creator) return;
 
-    if (deal.linkType === "own" || activeTab !== "liveoffer") {
-        const targetUrl = deal.shortCode ? `/go/${deal.shortCode}` : (deal.expandedUrl || deal.originalUrl);
-        if (targetUrl) return window.open(targetUrl, '_blank');
-        return triggerToast("Link not available");
-    }
-
-    try {
-      // 🔄 PEHLI BAAR CLICK: Sirf tabhi API chalegi
-      const res = await fetch('/api/generate-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dealId: deal._id, creatorUsername: creator.username, triggerSource: "bio_page" })
-      });
-      const data = await res.json();
-      
-      if (data.success && data.shortCode) {
-          
-          // 🚀 THE ULTIMATE FIX 1: Direct Memory Lock (Double click rokne ke liye)
-          deal.shortCode = data.shortCode; 
-          
-          // 🚀 THE ULTIMATE FIX 2: Drawer Stack ko update karo (Yahi API baar-baar call karwa raha tha!)
-          setDealDrawerStack(prevStack => prevStack.map(d => 
-              d._id === deal._id ? { ...d, shortCode: data.shortCode } : d
-          ));
-
-          // Main Deals List update karo
-          setDeals(prevDeals => prevDeals.map(d => 
-              d._id === deal._id ? { ...d, shortCode: data.shortCode } : d
-          ));
-          
-          // 📦 THE CACHE MAGIC: Cache ke andar bhi update kar do
-          const cacheKey = `deals_${creator.username}_${activeTab}`;
-          const cachedStr = sessionStorage.getItem(cacheKey);
-          if (cachedStr) {
-              const cachedData = JSON.parse(cachedStr);
-              if (cachedData.deals) {
-                  const updatedCachedDeals = cachedData.deals.map(d => 
-                      d._id === deal._id ? { ...d, shortCode: data.shortCode } : d
-                  );
-                  sessionStorage.setItem(cacheKey, JSON.stringify({ ...cachedData, deals: updatedCachedDeals }));
+      // 🚀 THE FIX: Sirf "Own" link hi bypass hoga kyunki uska link get-all bhej raha hai!
+      if (deal.linkType === "own") {
+          let targetUrl = deal.expandedUrl || deal.originalUrl;
+          if (targetUrl) {
+              if (targetUrl.startsWith('/go/')) {
+                  targetUrl = `${window.location.origin}${targetUrl}`;
               }
+              return window.open(targetUrl, '_blank');
           }
-
-          window.open(`/go/${data.shortCode}`, '_blank');
-      } else {
-          triggerToast("Deal is currently unavailable!"); 
+          return triggerToast("Link not available");
       }
-    } catch (err) { 
-      triggerToast("Connection error! Please try again.");
-    }
+      
+      // 🛑 CACHE CHECK FOR ALL PLATFORM DEALS (Manual + Telegram)
+      if (deal.finalUrl && deal.isRaw) {
+          return window.open(deal.finalUrl, '_blank');
+      } else if (deal.shortCode) {
+          return window.open(`${window.location.origin}/go/${deal.shortCode}`, '_blank');
+      }
+
+      // 🔄 API CALL: Ye ab saari Platform deals ke liye chalegi (Manual ho ya Telegram)
+      try {
+        const res = await fetch('/api/generate-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dealId: deal._id, creatorUsername: creator.username, triggerSource: "bio_page" })
+        });
+        const data = await res.json();
+        
+        if (data.success && (data.finalUrl || data.shortCode)) {
+            deal.shortCode = data.shortCode; 
+            deal.finalUrl = data.finalUrl; 
+            deal.isRaw = data.isRaw; 
+            
+            setDealDrawerStack(prevStack => prevStack.map(d => 
+                d._id === deal._id ? { ...d, shortCode: data.shortCode, finalUrl: data.finalUrl, isRaw: data.isRaw } : d
+            ));
+
+            setDeals(prevDeals => prevDeals.map(d => 
+                d._id === deal._id ? { ...d, shortCode: data.shortCode, finalUrl: data.finalUrl, isRaw: data.isRaw } : d
+            ));
+            
+            // ... (Cache Saving Logic exactly wahi purana wala) ...
+
+            if (data.isRaw) {
+                window.open(data.finalUrl, '_blank'); 
+            } else {
+                window.open(`${window.location.origin}/go/${data.shortCode}`, '_blank'); 
+            }
+        } else {
+            triggerToast("Deal is currently unavailable!"); 
+        }
+      } catch (err) { 
+        triggerToast("Connection error! Please try again.");
+      }
   };
 
   // ============================================================================

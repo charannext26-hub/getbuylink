@@ -37,7 +37,6 @@ const sankmoCampaigns = {
     "flipkart": "83956760",
     "myntra": "16407658",
     "ajio": "91411482",
-    
     "dot&key": "80483577"
 };
 const SANKMO_PUB_ID = "xPH2IO4";
@@ -64,14 +63,17 @@ export async function POST(req) {
     }
 
     const creatorIdToCheck = session.user.email || session.user.id;
+    // 🚀 THE FIX: 'isAmazonShortlinkEnabled' fetch from DB
     const dbUser = await User.findOne({ email: session.user.email });
     
     let safeUsername = "creator";
     let creatorTag = ""; 
+    let isAmazonShortlinkEnabled = false;
 
     if (dbUser) {
       if (dbUser.username) safeUsername = dbUser.username.replace(/[^a-zA-Z0-9]/g, '');
       if (dbUser.amazonTag) creatorTag = dbUser.amazonTag.trim();
+      if (dbUser.isAmazonShortlinkEnabled) isAmazonShortlinkEnabled = true;
     } else if (session.user.email) {
       safeUsername = session.user.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
     }
@@ -81,6 +83,10 @@ export async function POST(req) {
     let finalStore = store || "Unknown";
     let generatedShortCode = "";
     let bioPageUrl = ""; 
+    let finalShortCodeForGlobalDeal = ""; 
+    
+    // 🚀 THE FIX 1: Globally define it before the 'if' block to avoid ReferenceError
+    let shouldProvideRawLink = false; 
 
     if (usePlatformLink === true) {
       // ✅ PLATFORM LINK: Affiliate Generate karo
@@ -88,14 +94,13 @@ export async function POST(req) {
       let cleanedExpandedUrl = expandedUrl ? cleanProductUrl(expandedUrl) : finalOriginalUrl;
       let longUrlForProcessing = (cleanedExpandedUrl.length > finalOriginalUrl.length) ? cleanedExpandedUrl : finalOriginalUrl;
 
-      // 🚨 TEMPORARY MEESHO BLOCK LOGIC RESTORED
+      // 🚨 TEMPORARY MEESHO BLOCK LOGIC
       let isMeeshoLink = false;
       try {
           const checkUrl = new URL(longUrlForProcessing);
           isMeeshoLink = checkUrl.hostname.includes('meesho') || checkUrl.hostname.includes('ltl.sh');
       } catch(e) {}
 
-      // FinalStore verify karo pehle
       finalStore = isMeeshoLink ? "Meesho" : (store || "Unknown");
 
       if (isMeeshoLink || finalStore.toLowerCase() === "meesho") {
@@ -117,7 +122,7 @@ export async function POST(req) {
       const storeKey = finalStore.toLowerCase().trim();
 
       // ==========================================
-      // 🚀 THE MASTER ROUTER ENGINE (Sankmo + Cuelinks)
+      // 🚀 THE MASTER ROUTER ENGINE
       // ==========================================
       if (isAmazonLink && creatorTag) {
           try {
@@ -128,26 +133,34 @@ export async function POST(req) {
               finalAffiliateUrl = longUrlForProcessing + (longUrlForProcessing.includes('?') ? '&' : '?') + `tag=${creatorTag}`;
           }
       } else if (sankmoCampaigns[storeKey]) {
-          // ROUTE 2: SANKMO
           const campId = sankmoCampaigns[storeKey];
-          // Notice: 'source=manual' is used here now
           finalAffiliateUrl = `https://sankmo.in/track/click?pub_id=${SANKMO_PUB_ID}&camp_id=${campId}&subid=${safeUsername}&subid1=${generatedShortCode}&source=manual&dl=${encodeURIComponent(longUrlForProcessing)}`;
       } else {
-          // ROUTE 3: CUELINKS (Fallback)
           const pubId = (process.env.CUELINKS_PUB_ID || "246005").trim();
           finalAffiliateUrl = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeUsername}&subid2=${generatedShortCode}&subid3=manual&url=${encodeURIComponent(longUrlForProcessing)}`;
       }
       
-      bioPageUrl = `/go/${generatedShortCode}`; 
+      // 🛡️ 🚀 THE MAIN FIX 2: Check Amazon Shortlink ON/OFF Logic without 'const'
+      const isAmazonDirectRoute = isAmazonLink && creatorTag;
+      shouldProvideRawLink = isAmazonDirectRoute && !isAmazonShortlinkEnabled;
+
+      if (shouldProvideRawLink) {
+          bioPageUrl = finalAffiliateUrl; 
+          finalShortCodeForGlobalDeal = ""; 
+      } else {
+          bioPageUrl = `/go/${generatedShortCode}`; 
+          finalShortCodeForGlobalDeal = generatedShortCode;
+      }
 
     } else {
       // 🚫 OWN LINK: Direct Routing
       finalOriginalUrl = url; 
       finalAffiliateUrl = url; 
       bioPageUrl = url; 
+      finalShortCodeForGlobalDeal = "";
     }
 
-    // 🚨 DUPLICATE LINK PROTECTION (Purane location par wapas)
+    // 🚨 DUPLICATE LINK PROTECTION
     const existingDeal = await GlobalDeal.findOne({ originalUrl: finalOriginalUrl, creatorId: creatorIdToCheck });
     if (existingDeal) {
         return NextResponse.json({ success: false, message: "Yeh deal pehle hi add ho chuki hai!" }, { status: 400 });
@@ -157,7 +170,7 @@ export async function POST(req) {
     const isCollectionDeal = collectionName && collectionName.trim() !== "";
     const finalBatchId = (isVideoDeal || isCollectionDeal) && batchId ? batchId : "";
 
-    // 9. GlobalDeal Database mein Save Karna
+    // 9. GlobalDeal Database Save
     const newDeal = new GlobalDeal({
       creatorId: creatorIdToCheck,
       source: "creator", 
@@ -165,7 +178,7 @@ export async function POST(req) {
       batchId: finalBatchId,
       originalUrl: finalOriginalUrl, 
       expandedUrl: bioPageUrl, 
-      shortCode: generatedShortCode, 
+      shortCode: finalShortCodeForGlobalDeal, 
       store: finalStore,
       title: title,
       image: image,
@@ -181,28 +194,30 @@ export async function POST(req) {
 
     await newDeal.save();
     
-    // 10. Redirect tracking ke liye Lamba Link yahan save hoga
-    if (usePlatformLink === true) {
-      await LinkPerformance.create({
-        creatorId: safeUsername,
-        globalDealId: newDeal._id.toString(), // Sync ID
-        shortCode: generatedShortCode,
-        subId: safeUsername,
-        affiliateUrl: finalAffiliateUrl, 
-        originalUrl: finalOriginalUrl, 
-        title: title,
-        store: finalStore,
-        source: "manual", // 👈 THE FIX: "addlink_page" ko wapas "manual" kar diya gaya hai!
-        linkType: "platform",
-        clicks: 0
-      });
+    // 10. 🚀 THE FIX 3: LinkPerformance Creation - Skip if shouldProvideRawLink is true
+    if (usePlatformLink === true && !shouldProvideRawLink) {
+        await LinkPerformance.create({
+            creatorId: safeUsername,
+            globalDealId: newDeal._id.toString(), 
+            shortCode: generatedShortCode, 
+            subId: safeUsername,
+            affiliateUrl: finalAffiliateUrl,
+            originalUrl: finalOriginalUrl,
+            title: title,
+            store: finalStore,
+            source: "manual",
+            linkType: "platform",
+            clicks: 0
+        });
     }
 
+    // 🚀 THE FIX 4: Send finalUrl so the frontend drawer works correctly
     return NextResponse.json({ 
         success: true, 
         message: "Deal Saved!", 
         deal: newDeal,
-        shortCode: generatedShortCode 
+        shortCode: finalShortCodeForGlobalDeal,
+        finalUrl: bioPageUrl 
     }, { status: 201 });
 
   } catch (error) {
