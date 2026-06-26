@@ -124,26 +124,37 @@ export async function POST(req) {
       // ==========================================
       // 🚀 THE MASTER ROUTER ENGINE
       // ==========================================
-      if (isAmazonLink && creatorTag) {
+      const ADMIN_AMZ_TAG = process.env.AMAZON_PARTNER_TAG || "979298807-21";
+      let activeTagToUse = "";
+
+      if (isAmazonLink) {
+          // Fallback Logic Setup
+          if (creatorTag) {
+              activeTagToUse = creatorTag;
+              shouldProvideRawLink = !isAmazonShortlinkEnabled;
+          } else {
+              activeTagToUse = ADMIN_AMZ_TAG;
+              shouldProvideRawLink = true; // Force Raw -> No Tracking
+          }
+
           try {
               const amzUrl = new URL(longUrlForProcessing);
-              amzUrl.searchParams.set('tag', creatorTag);
+              amzUrl.searchParams.set('tag', activeTagToUse);
               finalAffiliateUrl = amzUrl.toString();
           } catch(e) {
-              finalAffiliateUrl = longUrlForProcessing + (longUrlForProcessing.includes('?') ? '&' : '?') + `tag=${creatorTag}`;
+              finalAffiliateUrl = longUrlForProcessing + (longUrlForProcessing.includes('?') ? '&' : '?') + `tag=${activeTagToUse}`;
           }
-      } else if (sankmoCampaigns[storeKey]) {
+      } 
+      else if (sankmoCampaigns[storeKey]) {
           const campId = sankmoCampaigns[storeKey];
           finalAffiliateUrl = `https://sankmo.in/track/click?pub_id=${SANKMO_PUB_ID}&camp_id=${campId}&subid=${safeUsername}&subid1=${generatedShortCode}&source=manual&dl=${encodeURIComponent(longUrlForProcessing)}`;
-      } else {
+      } 
+      else {
           const pubId = (process.env.CUELINKS_PUB_ID || "246005").trim();
           finalAffiliateUrl = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeUsername}&subid2=${generatedShortCode}&subid3=manual&url=${encodeURIComponent(longUrlForProcessing)}`;
       }
       
-      // 🛡️ 🚀 THE MAIN FIX 2: Check Amazon Shortlink ON/OFF Logic without 'const'
-      const isAmazonDirectRoute = isAmazonLink && creatorTag;
-      shouldProvideRawLink = isAmazonDirectRoute && !isAmazonShortlinkEnabled;
-
+      // 🛡️ 🚀 Route Decision Logic
       if (shouldProvideRawLink) {
           bioPageUrl = finalAffiliateUrl; 
           finalShortCodeForGlobalDeal = ""; 

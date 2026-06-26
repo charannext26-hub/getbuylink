@@ -75,6 +75,29 @@ export async function POST(req) {
     const rawLongUrl = deal.expandedUrl || deal.originalUrl;
     const cleanedUrl = cleanProductUrl(rawLongUrl);
 
+    let isAmazonLink = false;
+    try {
+        const checkUrl = new URL(cleanedUrl);
+        isAmazonLink = checkUrl.hostname.includes('amazon') || checkUrl.hostname.includes('amzn');
+    } catch(e) {}
+
+    // 🚀 THE MASTER FALLBACK LOGIC
+    const ADMIN_AMZ_TAG = process.env.AMAZON_PARTNER_TAG || "979298807-21";
+    let shouldProvideRawLink = false;
+    let activeTagToUse = "";
+    let bioPageUrl = "";
+    let finalShortCodeForGlobalDeal = "";
+
+    if (isAmazonLink) {
+        if (creatorTag) {
+            activeTagToUse = creatorTag;
+            shouldProvideRawLink = !isAmazonShortlinkEnabled;
+        } else {
+            activeTagToUse = ADMIN_AMZ_TAG;
+            shouldProvideRawLink = true;
+        }
+    }
+
     let existingPerformance = await LinkPerformance.findOne({
       creatorId: safeUsername,
       originalUrl: cleanedUrl 
@@ -83,26 +106,13 @@ export async function POST(req) {
     let shortCodeToReturn = "";
     let affiliateUrlToUse = "";
     let finalStoreName = deal.storeName || "PlatformDeal";
-    
-    // 🚀 THE FIX 2: Global variables for logic
-    let shouldProvideRawLink = false;
-    let bioPageUrl = "";
-    let finalShortCodeForGlobalDeal = "";
+    finalStoreName = isAmazonLink ? "Amazon" : finalStoreName;
 
     // Agar pehle se link bana hua hai
     if (existingPerformance) {
       shortCodeToReturn = existingPerformance.shortCode;
       affiliateUrlToUse = existingPerformance.affiliateUrl;
       
-      let isAmazonLink = false;
-      try {
-          const checkUrl = new URL(cleanedUrl);
-          isAmazonLink = checkUrl.hostname.includes('amazon') || checkUrl.hostname.includes('amzn');
-      } catch(e) {}
-      
-      const isAmazonDirectRoute = isAmazonLink && creatorTag;
-      shouldProvideRawLink = isAmazonDirectRoute && !isAmazonShortlinkEnabled;
-
       if (shouldProvideRawLink) {
           bioPageUrl = affiliateUrlToUse; 
           finalShortCodeForGlobalDeal = "";
@@ -114,25 +124,17 @@ export async function POST(req) {
     } else {
       shortCodeToReturn = Math.random().toString(36).substring(2, 8);
 
-      let isAmazonLink = false;
-      try {
-          const checkUrl = new URL(cleanedUrl);
-          isAmazonLink = checkUrl.hostname.includes('amazon') || checkUrl.hostname.includes('amzn');
-      } catch(e) {}
-
-      finalStoreName = isAmazonLink ? "Amazon" : finalStoreName;
-
       // ==========================================
       // 🚀 THE MASTER ROUTER ENGINE
       // ==========================================
       
-      if (isAmazonLink && creatorTag) {
+      if (isAmazonLink) {
           try {
               const amzUrl = new URL(cleanedUrl);
-              amzUrl.searchParams.set('tag', creatorTag);
+              amzUrl.searchParams.set('tag', activeTagToUse);
               affiliateUrlToUse = amzUrl.toString();
           } catch(e) {
-              affiliateUrlToUse = cleanedUrl + (cleanedUrl.includes('?') ? '&' : '?') + `tag=${creatorTag}`;
+              affiliateUrlToUse = cleanedUrl + (cleanedUrl.includes('?') ? '&' : '?') + `tag=${activeTagToUse}`;
           }
       } 
       else if (sankmoCampaigns[finalStoreName]) {
@@ -143,10 +145,6 @@ export async function POST(req) {
           const pubId = (process.env.CUELINKS_PUB_ID || "246005").trim();
           affiliateUrlToUse = `https://linksredirect.com/?cid=${pubId}&source=getbuylink&subid=${safeUsername}&subid2=${shortCodeToReturn}&subid3=manual&url=${encodeURIComponent(cleanedUrl)}`;
       }
-
-      // 🛡️ 🚀 THE MAIN FIX: Amazon Shortlink ON/OFF Logic Here
-      const isAmazonDirectRoute = isAmazonLink && creatorTag;
-      shouldProvideRawLink = isAmazonDirectRoute && !isAmazonShortlinkEnabled;
 
       if (shouldProvideRawLink) {
           bioPageUrl = affiliateUrlToUse; 

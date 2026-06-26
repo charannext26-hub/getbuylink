@@ -44,13 +44,12 @@ export async function POST(req) {
     const safeSubId = creatorUsername ? creatorUsername.replace(/[^a-zA-Z0-9]/g, '') : "unknown";
 
     // ==========================================
-    // 🛡️ STEP 1: FETCH USER PERMISSIONS
+    // 🛡️ STEP 1: FETCH USER PERMISSIONS & SET TAGS
     // ==========================================
     let creatorTag = "";
     let isAmazonShortlinkEnabled = false;
 
     if (creatorUsername) {
-       // Database me naya flag 'isAmazonShortlinkEnabled' check karega (default false hoga)
        const creatorData = await User.findOne({ username: creatorUsername }).select("amazonTag isAmazonShortlinkEnabled").lean();
        if (creatorData) {
            creatorTag = (creatorData.amazonTag || "").trim();
@@ -64,11 +63,22 @@ export async function POST(req) {
         isAmazonLink = checkUrl.hostname.includes('amazon') || checkUrl.hostname.includes('amzn');
     } catch(e) {}
 
-    // 🚀 THE FIX: Ye check karega ki kya sach mein Creator ka Tag lag raha hai?
-    const isAmazonDirectRoute = isAmazonLink && creatorTag;
+    // 🚀 THE MASTER FALLBACK LOGIC
+    const ADMIN_AMZ_TAG = process.env.AMAZON_PARTNER_TAG || "979298807-21";
+    let shouldProvideRawLink = false;
+    let activeTagToUse = "";
 
-    // 🚀 THE LOGIC: Raw link sirf tabhi do jab (Product Amazon ka ho + Creator ka Tag ho + Shortlink OFF ho)
-    const shouldProvideRawLink = isAmazonDirectRoute && !isAmazonShortlinkEnabled;
+    if (isAmazonLink) {
+        if (creatorTag) {
+            // Creator ka tag hai, unki settings follow karo
+            activeTagToUse = creatorTag;
+            shouldProvideRawLink = !isAmazonShortlinkEnabled;
+        } else {
+            // 🚨 Creator ka tag NAHI hai! Platform tag lagao aur tracking bypass karo.
+            activeTagToUse = ADMIN_AMZ_TAG;
+            shouldProvideRawLink = true; 
+        }
+    }
 
     // ==========================================
     // 🚨 STEP 2: EXISTING LINK CHECK
@@ -79,17 +89,16 @@ export async function POST(req) {
     });
 
     if (existingLink && existingLink.shortCode) {
-      // Agar link pehle se hai, toh check karo ki kya output dena hai
       let finalUrlToShare = `${BASE_URL}/go/${existingLink.shortCode}`;
       if (shouldProvideRawLink) {
-          finalUrlToShare = existingLink.affiliateUrl; // Raw Amazon Link!
+          finalUrlToShare = existingLink.affiliateUrl; 
       }
 
       return NextResponse.json({ 
           success: true, 
-          shortCode: existingLink.shortCode, // Bio page ke liye zaroori hai
-          finalUrl: finalUrlToShare,         // Share copy karne ke liye (Raw ya Short)
-          isRaw: shouldProvideRawLink,       // Frontend ko batane ke liye
+          shortCode: existingLink.shortCode, 
+          finalUrl: finalUrlToShare,        
+          isRaw: shouldProvideRawLink,      
           message: "Existing link fetched" 
       });
     }
@@ -101,14 +110,14 @@ export async function POST(req) {
     const finalStoreName = deal.store || (isAmazonLink ? "Amazon" : "Unknown");
     let affiliateUrl = "";
     
-    if (isAmazonLink && creatorTag) {
-        // ROUTE 1: AMAZON DIRECT
+    if (isAmazonLink) {
+        // ROUTE 1: AMAZON (Creator Tag ya Admin Tag)
         try {
             const amzUrl = new URL(targetProductUrl);
-            amzUrl.searchParams.set('tag', creatorTag); 
+            amzUrl.searchParams.set('tag', activeTagToUse); 
             affiliateUrl = amzUrl.toString();
         } catch(e) {
-            affiliateUrl = targetProductUrl + (targetProductUrl.includes('?') ? '&' : '?') + `tag=${creatorTag}`;
+            affiliateUrl = targetProductUrl + (targetProductUrl.includes('?') ? '&' : '?') + `tag=${activeTagToUse}`;
         }
     } 
     else if (sankmoCampaigns[finalStoreName]) {

@@ -20,7 +20,8 @@ export async function POST(req) {
       autodeal_active, 
       autoDealCategories, 
       amazonTag,
-      salesBoosterActive
+      salesBoosterActive,
+      isAmazonShortlinkEnabled
     } = await req.json();
 
     const updatedUser = await User.findOneAndUpdate(
@@ -38,7 +39,8 @@ export async function POST(req) {
           autodeal_active, 
           autoDealCategories, 
           amazonTag,
-          salesBoosterActive
+          salesBoosterActive,
+          isAmazonShortlinkEnabled
         } 
       },
       { new: true }
