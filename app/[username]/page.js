@@ -927,7 +927,7 @@ useEffect(() => {
                 <div className="space-y-3">
                     {[
                         { id: 'home', icon: '🛍️', label: 'Shop All Feed' },
-                        { id: 'trending', icon: '🔥', label: 'Trending Deals' },
+                        { id: 'trending', icon: '🔥', label: 'Trending Items' },
                         { id: 'liveoffer', icon: '⚡', label: 'Live Offers & Deals' },
                         { id: 'categories', icon: '📁', label: 'All Categories' },
                     ].map(t => (
@@ -1182,12 +1182,13 @@ useEffect(() => {
                        </div>
                    ) : (
                        <div className="columns-2 gap-3 space-y-3">
-                           {orderedDeals.map((deal, idx) => ( 
-                               <div key={`${activeTab}-trending-${deal._id}-${idx}`} className="break-inside-avoid relative transform-gpu"> 
-                                   <GridProductCard deal={deal} onClick={() => openDetailedModal(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
-                               </div>
-                           ))}
-                       </div>
+                       {orderedDeals.map((deal, idx) => ( 
+                       <div key={`${activeTab}-trending-${deal._id}-${idx}`} className="break-inside-avoid relative transform-gpu"> 
+                    {/* 🚀 THE FIX: 'openDetailedModal' ki jagah seedha 'handleDealClick' use kiya gaya hai direct redirect ke liye */}
+                         <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
+                         </div>
+                        ))}
+                     </div>
                    )
                ) : null}
 
@@ -1211,17 +1212,25 @@ useEffect(() => {
                
                {activeTab === "categories" ? (
                     <div className="space-y-6 pb-6 mt-2">
-                        {Object.keys(categoryGroups).length === 0 && !isFetchingMore && !hasMore ? (
-                           <div className="w-full flex flex-col items-center justify-center p-8 mt-2 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl bg-slate-50/50 dark:bg-white/5 mx-1">
-                               <svg className="w-12 h-12 text-slate-400 dark:text-white/40 mb-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                               <h4 className="text-[14px] font-black tracking-wide opacity-80">No Categories Found</h4>
-                           </div>
-                        ) : (
-                            // 🚀 NAYA LOGIC: Others ko last mein bhejne ka array manipulation
-                            Object.keys(categoryGroups).sort((a, b) => {
-                                if (a.toLowerCase() === "others") return 1;  // Others ko niche (1) bhejo
-                                if (b.toLowerCase() === "others") return -1; // Dusro ko upar (-1) bhejo
-                                return a.localeCompare(b); // Baaki categories ko A-Z sort karo
+                        {/* 🚀 THE MASTER FILTER: Pehle hi "Home Page Deal" ko nikal kar active categories ki list bana li */}
+                        {(() => {
+                            const activeCategories = Object.keys(categoryGroups).filter(
+                                catName => catName.toLowerCase() !== "home page deal"
+                            );
+
+                            if (activeCategories.length === 0 && !isFetchingMore && !hasMore) {
+                                return (
+                                    <div className="w-full flex flex-col items-center justify-center p-8 mt-2 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl bg-slate-50/50 dark:bg-white/5 mx-1">
+                                        <svg className="w-12 h-12 text-slate-400 dark:text-white/40 mb-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                        <h4 className="text-[14px] font-black tracking-wide opacity-80">No Categories Found</h4>
+                                    </div>
+                                );
+                            }
+
+                            return activeCategories.sort((a, b) => {
+                                if (a.toLowerCase() === "others") return 1;  // Others hamesha end me jayega
+                                if (b.toLowerCase() === "others") return -1;
+                                return a.localeCompare(b); // Baaki saari categories A-Z sort hongi
                             }).map((catName, idx) => (
                                 <div key={idx} className="space-y-3">
                                     <div className="flex justify-between items-center px-1">
@@ -1232,14 +1241,14 @@ useEffect(() => {
                                     </div>
                                     <div className="flex overflow-x-auto gap-3 pb-2 [&::-webkit-scrollbar]:hidden snap-x">
                                         {categoryGroups[catName].slice(0, 10).map((deal, idx) => (
-                                        <div key={`${deal._id}-${idx}`} className="w-[145px] flex-shrink-0 snap-start">
-                                        <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
-                                          </div>
+                                            <div key={`${deal._id}-${idx}`} className="w-[145px] flex-shrink-0 snap-start">
+                                                <GridProductCard deal={deal} onClick={() => handleDealClick(deal)} themeCardClass={currentTheme.card} onToast={triggerToast} />
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
-                            ))
-                        )}
+                            ));
+                        })()}
                     </div>
                ) : null}
 

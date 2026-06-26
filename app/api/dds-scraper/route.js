@@ -34,7 +34,9 @@ export async function GET(req) {
     let extractedOffers = [];
 
     // 🚀 SPECIAL SHOPSY / FLIPKART DIRECT LINK HANDLER
-    if (targetUrl.includes("shopsy.in") || targetUrl.includes("flipkart.com") || targetUrl.includes("amazon.in")) {
+    // Naya logic: "shopsy" aur "amazon" universally search karega
+    const lowerUrl = targetUrl.toLowerCase();
+    if (lowerUrl.includes("shopsy") || lowerUrl.includes("flipkart") || lowerUrl.includes("amazon") || lowerUrl.includes("amzn")) {
         debugLog.push("Direct Store Link detected. Using Direct Scrape Engine.");
         
         // 1. Offer Price Extraction (Already working, but making it robust)
@@ -200,26 +202,19 @@ export async function GET(req) {
         try {
            // 1. 🟠 AMAZON CLEANER (Extract ASIN & Handle Group/Search Pages)
             if (bestRawLink.match(/amazon\.|amzn\./i)) {
-                // Amazon ke URL se standard ASIN (10 digit code) nikalna
-                const asinMatch = bestRawLink.match(/\/(?:dp|gp\/product|exec\/obidos\/asin)\/([A-Z0-9]{10})/i);
-                
-                if (asinMatch) {
-                    // Agar Single Product (ASIN) hai, toh ekdum clean link banega.
-                    bestRawLink = `https://www.amazon.in/dp/${asinMatch[1]}`;
-                } else {
-                    // Fallback: Agar Group ya Search page hai (Amazon /s/ ya /deal/ type links)
-                    const urlObj = new URL(bestRawLink);
-                    
-                    // Kachra folders delete karo (dealsmagnet.com, pricehistory_app)
-                    let cleanPath = urlObj.pathname.split('/').filter(p => !p.includes('.com') && !p.includes('.in') && p !== 'pricehistory_app').join('/');
-                    if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
-
-                    // 🛑 THE FIX: Saare parameters delete karne ki jagah, sirf Affiliate aur Tracking IDs ko uda do!
-                    // Isse asli search keywords (jaise ?k=shoes ya ?hidden-keywords) bache rahenge.
-                    ['tag', 'linkCode', 'camp', 'creative', 'ascsubtag', 'utm_source', 'utm_medium', 'utm_campaign', 'aff_id', 'click_id'].forEach(p => urlObj.searchParams.delete(p));
-
-                    // Naya, clean URL wapas bana lo
-                    bestRawLink = `${urlObj.origin}${cleanPath}${urlObj.search}`;
+                // Agar target URL Shopsy ka nahi tha tabhi Amazon wala cleaner chalao, otherwise clash ho sakta hai
+                if (!lowerUrl.includes("shopsy")) {
+                   const asinMatch = bestRawLink.match(/\/(?:dp|gp\/product|exec\/obidos\/asin)\/([A-Z0-9]{10})/i);
+                   
+                   if (asinMatch) {
+                       bestRawLink = `https://www.amazon.in/dp/${asinMatch[1]}`;
+                   } else {
+                       const urlObj = new URL(bestRawLink);
+                       let cleanPath = urlObj.pathname.split('/').filter(p => !p.includes('.com') && !p.includes('.in') && p !== 'pricehistory_app').join('/');
+                       if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+                       ['tag', 'linkCode', 'camp', 'creative', 'ascsubtag', 'utm_source', 'utm_medium', 'utm_campaign', 'aff_id', 'click_id'].forEach(p => urlObj.searchParams.delete(p));
+                       bestRawLink = `${urlObj.origin}${cleanPath}${urlObj.search}`;
+                   }
                 }
             }
             

@@ -213,7 +213,7 @@ function AccountContent() {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 relative pb-20">
       
       {toastMessage && (
-        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-sm z-[300] flex items-center gap-2 animate-[bounce_0.3s_ease-in-out]">
+        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] sm:w-auto sm:max-w-md bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl font-semibold text-sm z-[300] flex items-center justify-center sm:justify-start gap-3 animate-[bounce_0.3s_ease-in-out] leading-relaxed text-center sm:text-left border border-slate-700/50">
           {toastMessage}
         </div>
       )}
@@ -279,7 +279,7 @@ function AccountContent() {
             
             {/* Dynamic Phone Input */}
             <div className={`flex justify-between items-center bg-blue-50/50 p-1.5 px-3 rounded-lg border border-blue-100 transition-all ${isEditingPhone ? 'ring-2 ring-blue-400' : ''}`}>
-               <span className="text-[9px] font-extrabold text-blue-600 whitespace-nowrap mr-2">Phone Number</span>
+               <span className="text-[9px] font-extrabold text-blue-600 whitespace-nowrap mr-2">Ph. Number</span>
                {isEditingPhone ? (
                  <input 
                    type="text" 
@@ -330,7 +330,7 @@ function AccountContent() {
               </div>
             </div>
             <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-              <svg className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7-7"></path></svg>
+              <svg className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg>
             </div>
           </button>
 
@@ -348,7 +348,7 @@ function AccountContent() {
               </div>
             </div>
             <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-orange-50 group-hover:text-orange-600 transition-colors">
-              <svg className="w-4 h-4 text-slate-400 group-hover:text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7-7"></path></svg>
+              <svg className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg>
             </div>
           </button>
 
@@ -365,7 +365,7 @@ function AccountContent() {
               </div>
             </div>
             <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-              <svg className="w-4 h-4 text-slate-400 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7-7"></path></svg>
+              <svg className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg>
             </div>
           </button>
 

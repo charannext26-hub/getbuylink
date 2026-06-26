@@ -61,15 +61,19 @@ async function expandAndCleanUrl(shortUrl) {
     }
 }
 
-// 🏢 STORE DETECTOR LOGIC
-function detectStore(link) {
-    if (!link) return "Unknown";
-    const lowLink = link.toLowerCase();
-    if (lowLink.includes("amazon")) return "Amazon";
-    if (lowLink.includes("flipkart")) return "Flipkart";
-    if (lowLink.includes("shopsy")) return "Shopsy";
-    if (lowLink.includes("myntra")) return "Myntra";
-    if (lowLink.includes("ajio")) return "Ajio";
+// 🏢 STORE DETECTOR LOGIC (Smart Version)
+// Hum isme raw/expanded link ke sath sath user ka diya hua original link bhi check karenge
+function detectStore(link, origLink = "") {
+    const lowLink = (link || "").toLowerCase();
+    const lowOrig = (origLink || "").toLowerCase();
+    
+    // Sabse pehle original link check karo kyunki wo sabse accurate hint deta hai
+    if (lowOrig.includes("shopsy") || lowLink.includes("shopsy")) return "Shopsy";
+    if (lowOrig.includes("amazon") || lowOrig.includes("amzn") || lowLink.includes("amazon") || lowLink.includes("amzn")) return "Amazon";
+    if (lowOrig.includes("flipkart") || lowLink.includes("flipkart")) return "Flipkart";
+    if (lowOrig.includes("myntra") || lowLink.includes("myntra")) return "Myntra";
+    if (lowOrig.includes("ajio") || lowLink.includes("ajio")) return "Ajio";
+    
     return "Unknown";
 }
 
@@ -124,8 +128,8 @@ export async function POST(req) {
         finalRawLink = scrapedData.bestRawLink;
     }
 
-    // 🔥 Exact Store Name Logic
-    const determinedStore = detectStore(finalRawLink);
+    // 🔥 Exact Store Name Logic (Passing both links for high accuracy)
+    const determinedStore = detectStore(finalRawLink, originalUrl);
 
     const scrapedDescription = isDDS && scrapedData.description ? scrapedData.description.join(" ") : "";
     const extraOffers = isDDS && scrapedData.extraOffers ? scrapedData.extraOffers.join(", ") : "";
