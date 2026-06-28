@@ -182,6 +182,10 @@ export async function POST(req) {
         }
     }
 
+    // 🚀 FALLBACK IMAGE: Agar image nahi aayi toh ek dummy deal image daal do
+    const fallbackImage = "https://placehold.co/600x400/indigo/white?text=Mega+Deal";
+    const finalImage = scrapedData.image && scrapedData.image.length > 5 ? scrapedData.image : fallbackImage;
+
     // 🚀 SAVE TO DB (Source & Creator locked to "telegram" for Frontend)
     const newDeal = await GlobalDeal.create({
       creatorId: "telegram_bot", // 🔒 Spoofing Telegram
@@ -190,7 +194,7 @@ export async function POST(req) {
       rawAffiliateLink: finalRawLink, // 🔥 100% CLEAN LINK GOES HERE
       store: determinedStore !== "Unknown" ? determinedStore : "Unknown", 
       title: aiData.catchyTitle,
-      image: scrapedData.image,
+      image: finalImage, // 🔥 FIX: Ab kabhi 'Path image is required' wala error nahi aayega
       category: aiData.category, 
       price: aiData.price, 
       mrp: aiData.mrp, 
