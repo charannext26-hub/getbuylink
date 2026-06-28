@@ -32,11 +32,7 @@ function cleanProductUrl(rawUrl) {
 
 // 🎯 STORE ROUTER DICTIONARY (Sankmo Configuration)
 const sankmoCampaigns = {
-    "Flipkart": "83956760",
-    "Myntra": "16407658",
-    "Ajio": "91411482",
-    "Shopsy": "78454597",
-    "Dot&Key": "80483577"
+    "Koparo": "99516122"
 };
 const SANKMO_PUB_ID = "xPH2IO4";
 

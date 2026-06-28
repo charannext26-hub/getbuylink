@@ -21,7 +21,7 @@ function cleanProductUrl(rawUrl) {
 
 // 🎯 STORE ROUTER DICTIONARY (Sankmo Configuration)
 const sankmoCampaigns = {
-    "Dot&Key": "80483577" 
+    "Koparo": "99516122" 
 };
 const SANKMO_PUB_ID = "xPH2IO4";
 // Apni asli site ka base URL yahan rakhein

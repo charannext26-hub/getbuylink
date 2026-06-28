@@ -34,10 +34,7 @@ function cleanProductUrl(rawUrl) {
 
 // 🎯 CASE-INSENSITIVE STORE DICTIONARY (Sankmo Configuration)
 const sankmoCampaigns = {
-    "flipkart": "83956760",
-    "myntra": "16407658",
-    "ajio": "91411482",
-    "dot&key": "80483577"
+    "Koparo": "99516122"
 };
 const SANKMO_PUB_ID = "xPH2IO4";
 
