@@ -604,26 +604,20 @@ function AddlinkContent() {
            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
              <ul className="space-y-4">
                <li className="flex items-start gap-3">
-                 <span className="text-emerald-500 mt-0.5 text-lg">✅</span>
+                 <span className="text-emerald-500 mt-0.5 text-lg">⚡</span>
                  <div>
                    <p className="text-sm font-bold text-slate-800">Use Coupons & Sale Timers</p>
                    <p className="text-xs text-slate-500 font-medium leading-relaxed">Adding a coupon code and a live countdown timer creates FOMO (Fear Of Missing Out) and pushes your audience to buy immediately before the offer expires.</p>
                  </div>
                </li>
                <li className="flex items-start gap-3">
-                 <span className="text-blue-500 mt-0.5 text-lg">💡</span>
+                 <span className="text-blue-500 mt-0.5 text-lg">👆</span>
                  <div>
                    <p className="text-sm font-bold text-slate-800">The "Hidden Price" Strategy</p>
                    <p className="text-xs text-slate-500 font-medium leading-relaxed">We strongly recommend <strong>NOT</strong> adding the exact price here. This builds curiosity, forcing users to click your link to check the price, which successfully drops your affiliate cookie in their browser!</p>
                  </div>
                </li>
-               <li className="flex items-start gap-3">
-                 <span className="text-orange-500 mt-0.5 text-lg">🔥</span>
-                 <div>
-                   <p className="text-sm font-bold text-slate-800">Custom Amazon Commission</p>
-                   <p className="text-xs text-slate-500 font-medium leading-relaxed">Not happy with the standard platform commission for Amazon? Go to your <strong>Account</strong> page and save your personal Amazon Associates Tag to convert any Amazon link into your own direct affiliate link.</p>
-                 </div>
-               </li>
+               
              </ul>
            </div>
         </div>

@@ -79,14 +79,21 @@ export async function GET(req) {
     else {
         const pageText = $('body').text().replace(/\s+/g, ' '); 
 
+        // 💰 1. SMART DOM-BASED PRICE & MRP EXTRACTION
         const domMrp = $('del, s, strike, [class*="strike"], [class*="old-price"]').first().text().replace(/[^0-9]/g, '');
         if (domMrp && domMrp.length > 1) mrp = domMrp;
 
-        const priceMatch = pageText.match(/(?:offer price|deal price|price)[\s:]*₹?\s*([0-9,]+)/i) || pageText.match(/₹\s*([0-9,]+)/i);
+        // 🔥 FIX: Offer Price Extraction for DealOfTheDayIndia
+        // Kabhi-kabhi price direct bold ya specific classes me hota hai
+        const priceMatch = pageText.match(/(?:offer price|deal price|price)[\s:]*₹?\s*([0-9,]+)/i) || 
+                           pageText.match(/₹\s*([0-9,]+)\s*(?:instead of|only)/i) || 
+                           pageText.match(/price of ₹\s*([0-9,]+)/i) ||
+                           pageText.match(/₹\s*([0-9,]+)/i); 
+                           
         if (priceMatch) offerPrice = priceMatch[1].replace(/,/g, '');
 
         if (!mrp) {
-            const mrpMatch = pageText.match(/mrp[\s:]*₹?\s*([0-9,]+)/i) || pageText.match(/₹([0-9,]+)\s*\(Save/i) || pageText.match(/(?:original price|regular price)[\s:]*₹?\s*([0-9,]+)/i);
+            const mrpMatch = pageText.match(/mrp[\s:]*₹?\s*([0-9,]+)/i) || pageText.match(/₹([0-9,]+)\s*\(Save/i) || pageText.match(/(?:original price|regular price|standard price)[\s:]*₹?\s*([0-9,]+)/i);
             if (mrpMatch) mrp = mrpMatch[1].replace(/,/g, '');
         }
 
@@ -125,7 +132,10 @@ export async function GET(req) {
                    lTxt.includes("reach out to us") || lTxt.includes("additional cost") ||
                    lTxt.includes("merchant's site") || lTxt.includes("subject to change") ||
                    lTxt.includes("disclaimer") || lTxt.includes("offertag - why us?") ||
-                   lTxt.includes("other quicklinks") || lTxt.includes("disclosure");
+                   lTxt.includes("other quicklinks") || lTxt.includes("disclosure") ||
+                   // 🔥 NEW: DealOfTheDayIndia junk filters
+                   lTxt.includes("deals new deals today") || lTxt.includes("great indian sale") ||
+                   lTxt.includes("big billion days") || lTxt.includes("flipkart sale today");
         };
 
         $('div[class*="desc"] p, div.description, p, ul li').each((i, el) => {
@@ -153,7 +163,7 @@ export async function GET(req) {
             $('h1, h2, h3, div[class*="title"], div[class*="name"]').each((i, el) => {
                 const txt = $(el).text().trim();
                 const lTxt = txt.toLowerCase();
-                const isJunkTitle = lTxt.includes("digit code") || lTxt.includes("verify") || lTxt.includes("similar") || lTxt.includes("roobai") || lTxt.includes("offertag");
+                const isJunkTitle = lTxt.includes("digit code") || lTxt.includes("verify") || lTxt.includes("similar") || lTxt.includes("roobai") || lTxt.includes("offertag") || lTxt.includes("deal of the day");
                 
                 if (txt.length > 15 && txt.length < 150 && !isJunkTitle) {
                     if (!foundTitle) foundTitle = txt; 
@@ -165,7 +175,7 @@ export async function GET(req) {
         if (!image || image.includes("logo") || image.includes("favicon") || image.includes("avatar")) {
             $('img').each((i, el) => {
                 const src = $(el).attr('src');
-                if (src && (src.includes('cdn.') || src.includes('prd') || src.includes('product') || src.includes('deal') || src.includes('storage')) && !src.includes('logo') && !src.includes('icon') && !src.includes('avatar')) {
+                if (src && (src.includes('cdn.') || src.includes('prd') || src.includes('product') || src.includes('deal') || src.includes('storage') || src.includes('uploads')) && !src.includes('logo') && !src.includes('icon') && !src.includes('avatar')) {
                     image = src.startsWith('//') ? 'https:' + src : (src.startsWith('/') ? new URL(targetUrl).origin + src : src);
                     return false; 
                 }
@@ -180,12 +190,13 @@ export async function GET(req) {
         $('a').each((i, el) => {
             const href = $(el).attr('href');
             const btnText = $(el).text().toLowerCase();
-            // 🚀 FIX: ajiio.in added here!
+            
             if (href && (
                 href.includes('amazon.in') || href.includes('amzn.to') ||
                 href.includes('flipkart.com') || href.includes('fkrt.it') || href.includes('fkrt.cc') ||
                 href.includes('shopsy.in') || href.includes('myntra.com') || href.includes('myntr.it') ||
                 href.includes('ajio.com') || href.includes('ajiio.in') || href.includes('earnkaro.com') || href.includes('linkredirect.in') ||
+                href.includes('go.php') || // 🔥 FIX: Catching dealofthedayindia's go.php links
                 btnText.includes('buy') || btnText.includes('shop now') || btnText.includes('get deal')
             )) {
                 if (!href.includes('whatsapp.com') && !href.includes('telegram.me') && !href.includes('facebook.com')) {
@@ -202,7 +213,6 @@ export async function GET(req) {
             if (base64Match) {
                  try {
                      const decodedString = Buffer.from(base64Match[1], 'base64').toString('utf-8');
-                     // 🚀 FIX: ajio.com and ajiio.in added to Regex!
                      const extractedLinkMatch = decodedString.match(/(https?:\/\/(?:www\.|dl\.)?(?:amazon\.in|amzn\.to|flipkart\.com|myntra\.com|ajio\.com|ajiio\.in)[\S]+)/i);
                      if (extractedLinkMatch) bestRawLink = extractedLinkMatch[1];
                  } catch (e) {}
@@ -213,7 +223,7 @@ export async function GET(req) {
             bestRawLink = directHrefLink.startsWith('/') ? new URL(targetUrl).origin + directHrefLink : directHrefLink;
         }
 
-        // 🚀 UNIVERSAL REDIRECT EXPANDER (Added ajiio.in)
+        // 🚀 UNIVERSAL REDIRECT EXPANDER 
         if (bestRawLink && (
             bestRawLink.includes('/buy?') || bestRawLink.includes('fkrt.it') || bestRawLink.includes('fkrt.cc') || 
             bestRawLink.includes('myntr.it') || bestRawLink.includes('linkredirect.in') || 
@@ -249,6 +259,16 @@ export async function GET(req) {
     } 
 
     // 🧹 BULLETPROOF URL CLEANER
+    
+    // 🔥 NEW: Extract actual link from go.php (DealOfTheDayIndia)
+    if (bestRawLink && bestRawLink.includes("go.php?")) {
+        const goParts = bestRawLink.split('go.php?');
+        if (goParts.length > 1) {
+            // Decoding the URL part after 'go.php?'
+            bestRawLink = decodeURIComponent(goParts[1]); 
+        }
+    }
+
     if (bestRawLink && (bestRawLink.includes("dl=http") || bestRawLink.includes("url=http") || bestRawLink.includes("dl=https"))) {
         try {
             const parsedUrl = new URL(bestRawLink);
@@ -280,12 +300,11 @@ export async function GET(req) {
                    }
                 }
             }
-            // FLIPKART CLEANER (🚀 FIX: Replace junk with 'product' instead of deleting)
+            // FLIPKART CLEANER
             else if (bestRawLink.includes("flipkart.com")) {
                 const urlObj = new URL(bestRawLink);
                 const pid = urlObj.searchParams.get("pid");
                 
-                // Kachra path hatao aur "product" likh do taaki Flipkart ka server error na de
                 let cleanPathParts = urlObj.pathname.split('/');
                 for (let j = 0; j < cleanPathParts.length; j++) {
                     if (isJunkPath(cleanPathParts[j])) {
@@ -298,17 +317,23 @@ export async function GET(req) {
                 if (pid) {
                     bestRawLink = `https://www.flipkart.com${cleanPath}?pid=${pid}`;
                 } else {
-                    ['affid', 'cmpid', 'affExtParam1', 'affExtParam2', 'otracker', 'sid'].forEach(p => urlObj.searchParams.delete(p));
+                    ['affid', 'cmpid', 'affExtParam1', 'affExtParam2', 'otracker', 'sid', 'pageUID'].forEach(p => urlObj.searchParams.delete(p));
                     bestRawLink = `https://www.flipkart.com${cleanPath}${urlObj.search}`;
                 }
             }
             // MYNTRA / AJIO / OTHERS
             else {
+                // 🔥 CLEANING LONG URLs (like Myntra/Ajio with tracking)
+                bestRawLink = bestRawLink.replace(/\+/g, ' '); // Replacing + with spaces for cleaner names
                 const urlObj = new URL(bestRawLink);
                 let cleanPath = urlObj.pathname.split('/').filter(p => !isJunkPath(p)).join('/');
                 if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
 
-                ['utm_source', 'utm_medium', 'utm_campaign', 'aff_id', 'click_id'].forEach(p => urlObj.searchParams.delete(p));
+                // Stripping out ALL UTM, Affiliate and Tracking parameters
+                // 🔥 Added all possible variations of affiliate and click IDs
+                const paramsToRemove = ['utm_source', 'utm_medium', 'utm_campaign', 'aff_id', 'affid', 'click_id', 'clickid', 'af_siteid', 'product_name', 'campaign_id', 'af_click_lookback', 'host_internal', 'is_retargeting', 'pid', 'af_dp', 'af_xp', 'af_force_deeplink', 'deep_link_value', 'c', 'subid', 'subid1', 'subid2', 'affExtParam1', 'affExtParam2'];
+                paramsToRemove.forEach(p => urlObj.searchParams.delete(p));
+                
                 bestRawLink = `${urlObj.origin}${cleanPath}${urlObj.search}`;
             }
         } catch (e) {
