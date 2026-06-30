@@ -15,9 +15,17 @@ const BROAD_CATEGORIES = [
 
 function formatPrice(rawPrice) {
   if (!rawPrice) return "";
-  let cleanStr = String(rawPrice).replace(/rs\.?|rupees|price|₹/gi, "").trim();
-  const numberMatch = cleanStr.match(/[\d,]+(\.\d+)?/);
-  if (numberMatch) return `₹${numberMatch[0]}`; 
+  let cleanStr = String(rawPrice).replace(/rs\.?|rupees|price|₹|,/gi, "").trim();
+  const numberMatch = cleanStr.match(/\d+(\.\d+)?/);
+  
+  if (numberMatch) {
+      const numValue = parseInt(numberMatch[0], 10);
+      // 🛑 SANITY CHECK: Agar price 5 Lakh se zyada hai, toh wo pakka kachra string ya phone number hai!
+      if (numValue > 500000) return ""; 
+      
+      // Number ko wapas proper Indian comma format me convert kar do (e.g., 2,345)
+      return `₹${numValue.toLocaleString('en-IN')}`; 
+  }
   return ""; 
 }
 
@@ -108,8 +116,18 @@ export async function POST(req) {
 
     // 🔥 THE URL WASHER: Raw link nikalna aur usko turant saaf karna
     const rawLinkFromDDS = scrapedData.bestRawLink && scrapedData.bestRawLink !== "Link still hidden." ? scrapedData.bestRawLink : targetUrl;
-    const finalRawLink = await expandAndCleanUrl(rawLinkFromDDS); // 🚀 Cleaning process applied here!
+    const finalRawLink = await expandAndCleanUrl(rawLinkFromDDS); 
+
+    // 🛑 THE ULTIMATE GATEKEEPER: Deal Sites Blocker
+    const junkDomains = ['dealsmagnet.com', 'dealsspy.in', 'offertag.in', 'roobai.com', 'dealofthedayindia.com', 'earnkaro.com', 'linkredirect.in', 'cuelinks.com'];
+    const isJunkLink = junkDomains.some(domain => finalRawLink.toLowerCase().includes(domain));
     
+    if (isJunkLink || !finalRawLink.startsWith('http')) {
+        console.log(`🚫 Gatekeeper Blocked: Raw link stuck on competitor domain -> ${finalRawLink}`);
+        // Status 200 return karenge taaki webhook crash na ho, par deal save nahi hogi
+        return NextResponse.json({ status: "blocked_competitor_link", reason: "Pure store link not found" }, { status: 200 });
+    }
+
     const determinedStore = detectStore(finalRawLink);
     
     const scrapedDescription = scrapedData.description ? scrapedData.description.join(" ") : "";
@@ -204,6 +222,33 @@ export async function POST(req) {
       description: aiData.description, 
       saleEndTime: aiData.saleEndTime 
     });
+
+    // 🚀 THE MAGIC PUSH: DB me save hote hi Hostinger ko data bhej do
+    try {
+        console.log("Pushing deal to Hostinger Telegram Poster...");
+        await fetch("https://cb.metrovatech.com/telegram-poster.php", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "x-secret-key": "FavyLinkPro2026" // Security ke liye taaki koi aur hit na kar paye
+            },
+            body: JSON.stringify({
+                title: newDeal.title,
+                price: newDeal.price,
+                mrp: newDeal.mrp,
+                discount: newDeal.discountPercent,
+                coupon: newDeal.couponCode,
+                description: newDeal.description,
+                rawLink: newDeal.rawAffiliateLink,
+                image: newDeal.image,
+                store: newDeal.store,
+                extraOffers: extraOffers // Scraper se nikle hue bank offers
+            })
+        });
+        console.log("✅ Successfully pushed to Hostinger!");
+    } catch (pushErr) {
+        console.error("⚠️ Failed to push to Hostinger:", pushErr.message);
+    }
 
     console.log("✅ Auto Deal Saved Cleanly! Store:", newDeal.store);
     return NextResponse.json({ status: "success", dealId: newDeal._id }, { status: 200 });
