@@ -171,11 +171,12 @@ export async function POST(req) {
             3. price: Extract the final price.
             4. mrp: Extract original MRP.
             5. discountPercent: Extract discount (e.g. "50%").
-            6. couponCode: STRICTLY extract ONLY exact alphanumeric promo codes (e.g., "SAVE50"). DO NOT put sentences like "Apply 50% coupon" or "₹400 off with HDFC" here. Return "" if no exact code exists.
-            7. description: Write 2 short paragraphs. Then, add exactly "Why buy this?" followed by 3-4 bullet points. IMPORTANT: If there are bank offers, card offers, or generic 'Apply X% off' coupons, add them exactly as the VERY LAST bullet point in bold. Ignore irrelevant text.
-            8. saleEndTime: ISO 8601 format if expiry is present, else null.
+            6. couponCode: STRICTLY extract ONLY exact alphanumeric promo codes. Return "" if none.
+            7. cleanBankOffers: Extract ONLY genuine bank/card discounts. STRICTLY REMOVE competitor site names like "DealsSpy", "OfferTag". Return "" if no real bank offer exists.
+            8. description: Write 3 VERY SHORT plain-text bullet points highlighting product features. DO NOT include bank offers, coupons, or competitor names here. DO NOT use markdown like asterisks (**).
+            9. saleEndTime: ISO 8601 format if expiry is present, else null.
             
-            Respond ONLY with a valid JSON object matching these 8 keys.
+            Respond ONLY with a valid JSON object matching these exactly 9 keys.
           `;
 
           const result = await model.generateContent(prompt);
@@ -184,15 +185,18 @@ export async function POST(req) {
           aiData.catchyTitle = parsedAiData.catchyTitle || scrapedData.title;
           aiData.category = BROAD_CATEGORIES.includes(parsedAiData.category) ? parsedAiData.category : guessCategory(scrapedData.title); 
           
-          // 🛡️ DATA LOCK (Priority to DDS Scraper data)
+          // 🛡️ DATA LOCK
           aiData.price = formatPrice(scrapedData.offerPrice) || formatPrice(parsedAiData.price);
           aiData.mrp = formatPrice(scrapedData.mrp) || formatPrice(parsedAiData.mrp);
           aiData.discountPercent = formatDiscount(scrapedData.discountPercentage) || formatDiscount(parsedAiData.discountPercent);
           
           aiData.couponCode = parsedAiData.couponCode || "";
-          aiData.description = parsedAiData.description || aiData.description;
+          aiData.description = parsedAiData.description || "";
           aiData.saleEndTime = parsedAiData.saleEndTime || null;
           
+          // 🔥 NEW: Clean Bank Offers extracted separately
+          aiData.cleanBankOffers = parsedAiData.cleanBankOffers || "";
+
           console.log(`✅ Auto-Fetcher AI Parsed Successfully!`);
           break; 
         } catch (error) {
@@ -200,37 +204,42 @@ export async function POST(req) {
         }
     }
 
-    // 🚀 FALLBACK IMAGE: Agar image nahi aayi toh ek dummy deal image daal do
+    // 🔥 SMART MERGE FOR BIO PAGE: Bank Offers ko Description me merge kar do taaki DB schema change na karna pade
+    let finalDescriptionForDB = aiData.description;
+    if (aiData.cleanBankOffers) {
+        finalDescriptionForDB += "\n\n**Bank Offers:** " . aiData.cleanBankOffers;
+    }
+
     const fallbackImage = "https://placehold.co/600x400/indigo/white?text=Mega+Deal";
     const finalImage = scrapedData.image && scrapedData.image.length > 5 ? scrapedData.image : fallbackImage;
 
-    // 🚀 SAVE TO DB (Source & Creator locked to "telegram" for Frontend)
+    // 🚀 SAVE TO DB
     const newDeal = await GlobalDeal.create({
-      creatorId: "telegram_bot", // 🔒 Spoofing Telegram
+      creatorId: "telegram_bot", 
       originalUrl: targetUrl, 
       expandedUrl: targetUrl, 
-      rawAffiliateLink: finalRawLink, // 🔥 100% CLEAN LINK GOES HERE
+      rawAffiliateLink: finalRawLink, 
       store: determinedStore !== "Unknown" ? determinedStore : "Unknown", 
       title: aiData.catchyTitle,
-      image: finalImage, // 🔥 FIX: Ab kabhi 'Path image is required' wala error nahi aayega
+      image: finalImage,
       category: aiData.category, 
       price: aiData.price, 
       mrp: aiData.mrp, 
       discountPercent: aiData.discountPercent,
       couponCode: aiData.couponCode,
-      source: "telegram", // 🔒 Spoofing Telegram
-      description: aiData.description, 
+      source: "telegram", 
+      description: finalDescriptionForDB, // 👈 DB me merged description jayega (Bio Page ke liye)
       saleEndTime: aiData.saleEndTime 
     });
 
-    // 🚀 THE MAGIC PUSH: DB me save hote hi Hostinger ko data bhej do
+    // 🚀 THE MAGIC PUSH TO HOSTINGER
     try {
         console.log("Pushing deal to Hostinger Telegram Poster...");
         await fetch("https://cb.metrovatech.com/telegram-poster.php", {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json",
-                "x-secret-key": "FavyLinkPro2026" // Security ke liye taaki koi aur hit na kar paye
+                "x-secret-key": "FavyLinkPro2026"
             },
             body: JSON.stringify({
                 title: newDeal.title,
@@ -238,11 +247,11 @@ export async function POST(req) {
                 mrp: newDeal.mrp,
                 discount: newDeal.discountPercent,
                 coupon: newDeal.couponCode,
-                description: newDeal.description,
+                description: aiData.description, // 👈 Hostinger par ONLY bullets jayenge
+                extraOffers: aiData.cleanBankOffers, // 👈 Hostinger par Bank Offers alag se jayenge (Price ke niche lagne ke liye)
                 rawLink: newDeal.rawAffiliateLink,
                 image: newDeal.image,
-                store: newDeal.store,
-                extraOffers: extraOffers // Scraper se nikle hue bank offers
+                store: newDeal.store
             })
         });
         console.log("✅ Successfully pushed to Hostinger!");
