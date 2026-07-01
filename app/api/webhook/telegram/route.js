@@ -16,9 +16,15 @@ const BROAD_CATEGORIES = [
 
 function formatPrice(rawPrice) {
   if (!rawPrice) return "";
-  let cleanStr = String(rawPrice).replace(/rs\.?|rupees|price|₹/gi, "").trim();
-  const numberMatch = cleanStr.match(/[\d,]+(\.\d+)?/);
-  if (numberMatch) return `₹${numberMatch[0]}`; 
+  let cleanStr = String(rawPrice).replace(/rs\.?|rupees|price|₹|,/gi, "").trim();
+  const numberMatch = cleanStr.match(/\d+(\.\d+)?/);
+  
+  if (numberMatch) {
+      const numValue = parseInt(numberMatch[0], 10);
+      // 🛑 SANITY CHECK
+      if (numValue > 500000) return ""; 
+      return `₹${numValue.toLocaleString('en-IN')}`; 
+  }
   return ""; 
 }
 
@@ -62,12 +68,10 @@ async function expandAndCleanUrl(shortUrl) {
 }
 
 // 🏢 STORE DETECTOR LOGIC (Smart Version)
-// Hum isme raw/expanded link ke sath sath user ka diya hua original link bhi check karenge
 function detectStore(link, origLink = "") {
     const lowLink = (link || "").toLowerCase();
     const lowOrig = (origLink || "").toLowerCase();
     
-    // Sabse pehle original link check karo kyunki wo sabse accurate hint deta hai
     if (lowOrig.includes("shopsy") || lowLink.includes("shopsy")) return "Shopsy";
     if (lowOrig.includes("amazon") || lowOrig.includes("amzn") || lowLink.includes("amazon") || lowLink.includes("amzn")) return "Amazon";
     if (lowOrig.includes("flipkart") || lowLink.includes("flipkart")) return "Flipkart";
@@ -100,7 +104,7 @@ export async function POST(req) {
     let finalMrp = "";
 
     // 🌐 ROUTING
-    if (hostname.includes("dealsmagnet.com") || hostname.includes("dealsspy.in") || hostname.includes("shopsy.in")) {
+    if (hostname.includes("dealsmagnet.com") || hostname.includes("dealsspy.in") || hostname.includes("shopsy.in") || hostname.includes("offertag.in") || hostname.includes("roobai.com") || hostname.includes("dealofthedayindia.com")) {
         console.log("➡️ Routing to DDS Scraper...");
         isDDS = true;
         const protocol = req.headers.get("x-forwarded-proto") || "http";
@@ -128,7 +132,16 @@ export async function POST(req) {
         finalRawLink = scrapedData.bestRawLink;
     }
 
-    // 🔥 Exact Store Name Logic (Passing both links for high accuracy)
+    // 🛑 THE ULTIMATE GATEKEEPER (Junk Domain Blocker)
+    const junkDomains = ['dealsmagnet.com', 'dealsspy.in', 'offertag.in', 'roobai.com', 'dealofthedayindia.com', 'earnkaro.com', 'linkredirect.in', 'cuelinks.com'];
+    const isJunkLink = junkDomains.some(domain => finalRawLink.toLowerCase().includes(domain));
+    
+    if (isJunkLink || !finalRawLink.startsWith('http')) {
+        console.log(`🚫 Gatekeeper Blocked: Raw link stuck on competitor domain -> ${finalRawLink}`);
+        return NextResponse.json({ status: "blocked_competitor_link", reason: "Pure store link not found" }, { status: 200 });
+    }
+
+    // 🔥 Exact Store Name Logic 
     const determinedStore = detectStore(finalRawLink, originalUrl);
 
     const scrapedDescription = isDDS && scrapedData.description ? scrapedData.description.join(" ") : "";
@@ -138,10 +151,10 @@ export async function POST(req) {
       catchyTitle: ogTitle,
       category: guessCategory(text + " " + ogTitle), 
       price: "", mrp: "", discountPercent: "", couponCode: "",
-      description: "An amazing deal!", saleEndTime: null
+      description: "An amazing deal!", saleEndTime: null, cleanBankOffers: ""
     };
 
-    // 🤖 AI BRAIN (With RPM Fallback)
+    // 🤖 AI BRAIN (With RPM Fallback & Array Fix)
     const AI_MODELS = ["gemini-3.1-flash-lite", "gemini-2.5-flash-lite", "gemini-2.5-flash"];
     let aiSuccess = false;
 
@@ -155,7 +168,7 @@ export async function POST(req) {
 
           const currentIsoTime = new Date().toISOString();
 
-          // 🚨 STRICT PROMPT FOR COUPONS & OFFERS
+          // 🚨 ULTRA-STRICT PROMPT (Matching Auto-Fetcher)
           const prompt = `
             Analyze this e-commerce deal.
             TELEGRAM ORIGINAL POST: "${text}"
@@ -170,11 +183,12 @@ export async function POST(req) {
             3. price: Extract the final price.
             4. mrp: Extract original MRP.
             5. discountPercent: Extract discount (e.g. "50%").
-            6. couponCode: STRICTLY extract ONLY exact alphanumeric promo codes (e.g., "SAVE50", "SBI10"). If the text just says "Apply 50% coupon" or "₹400 off with HDFC", DO NOT put it here. Return "" if no exact code exists.
-            7. description: Write 2 short paragraphs. Then, add exactly "Why buy this?" followed by 3-4 bullet points. IMPORTANT: If there are bank offers, card offers, or generic 'Apply X% off' coupons, add them exactly as the VERY LAST bullet point in bold. Ignore irrelevant text.
-            8. saleEndTime: ISO 8601 format if expiry is present, else null.
+            6. couponCode: STRICTLY extract ONLY exact alphanumeric promo codes. Return "" if no exact code exists.
+            7. cleanBankOffers: Extract ONLY genuine bank/card discounts or 'Apply coupon' text. STRICTLY REMOVE competitor site names like "DealsSpy", "OfferTag". Return "" if no real bank offer exists.
+            8. description: Write 2 short paragraphs about the product. Then, add exactly "Why buy this?" followed by 3 short bullet points. DO NOT include bank offers here. **CRITICAL: Return this as a SINGLE STRING, NOT AN ARRAY.**
+            9. saleEndTime: ISO 8601 format if expiry is present, else null.
             
-            Respond ONLY with a valid JSON object matching these 8 keys.
+            Respond ONLY with a valid JSON object matching these exactly 9 keys.
           `;
 
           const result = await model.generateContent(prompt);
@@ -188,8 +202,15 @@ export async function POST(req) {
           aiData.discountPercent = isDDS && scraperDiscount ? formatDiscount(scraperDiscount) : formatDiscount(parsedAiData.discountPercent || scraperDiscount);
           
           aiData.couponCode = parsedAiData.couponCode || "";
-          aiData.description = parsedAiData.description || aiData.description;
           aiData.saleEndTime = parsedAiData.saleEndTime || null;
+          aiData.cleanBankOffers = parsedAiData.cleanBankOffers || "";
+
+          // 🔥 ARRAY FIX: Agar AI galti se Array de de
+          let rawAiDesc = parsedAiData.description || "";
+          if (Array.isArray(rawAiDesc)) {
+              rawAiDesc = rawAiDesc.join("\n\n");
+          }
+          aiData.description = rawAiDesc;
           
           console.log(`✅ AI Parsed Successfully!`);
           aiSuccess = true;
@@ -201,7 +222,22 @@ export async function POST(req) {
 
     if (!mongoose.connection.readyState) await mongoose.connect(process.env.MONGODB_URI);
 
-    // 🚀 SAVE TO DB (Source & Creator locked to "telegram")
+    // 🚀 SMART MERGE & SPLIT ENGINE
+    
+    // 1. DB (Bio Page) Ke Liye: 2 Paragraphs + Bullets + Extra Offers
+    let finalDescriptionForDB = aiData.description;
+    if (aiData.cleanBankOffers) {
+        finalDescriptionForDB += "\n\n**Extra Offers:** " + aiData.cleanBankOffers;
+    }
+
+    // 2. Hostinger (WhatsApp/Telegram) Ke Liye: Sirf Bullets
+    let telegramDescOnlyBullets = aiData.description;
+    const splitKeyword = telegramDescOnlyBullets.match(/Why buy this\?/i);
+    if (splitKeyword) {
+        telegramDescOnlyBullets = telegramDescOnlyBullets.split(splitKeyword[0])[1].trim();
+    }
+
+    // 🚀 SAVE TO DB
     const newDeal = await GlobalDeal.create({
       creatorId: "telegram_bot",
       originalUrl: originalUrl, 
@@ -215,13 +251,49 @@ export async function POST(req) {
       mrp: aiData.mrp, 
       discountPercent: aiData.discountPercent,
       couponCode: aiData.couponCode,
-      source: "telegram",  // 🔒 FRONTEND FIX
-      description: aiData.description, 
+      source: "telegram", 
+      description: finalDescriptionForDB, // 👈 DB me merged content
       saleEndTime: aiData.saleEndTime 
     });
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    // 🛑 STORES TO BLOCK FROM TELEGRAM/WHATSAPP (Hostinger Push)
+    const blockedStoresForPush = ["shopsy", "meesho"]; 
+    const currentStore = (newDeal.store || "").toLowerCase();
+
+    if (blockedStoresForPush.includes(currentStore)) {
+        console.log(`⏭️ Skipped Hostinger Push: Store '${newDeal.store}' is currently blocked for Telegram/WhatsApp.`);
+    } else {
+        // 🚀 THE MAGIC PUSH TO HOSTINGER
+        try {
+            console.log("Pushing Webhook Deal to Hostinger Telegram Poster...");
+            await fetch("https://cb.metrovatech.com/telegram-poster.php", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "x-secret-key": "FavyLinkPro2026" 
+                },
+                body: JSON.stringify({
+                    title: newDeal.title,
+                    price: newDeal.price,
+                    mrp: newDeal.mrp,
+                    discount: newDeal.discountPercent,
+                    coupon: newDeal.couponCode,
+                    description: telegramDescOnlyBullets, 
+                    extraOffers: aiData.cleanBankOffers,  
+                    rawLink: newDeal.rawAffiliateLink,
+                    image: newDeal.image,
+                    store: newDeal.store
+                })
+            });
+            console.log("✅ Successfully pushed Webhook Deal to Hostinger!");
+        } catch (pushErr) {
+            console.error("⚠️ Failed to push Webhook Deal to Hostinger:", pushErr.message);
+        }
+    }
+
+    return NextResponse.json({ success: true, dealId: newDeal._id }, { status: 200 });
   } catch (error) {
+    console.error("❌ Webhook Error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 }); 
   }
 }
