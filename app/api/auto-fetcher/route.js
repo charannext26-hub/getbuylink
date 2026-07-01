@@ -157,7 +157,7 @@ export async function POST(req) {
 
           const currentIsoTime = new Date().toISOString();
 
-          // 🚨 STRICT PROMPT MATCHED WITH TELEGRAM WEBHOOK
+          // 🚨 ULTRA-STRICT PROMPT 
           const prompt = `
             Analyze this e-commerce deal.
             SCRAPED TITLE: "${scrapedData.title}"
@@ -171,9 +171,9 @@ export async function POST(req) {
             3. price: Extract the final price.
             4. mrp: Extract original MRP.
             5. discountPercent: Extract discount (e.g. "50%").
-            6. couponCode: STRICTLY extract ONLY exact alphanumeric promo codes. Return "" if none.
-            7. cleanBankOffers: Extract ONLY genuine bank/card discounts. STRICTLY REMOVE competitor site names like "DealsSpy", "OfferTag". Return "" if no real bank offer exists.
-            8. description: Write 3 VERY SHORT plain-text bullet points highlighting product features. DO NOT include bank offers, coupons, or competitor names here. DO NOT use markdown like asterisks (**).
+            6. couponCode: STRICTLY extract ONLY exact alphanumeric promo codes (e.g., "SAVE50"). Return "" if no exact code exists.
+            7. cleanBankOffers: Extract ONLY genuine bank/card discounts or 'Apply coupon' text. STRICTLY REMOVE competitor site names like "DealsSpy", "OfferTag". Return "" if no real bank offer exists.
+            8. description: Write 2 short paragraphs about the product. Then, add exactly "Why buy this?" followed by 3 short bullet points. DO NOT include bank offers here. **CRITICAL: Return this as a SINGLE STRING, NOT AN ARRAY.**
             9. saleEndTime: ISO 8601 format if expiry is present, else null.
             
             Respond ONLY with a valid JSON object matching these exactly 9 keys.
@@ -185,16 +185,19 @@ export async function POST(req) {
           aiData.catchyTitle = parsedAiData.catchyTitle || scrapedData.title;
           aiData.category = BROAD_CATEGORIES.includes(parsedAiData.category) ? parsedAiData.category : guessCategory(scrapedData.title); 
           
-          // 🛡️ DATA LOCK
+          // 🛡️ DATA LOCK (Priority to DDS Scraper data)
           aiData.price = formatPrice(scrapedData.offerPrice) || formatPrice(parsedAiData.price);
           aiData.mrp = formatPrice(scrapedData.mrp) || formatPrice(parsedAiData.mrp);
           aiData.discountPercent = formatDiscount(scrapedData.discountPercentage) || formatDiscount(parsedAiData.discountPercent);
-          
           aiData.couponCode = parsedAiData.couponCode || "";
-          aiData.description = parsedAiData.description || "";
           aiData.saleEndTime = parsedAiData.saleEndTime || null;
           
-          // 🔥 NEW: Clean Bank Offers extracted separately
+          // 🔥 ARRAY FIX: Agar AI galti se Array de de, toh usko String me convert kar do
+          let rawAiDesc = parsedAiData.description || "";
+          if (Array.isArray(rawAiDesc)) {
+              rawAiDesc = rawAiDesc.join("\n\n");
+          }
+          aiData.description = rawAiDesc;
           aiData.cleanBankOffers = parsedAiData.cleanBankOffers || "";
 
           console.log(`✅ Auto-Fetcher AI Parsed Successfully!`);
@@ -204,16 +207,26 @@ export async function POST(req) {
         }
     }
 
-    // 🔥 SMART MERGE FOR BIO PAGE: Bank Offers ko Description me merge kar do taaki DB schema change na karna pade
+    // 🚀 SMART MERGE & SPLIT ENGINE
+    
+    // 1. DB (Bio Page) Ke Liye: 2 Paragraphs + Bullets + Bank Offers at the bottom
     let finalDescriptionForDB = aiData.description;
     if (aiData.cleanBankOffers) {
-        finalDescriptionForDB += "\n\n**Bank Offers:** " . aiData.cleanBankOffers;
+        finalDescriptionForDB += "\n\n**Extra Offers:** " + aiData.cleanBankOffers;
     }
 
+    // 2. Telegram Ke Liye: Sirf "Why buy this?" ke neeche wale bullets nikal lo (No long paragraphs)
+    let telegramDescOnlyBullets = aiData.description;
+    const splitKeyword = telegramDescOnlyBullets.match(/Why buy this\?/i);
+    if (splitKeyword) {
+        telegramDescOnlyBullets = telegramDescOnlyBullets.split(splitKeyword[0])[1].trim();
+    }
+
+    // 🚀 FALLBACK IMAGE
     const fallbackImage = "https://placehold.co/600x400/indigo/white?text=Mega+Deal";
     const finalImage = scrapedData.image && scrapedData.image.length > 5 ? scrapedData.image : fallbackImage;
 
-    // 🚀 SAVE TO DB
+    // 🚀 SAVE TO DB (Source & Creator locked to "telegram" for Frontend)
     const newDeal = await GlobalDeal.create({
       creatorId: "telegram_bot", 
       originalUrl: targetUrl, 
@@ -228,7 +241,7 @@ export async function POST(req) {
       discountPercent: aiData.discountPercent,
       couponCode: aiData.couponCode,
       source: "telegram", 
-      description: finalDescriptionForDB, // 👈 DB me merged description jayega (Bio Page ke liye)
+      description: finalDescriptionForDB, // 👈 DB me Pura Format Jayega (Bio Page ke liye)
       saleEndTime: aiData.saleEndTime 
     });
 
@@ -239,7 +252,7 @@ export async function POST(req) {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json",
-                "x-secret-key": "FavyLinkPro2026"
+                "x-secret-key": "FavyLinkPro2026" 
             },
             body: JSON.stringify({
                 title: newDeal.title,
@@ -247,8 +260,8 @@ export async function POST(req) {
                 mrp: newDeal.mrp,
                 discount: newDeal.discountPercent,
                 coupon: newDeal.couponCode,
-                description: aiData.description, // 👈 Hostinger par ONLY bullets jayenge
-                extraOffers: aiData.cleanBankOffers, // 👈 Hostinger par Bank Offers alag se jayenge (Price ke niche lagne ke liye)
+                description: telegramDescOnlyBullets, // 👈 Telegram par SIRF Bullets jayenge!
+                extraOffers: aiData.cleanBankOffers,  // 👈 Bank Offers alag se jayenge
                 rawLink: newDeal.rawAffiliateLink,
                 image: newDeal.image,
                 store: newDeal.store
