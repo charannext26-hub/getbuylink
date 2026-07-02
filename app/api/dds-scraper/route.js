@@ -83,8 +83,6 @@ export async function GET(req) {
         const domMrp = $('del, s, strike, [class*="strike"], [class*="old-price"]').first().text().replace(/[^0-9]/g, '');
         if (domMrp && domMrp.length > 1) mrp = domMrp;
 
-        // 🔥 FIX: Offer Price Extraction for DealOfTheDayIndia
-        // Kabhi-kabhi price direct bold ya specific classes me hota hai
         const priceMatch = pageText.match(/(?:offer price|deal price|price)[\s:]*₹?\s*([0-9,]+)/i) || 
                            pageText.match(/₹\s*([0-9,]+)\s*(?:instead of|only)/i) || 
                            pageText.match(/price of ₹\s*([0-9,]+)/i) ||
@@ -105,16 +103,11 @@ export async function GET(req) {
             discount = Math.round(((parseInt(mrp) - parseInt(offerPrice)) / parseInt(mrp)) * 100);
         }
 
-        $('div, span, strong, b, p').each((i, el) => {
-            const txt = $(el).text().trim();
-            const lowerTxt = txt.toLowerCase();
-            if ((lowerTxt.includes("coupon") || lowerTxt.includes("bank cc") || lowerTxt.includes("hdfc") || lowerTxt.includes("sbi") || lowerTxt.includes("discount code")) && txt.length > 5 && txt.length < 120) {
-                extractedOffers.push(txt);
-            }
-        });
-
+        // 🧹 ENHANCED GARBAGE CHECKER
         const checkGarbage = (text) => {
-            const lTxt = text.toLowerCase();
+            const lTxt = text.toLowerCase().trim();
+            if (lTxt === "coupon" || lTxt === "coupons" || lTxt === "offer" || lTxt === "offers" || lTxt === "deal" || lTxt === "deals") return true;
+
             return lTxt.includes("telegram") || lTxt.includes("whatsapp") || 
                    lTxt.includes("download our app") || lTxt.includes("ios app") ||
                    lTxt.includes("shipping details") || lTxt.includes("credit/debit card") || 
@@ -133,14 +126,71 @@ export async function GET(req) {
                    lTxt.includes("merchant's site") || lTxt.includes("subject to change") ||
                    lTxt.includes("disclaimer") || lTxt.includes("offertag - why us?") ||
                    lTxt.includes("other quicklinks") || lTxt.includes("disclosure") ||
-                   // 🔥 NEW: DealOfTheDayIndia junk filters
                    lTxt.includes("deals new deals today") || lTxt.includes("great indian sale") ||
-                   lTxt.includes("big billion days") || lTxt.includes("flipkart sale today");
+                   lTxt.includes("big billion days") || lTxt.includes("flipkart sale today") ||
+                   lTxt.includes("copied") || lTxt.includes("coppied") || 
+                   lTxt.includes("click to copy") || lTxt.includes("tap to copy") || 
+                   lTxt.includes("show coupon") || lTxt.includes("copy code");
         };
 
+        // ========================================================
+        // 🛑 CUSTOM STOP ARRAY FOR 'EXTRA OFFERS' ONLY
+        // Aap yahan site ke specific headings daal sakte hain. 
+        // ========================================================
+        const offerStopKeywords = [
+            "offer details",       // DealsSpy cutoff
+            "join us on",          // DealsMagnet cutoff
+            "product description", // Another site cutoff
+            "similar deals",       // Generic safety
+            "related products",    // Generic safety
+            "you may also like",
+            "more deals"
+        ];
+
+        // 🔥 EXTRA OFFERS EXTRACTION (Independent Smart Cutoff)
+        $('div, span, strong, b, p').each((i, el) => {
+            if (extractedOffers.length >= 4) return false; // 🛑 4 offers milte hi loop completely break
+
+            const txt = $(el).text().trim();
+            const lowerTxt = txt.toLowerCase();
+
+            // 🛑 CUSTOM STOP ENGINE: Agar keyword mila, toh array aage scan karna BURA band kar dega!
+            const shouldStop = offerStopKeywords.some(keyword => lowerTxt.includes(keyword));
+            if (shouldStop) {
+                if (txt.length < 150) { // Ensures it's a heading, not a random long paragraph mentioning the word
+                    return false; // 🔥 Cheerio me 'return false' loop ko hamesha ke liye rok deta hai
+                }
+            }
+
+            if ((lowerTxt.includes("coupon") || lowerTxt.includes("bank cc") || lowerTxt.includes("hdfc") || lowerTxt.includes("sbi") || lowerTxt.includes("discount code") || lowerTxt.includes("cashback")) && txt.length > 8 && txt.length < 120) {
+                if (!checkGarbage(txt)) { 
+                    extractedOffers.push(txt);
+                }
+            }
+        });
+
+        // 🔥 DESCRIPTION EXTRACTION (Offers band hone ke baad bhi ye chalta rahega!)
         $('div[class*="desc"] p, div.description, p, ul li').each((i, el) => {
             let rawText = $(el).text();
             let text = rawText.replace(/\s+/g, ' ').trim(); 
+            let lowerTxt = text.toLowerCase();
+
+            // 🛑 DESCRIPTION STOP SIGNAL: Ye sirf tab rukega jab page ke ekdum aakhir ke sections aayenge
+            if (
+                (lowerTxt.includes("similar") && lowerTxt.includes("deal")) || 
+                (lowerTxt.includes("related") && lowerTxt.includes("product")) ||
+                (lowerTxt.includes("popular") && lowerTxt.includes("deal")) || 
+                (lowerTxt.includes("trending") && lowerTxt.includes("now")) || 
+                lowerTxt === "you may also like" || 
+                lowerTxt === "leave a reply" ||
+                lowerTxt === "comments" || 
+                lowerTxt === "recent posts"
+            ) {
+                if (text.length < 100) {
+                    return false; // 🔥 Break loop completely for description
+                }
+            }
+
             if (text.length > 35 && text.length < 600 && !checkGarbage(text)) {
                 if (!description.includes(text)) description.push(text);
             }
