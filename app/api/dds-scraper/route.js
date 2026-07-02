@@ -364,10 +364,16 @@ export async function GET(req) {
                 let cleanPath = cleanPathParts.join('/');
                 if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
                 
+                // 🛑 NAYA UPDATE: 'sid' ko hatana BAND kar diya, aur 'pwsvid' ko delete list me daal diya!
+                // 'otracker' aur 'otracker1' ko bhi delete karenge kyunki wo faltu tracking hain.
+                ['affid', 'cmpid', 'affExtParam1', 'affExtParam2', 'otracker', 'otracker1', 'pageUID', 'pwsvid', 'srno'].forEach(p => urlObj.searchParams.delete(p));
+                
                 if (pid) {
-                    bestRawLink = `https://www.flipkart.com${cleanPath}?pid=${pid}`;
+                    // Single product page ke liye 'pid' aur 'lid' (agar ho toh) rakhenge
+                    const lid = urlObj.searchParams.get("lid");
+                    bestRawLink = `https://www.flipkart.com${cleanPath}?pid=${pid}` + (lid ? `&lid=${lid}` : '');
                 } else {
-                    ['affid', 'cmpid', 'affExtParam1', 'affExtParam2', 'otracker', 'sid', 'pageUID'].forEach(p => urlObj.searchParams.delete(p));
+                    // Collection pages (/pr?) ke liye baaki bache parameters (jaise sid, offer, p[]) ko safe rakhenge
                     bestRawLink = `https://www.flipkart.com${cleanPath}${urlObj.search}`;
                 }
             }
@@ -380,8 +386,8 @@ export async function GET(req) {
                 if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
 
                 // Stripping out ALL UTM, Affiliate and Tracking parameters
-                // 🔥 Added all possible variations of affiliate and click IDs
-                const paramsToRemove = ['utm_source', 'utm_medium', 'utm_campaign', 'aff_id', 'affid', 'click_id', 'clickid', 'af_siteid', 'product_name', 'campaign_id', 'af_click_lookback', 'host_internal', 'is_retargeting', 'pid', 'af_dp', 'af_xp', 'af_force_deeplink', 'deep_link_value', 'c', 'subid', 'subid1', 'subid2', 'affExtParam1', 'affExtParam2'];
+                // NAYA UPDATE: Yahan bhi pwsvid add kar diya for maximum safety
+                const paramsToRemove = ['utm_source', 'utm_medium', 'utm_campaign', 'aff_id', 'affid', 'click_id', 'clickid', 'af_siteid', 'product_name', 'campaign_id', 'af_click_lookback', 'host_internal', 'is_retargeting', 'pid', 'af_dp', 'af_xp', 'af_force_deeplink', 'deep_link_value', 'c', 'subid', 'subid1', 'subid2', 'affExtParam1', 'affExtParam2', 'pwsvid'];
                 paramsToRemove.forEach(p => urlObj.searchParams.delete(p));
                 
                 bestRawLink = `${urlObj.origin}${cleanPath}${urlObj.search}`;
@@ -407,6 +413,24 @@ export async function GET(req) {
             error: "Unsupported Store", 
             message: "This store is currently blocked as it's not supported by favylink." 
         }, { status: 200 }); // Status 200 isliye taaki webhook error fail na kare.
+    }
+
+    // 🚫 11. MULTI-JUNK IMAGE BLOCKER (Playstore / Promo Image Rejector)
+    const junkImageKeywords = [
+        "playstore.webp",
+        "app-store",
+        "default-product",
+        "no-image"
+    ];
+
+    const isJunkImage = junkImageKeywords.some(junk => image && image.toLowerCase().includes(junk.toLowerCase()));
+
+    if (isJunkImage) {
+        return NextResponse.json({ 
+            success: false, 
+            error: "Junk Image Detected", 
+            message: "This deal was rejected because the site provided a promotional or junk image instead of the real product." 
+        }, { status: 200 }); // Status 200 taaki Vercel/Cron bina crash hue chup-chap skip kar de.
     }
 
     const uniqueOffers = [...new Set(extractedOffers)];
