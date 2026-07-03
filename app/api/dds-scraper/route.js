@@ -433,6 +433,28 @@ export async function GET(req) {
         }, { status: 200 }); // Status 200 taaki Vercel/Cron bina crash hue chup-chap skip kar de.
     }
 
+    // 🚀 HOSTINGER IMAGE MIRROR ENGINE: Image link ko hostinger par bhej kar local link banana
+    if (image && image.startsWith("http")) {
+        try {
+            console.log("Sending image to Hostinger Mirror Engine...");
+            const mirrorUrl = `https://cb.metrovatech.com/image-mirror.php?url=${encodeURIComponent(image)}`;
+            
+            const mirrorRes = await fetch(mirrorUrl, {
+                headers: { "x-secret-key": "FavyLinkPro2026" },
+                signal: AbortSignal.timeout(6000) // 6 second ka timeout backup protecter
+            });
+            
+            const mirrorJson = await mirrorRes.json();
+            if (mirrorJson.success && mirrorJson.localImage) {
+                console.log("✅ Image mirrored successfully to Hostinger!");
+                image = mirrorJson.localImage; // 🔥 Magic: Original URL ki jagah Hostinger ka local URL set ho gaya!
+            }
+        } catch (e) {
+            console.log("⚠️ Image mirror failed, falling back to original url:", e.message);
+            // Agar hostinger down bhi ho jaye, toh deal fail nahi hogi, original image link use ho jayega
+        }
+    }
+
     const uniqueOffers = [...new Set(extractedOffers)];
 
     return NextResponse.json({
