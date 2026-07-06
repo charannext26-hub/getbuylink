@@ -2,7 +2,7 @@
   "name": "FavyLink",
   "short_name": "FavyLink",
   "description": "The Ultimate Creator Affiliate Platform",
-  "start_url": "/",
+  "start_url": "/creators",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",

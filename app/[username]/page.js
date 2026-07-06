@@ -16,7 +16,8 @@ export async function generateMetadata({ params }) {
       await mongoose.connect(process.env.MONGODB_URI);
     }
 
-    const creator = await User.findOne({ username }).select("name bio profileImage username").lean();
+    // 1. .select() me sirf 'image' mangwayein
+    const creator = await User.findOne({ username }).select("name bio image username").lean();
 
     if (!creator) {
       return { 
@@ -27,7 +28,11 @@ export async function generateMetadata({ params }) {
 
     const title = `${creator.name || creator.username}'s Store | FavyLink`;
     const description = creator.bio || "Shop my favorite products, exclusive coupons, and live deals!";
-    const imageUrl = creator.profileImage || "https://favylink.com/logo-avy-black.png";
+    
+    // 2. Yahan creator.image set karein
+    const imageUrl = creator.image && creator.image.startsWith("http") 
+      ? creator.image 
+      : "https://favylink.com/logo-avy-black.png";
 
     return {
       title,

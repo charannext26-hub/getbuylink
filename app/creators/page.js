@@ -434,7 +434,7 @@ function DashboardContent() {
               {/* YOUTUBE/TUTORIAL SLIDER */}
               {platformConfig?.youtubeBanners?.isActive && platformConfig?.youtubeBanners?.videos?.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 px-1">explore favylink</h3>
+                  <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 px-1">favylink exclusive</h3>
                   <div className="flex overflow-x-auto gap-4 pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
                     {platformConfig.youtubeBanners.videos.map((vid, idx) => {
                       const isYoutube = vid.videoUrl && (vid.videoUrl.includes('youtube.com') || vid.videoUrl.includes('youtu.be'));
