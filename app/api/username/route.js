@@ -5,59 +5,63 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
-    // 1. Check karein ki user login hai ya nahi
+    // 1. Check Login Session
     const session = await getServerSession();
-    if (!session) {
+    if (!session || !session.user?.email) {
       return NextResponse.json({ error: "Please login first." }, { status: 401 });
     }
 
-    // 2. 🚨 NAYA: Frontend se bheje gaye ARRAYS pakdein
+    // 2. Extract Data
     const { username, socialHandles, categories } = await req.json();
+    const cleanUsername = username?.toLowerCase().trim();
 
-    // Basic length check
-    if (!username || username.length < 3) {
-      return NextResponse.json({ error: "Username must be at least 3 characters long." }, { status: 400 });
+    // 3. Strict Length Check (Min 6, Max 20)
+    if (!cleanUsername || cleanUsername.length < 6 || cleanUsername.length > 20) {
+      return NextResponse.json({ error: "Username must be exactly between 6 and 20 characters." }, { status: 400 });
     }
 
-    // 3. THE BLACKLIST
-    const blacklist = ["admin", "api", "login", "dashboard", "creators", "settings", "about", "privacy", "home", "search", "explore"];
-    if (blacklist.includes(username.toLowerCase())) {
-      return NextResponse.json({ error: "This username is reserved. Please choose another." }, { status: 400 });
+    // 4. Strict Regex Validation (No underscores or special characters)
+    const regex = /^[a-z0-9]+$/;
+    if (!regex.test(cleanUsername)) {
+      return NextResponse.json({ error: "Username can only contain English letters (a-z) and numbers (0-9)." }, { status: 400 });
     }
 
-    // 4. Strict Regex Validation (Sirf letters, numbers aur underscore)
-    const regex = /^[a-zA-Z0-9_]+$/;
-    if (!regex.test(username)) {
-      return NextResponse.json({ error: "Username can only contain letters, numbers, and underscores (_)." }, { status: 400 });
+    // 5. THE COMPLETE BLACKLIST
+    const blacklist = [
+      "admin", "api", "login", "signup", "campaign", "campaigns", "terms", "term", 
+      "disclosure", "username", "user", "users", "support", "deal", "offer", "cron", 
+      "dashboard", "creators", "creator", "influencer", "settings", "about", 
+      "privacypolicy", "privacy", "home", "search", "explore", "official", "favylink", "system"
+    ];
+    if (blacklist.includes(cleanUsername)) {
+      return NextResponse.json({ error: "This username is reserved by system. Please choose another." }, { status: 400 });
     }
 
-    // 5. Database connect karein
+    // 6. Connect DB
     await mongoose.connect(process.env.MONGODB_URI);
 
-    // 6. Check karein ki kya yeh username taken hai
-    const existingUser = await User.findOne({ username: username.toLowerCase() });
+    // 7. Check Availability in DB
+    const existingUser = await User.findOne({ username: cleanUsername });
     if (existingUser) {
       return NextResponse.json({ error: "This username is already taken! Please try another." }, { status: 400 });
     }
 
-    // 7. 🚨 SMART DB UPDATE PREPARATION
+    // 8. Prepare DB Update
     let setFields = { 
-      username: username.toLowerCase() 
+      username: cleanUsername 
     };
 
-    // Agar user ne categories select ki hain, toh naye 'nicheCategories' field mein daalo
     if (categories && categories.length > 0) {
       setFields.nicheCategories = categories;
     }
 
     let updateOperation = { $set: setFields };
 
-    // Agar user ne social links dale hain, toh array mein push (add) karo
     if (socialHandles && socialHandles.length > 0) {
       updateOperation.$addToSet = { socialHandles: { $each: socialHandles } }; 
     }
 
-    // 8. Final DB Update (Ek hi baar mein sab save)
+    // 9. Final Update in MongoDB
     await User.findOneAndUpdate(
       { email: session.user.email }, 
       updateOperation
