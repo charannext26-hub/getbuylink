@@ -41,18 +41,25 @@ export async function POST(req) {
       // Step D: Filter only Hostinger links (cb.metrovatech.com)
       const hostingerImagesToDelete = imagesToDelete.filter(img => img.includes("cb.metrovatech.com"));
 
-      // Step E: Trigger Hostinger Deletion (Background task)
+      // Step E: Trigger Hostinger Deletion (Vercel Serverless Fix - WAIT for it)
       if (hostingerImagesToDelete.length > 0) {
-        hostingerImagesToDelete.forEach(imageUrl => {
-          fetch('https://cb.metrovatech.com/delete-image.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              url: imageUrl, 
-              secret: process.env.HOSTINGER_SECRET_KEY || "FavylinkSecret123" // Secure Key
-            })
-          }).catch(err => console.log("Hostinger Auto-Delete silent error:", err));
-        });
+        // Promise.all aur await lagana zaroori hai taaki Vercel function ko kill na kare
+        await Promise.all(
+          hostingerImagesToDelete.map(async (imageUrl) => {
+            try {
+              await fetch('https://cb.metrovatech.com/delete-image.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  url: imageUrl, 
+                  secret: process.env.HOSTINGER_SECRET_KEY || "FavylinkSecret123" 
+                })
+              });
+            } catch (err) {
+              console.log("Hostinger Auto-Delete error:", err);
+            }
+          })
+        );
       }
     }
 
@@ -63,21 +70,12 @@ export async function POST(req) {
       { email: email },
       { 
         $set: { 
-          name, 
-          image,
-          bio, 
-          mobileNumber,
-          bioTheme,
-          banners, 
-          socialHandles, 
-          autodeal_active, 
-          autoDealCategories, 
-          amazonTag,
-          salesBoosterActive,
-          isAmazonShortlinkEnabled
+          name, image, bio, mobileNumber, bioTheme, banners, 
+          socialHandles, autodeal_active, autoDealCategories, 
+          amazonTag, salesBoosterActive, isAmazonShortlinkEnabled
         } 
       },
-      { new: true }
+      { returnDocument: 'after' } // 👈 BAAHUBALI FIX: Mongoose ki Red warning hamesha ke liye gayab! (Pehle yahan 'new: true' tha)
     );
 
     return NextResponse.json({ success: true, user: updatedUser });
