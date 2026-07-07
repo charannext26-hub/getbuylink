@@ -33,10 +33,7 @@ function AccountContent() {
   const [username, setUsername] = useState("");
   const [totalEarnings, setTotalEarnings] = useState(0);
 
-  // 👇 NAYA: Mobile Number Edit State
   const [isEditingPhone, setIsEditingPhone] = useState(false);
-
-  // 👇 NAYA: Full Page Drawer State (null, 'storefront', 'amazon')
   const [activeDrawer, setActiveDrawer] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -46,7 +43,7 @@ function AccountContent() {
     mobileNumber: "",
     bioTheme: "minimal", 
     amazonTag: "",
-    isAmazonShortlinkEnabled: false, // 🚀 Toggle for DB
+    isAmazonShortlinkEnabled: false, 
     salesBoosterActive: false,
     banners: [],
     socialHandles: []
@@ -57,10 +54,16 @@ function AccountContent() {
   const [newSocialTitle, setNewSocialTitle] = useState("");
   const [newSocialLink, setNewSocialLink] = useState("");
   
-  const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   
+  // 👇 NAYA: Image Upload & Modal States
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isUploadingProfile, setIsUploadingProfile] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const fileInputRefProfile = useRef(null);
+  const fileInputRefBanner = useRef(null);
+
   const videoTutorialUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"; 
   const bioMaxLength = 150;
 
@@ -75,7 +78,6 @@ function AccountContent() {
   const fetchedUsername = userData?.success ? userData.user.username : null;
   const { data: statsData } = useSWR(fetchedUsername ? `/api/analytics/get-data?username=${fetchedUsername}&timeline=all` : null, fetcher, { revalidateOnFocus: false });
 
-  // 🚀 DRAWER BACK BUTTON LOGIC (Hardware Back Button Support)
   useEffect(() => {
     const handlePopState = () => {
       if (activeDrawer) {
@@ -92,15 +94,13 @@ function AccountContent() {
   };
 
   const closeDrawer = () => {
-    window.history.back(); // This triggers popstate -> sets activeDrawer to null
+    window.history.back(); 
   };
 
-  // Auth Check
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
 
-  // Data Sync
   useEffect(() => {
     if (userData?.success && userData?.user && !isInitialized) {
       const u = userData.user;
@@ -117,7 +117,7 @@ function AccountContent() {
         mobileNumber: u.mobileNumber || "",
         bioTheme: u.bioTheme || "minimal",
         amazonTag: u.amazonTag || "",
-        isAmazonShortlinkEnabled: !!u.isAmazonShortlinkEnabled, // 🚀 Sync Amazon Toggle
+        isAmazonShortlinkEnabled: !!u.isAmazonShortlinkEnabled, 
         salesBoosterActive: u.salesBoosterActive || false,
         banners: u.banners || [],
         socialHandles: u.socialHandles || []
@@ -134,6 +134,43 @@ function AccountContent() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // 🚀 NAYA: Master Upload Handler (FavyLink -> Hostinger API)
+  const handleImageUpload = async (e, type) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (type === 'profile') setIsUploadingProfile(true);
+    if (type === 'banner') setIsUploadingBanner(true);
+
+    const uploadData = new FormData();
+    uploadData.append("image", file);
+    uploadData.append("type", type); 
+
+    try {
+      // Future API Call: FavyLink Backend -> Hostinger
+      const res = await fetch('/api/upload-image', { method: 'POST', body: uploadData });
+      const data = await res.json();
+
+      if (data.success && data.url) {
+        if (type === 'profile') {
+          setFormData(prev => ({ ...prev, image: data.url }));
+          setIsProfileModalOpen(false);
+          showToast("✅ Profile Image Uploaded!");
+        } else if (type === 'banner') {
+          setNewBannerImage(data.url);
+          showToast("✅ Banner Image Uploaded!");
+        }
+      } else {
+        showToast("⚠️ Upload failed. Try again.");
+      }
+    } catch (error) {
+      showToast("⚠️ Backend API not connected yet, but UI is working perfectly!");
+    }
+
+    if (type === 'profile') setIsUploadingProfile(false);
+    if (type === 'banner') setIsUploadingBanner(false);
   };
 
   const handleAddBanner = () => {
@@ -236,13 +273,12 @@ function AccountContent() {
       {/* 📱 THE MAIN PAGE UI */}
       <div className="max-w-3xl mx-auto p-4 md:p-8">
         
-        {/* Compact Header */}
         <div className="flex items-end gap-2 mb-4">
           <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Account</h1>
           <span className="text-xs font-bold text-slate-500 mb-[2px]">Settings & Overview</span>
         </div>
 
-        {/* BIO LINK BAR (Unchanged) */}
+        {/* BIO LINK BAR */}
         <div className="bg-white border-[0.5px] border-slate-200/70 rounded-xl py-2 px-3 shadow-sm flex items-center justify-between gap-2 overflow-hidden hover:border-slate-300 transition-colors mb-4">
           <div className="flex flex-col min-w-0 flex-1 pl-1">
             <div className="flex items-center gap-1.5 mb-0.5">
@@ -263,10 +299,9 @@ function AccountContent() {
           </div>
         </div>
 
-        {/* 👇 NAYA: User Info & Dynamic Total Mined Box */}
+        {/* User Info & Dynamic Total Mined Box */}
         <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex flex-row items-stretch gap-3 mb-6 transition-all duration-300">
           
-          {/* Left Side: User Details */}
           <div className="flex-1 flex flex-col justify-between gap-2">
             <div className="flex justify-between items-center bg-slate-50 p-1.5 px-3 rounded-lg border border-slate-100">
                <span className="text-[9px] font-extrabold text-slate-400">Username</span>
@@ -277,26 +312,16 @@ function AccountContent() {
                <span className="text-[11px] font-bold text-slate-600 truncate max-w-[100px] sm:max-w-[150px]">{email}</span>
             </div>
             
-            {/* Dynamic Phone Input */}
             <div className={`flex justify-between items-center bg-blue-50/50 p-1.5 px-3 rounded-lg border border-blue-100 transition-all ${isEditingPhone ? 'ring-2 ring-blue-400' : ''}`}>
                <span className="text-[9px] font-extrabold text-blue-600 whitespace-nowrap mr-2">Ph. Number</span>
                {isEditingPhone ? (
-                 <input 
-                   type="text" 
-                   maxLength="10" 
-                   autoFocus
-                   value={formData.mobileNumber} 
-                   onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value.replace(/\D/g, '') })} 
-                   placeholder="10 digit number" 
-                   className="w-full bg-transparent text-right text-[11px] font-bold text-slate-800 outline-none placeholder:text-blue-300" 
-                 />
+                 <input type="text" maxLength="10" autoFocus value={formData.mobileNumber} onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value.replace(/\D/g, '') })} placeholder="10 digit number" className="w-full bg-transparent text-right text-[11px] font-bold text-slate-800 outline-none placeholder:text-blue-300" />
                ) : (
                  <span onClick={() => setIsEditingPhone(true)} className="text-[11px] font-bold text-slate-800 cursor-pointer w-full text-right hover:text-blue-600">
                    {formData.mobileNumber ? `+91 ${formData.mobileNumber}` : "+ Add Number"}
                  </span>
                )}
             </div>
-            {/* Update Number Button (Appears only when editing) */}
             {isEditingPhone && (
                <button onClick={() => handleSaveChanges(true)} disabled={saving || formData.mobileNumber.length !== 10} className="w-full bg-blue-600 text-white text-[10px] font-black py-2 rounded-lg mt-1 transition-all disabled:opacity-50">
                  {saving ? "Updating..." : "Update Number"}
@@ -304,7 +329,6 @@ function AccountContent() {
             )}
           </div>
 
-          {/* Right Side: Total Mined (Shrinks if editing phone) */}
           <div className={`bg-emerald-500 rounded-xl flex flex-col items-center justify-center relative overflow-hidden shrink-0 transition-all duration-300 ease-in-out ${isEditingPhone ? 'w-16 p-2 opacity-50' : 'w-28 sm:w-32 p-3'}`}>
             <div className="relative z-10 text-center">
               <p className={`font-black text-emerald-100 uppercase tracking-wider mb-0.5 transition-all ${isEditingPhone ? 'text-[6px]' : 'text-[8px]'}`}>Total Mined</p>
@@ -314,14 +338,11 @@ function AccountContent() {
           </div>
         </div>
 
-        {/* 👇 NAYA: DRAWER TRIGGERS (Main Page Buttons) */}
+        {/* DRAWER TRIGGERS */}
         <div className="space-y-4 mb-8">
-          
-          {/* 1. Storefront Settings Trigger */}
           <button onClick={() => openDrawer('storefront')} className="w-full bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-sm hover:shadow-md hover:border-slate-300 transition-all active:scale-[0.99] group">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-100/50">
-                 {/* NAYA: Bio Page (Profile/Layout) SVG Icon */}
                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
               </div>
               <div className="text-left">
@@ -334,12 +355,10 @@ function AccountContent() {
             </div>
           </button>
 
-          {/* 2. Amazon Affiliate Trigger */}
           <button onClick={() => openDrawer('amazon')} className="w-full bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-sm hover:shadow-md hover:border-orange-300 transition-all active:scale-[0.99] group relative overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-400"></div>
             <div className="flex items-center gap-4 pl-2">
               <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center border border-orange-100/50 p-2 shadow-inner">
-                 {/* NAYA: Real Amazon Logo */}
                  <img src="https://upload.wikimedia.org/wikipedia/commons/d/de/Amazon_icon.png" alt="Amazon" className="w-full h-full object-contain drop-shadow-sm" />
               </div>
               <div className="text-left">
@@ -352,11 +371,9 @@ function AccountContent() {
             </div>
           </button>
 
-          {/* 3. NAYA: Payouts & Earnings Trigger */}
           <button onClick={() => router.push('/creators/analytics?tab=payouts')} className="w-full bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-sm hover:shadow-md hover:border-emerald-300 transition-all active:scale-[0.99] group">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center border border-emerald-100/50">
-                 {/* NAYA: Indian Cash/Rupee SVG */}
                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 8h6m-5 0a3 3 0 110 6H9l3 3m-3-6h6m6 1a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               </div>
               <div className="text-left">
@@ -368,10 +385,9 @@ function AccountContent() {
               <svg className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg>
             </div>
           </button>
-
         </div>
 
-        {/* FAQ SECTION (Unchanged) */}
+        {/* FAQ SECTION */}
         <div className="space-y-3 pb-8">
           <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-4">Frequently Asked Questions</h3>
           <details className="bg-white border border-slate-200 rounded-xl p-4 cursor-pointer group shadow-sm">
@@ -397,13 +413,11 @@ function AccountContent() {
 
       </div>
 
-
       {/* ========================================== */}
       {/* 🚀 FULL PAGE DRAWER 1: STOREFRONT SETTINGS */}
       {/* ========================================== */}
       <div className={`fixed inset-0 z-[150] bg-slate-50 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col ${activeDrawer === 'storefront' ? 'translate-x-0' : 'translate-x-full'}`}>
         
-        {/* NAYA: Non-Sticky Header with <-- Arrow */}
         <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={closeDrawer} className="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center transition-colors pr-0.5">
@@ -418,21 +432,30 @@ function AccountContent() {
           <div className="max-w-3xl mx-auto space-y-6">
             
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-5">
-              {/* ... (Profile Image and Details remain same as your code) ... */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="md:col-span-2 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden flex-shrink-0 relative">
-                    {formData.image ? <img src={formData.image} alt="Profile" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-slate-400"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>}
+                
+                {/* 👇 NAYA: Premium Centered Profile Image Section */}
+                <div className="md:col-span-2 flex flex-col items-center justify-center p-5 border border-slate-100 rounded-2xl bg-slate-50 mb-2 relative">
+                  <div className="w-24 h-24 rounded-full bg-white border-4 border-white shadow-md overflow-hidden flex-shrink-0 relative">
+                    {formData.image ? (
+                      <img src={formData.image} alt="Profile" className="w-full h-full object-cover"/>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400 bg-slate-100">
+                        <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                      </div>
+                    )}
+                    {/* Uploading Spinner Overlay */}
+                    {isUploadingProfile && (
+                      <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center backdrop-blur-sm">
+                        <svg className="animate-spin h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1 w-full">
-                    <div className="flex justify-between items-end mb-1">
-                      <label className="block text-xs font-bold text-slate-600">Profile Image URL</label>
-                      <button type="button" onClick={() => setIsVideoModalOpen(true)} className="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-1 rounded flex items-center gap-1 hover:bg-blue-100 transition-colors">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> How to add?
-                      </button>
-                    </div>
-                    <input type="text" name="image" value={formData.image} onChange={handleChange} placeholder="https://..." className="w-full border-2 border-slate-200 rounded-xl p-2.5 font-medium focus:border-blue-500 outline-none transition-colors" />
-                  </div>
+                  
+                  <button type="button" onClick={() => setIsProfileModalOpen(true)} className="mt-4 text-xs font-black text-slate-600 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-sm hover:bg-slate-100 hover:text-blue-600 transition-all active:scale-95 flex items-center gap-2">
+                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                  Edit Profile Picture
+                 </button>
                 </div>
 
                 <div>
@@ -464,7 +487,7 @@ function AccountContent() {
                     className={`w-full border-2 rounded-xl p-3 font-medium outline-none transition-colors ${formData.bio.length > bioMaxLength ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'}`}
                   ></textarea>
                   
-                  {/* Sales Booster Toggle - DISABLED FOR NOW */}
+                  {/* Sales Booster Toggle - DISABLED */}
                   <div className="mt-4 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-lg p-3 flex items-center justify-between opacity-60">
                     <div className="flex items-center gap-2">
                       <span className="text-base">🔥</span>
@@ -473,7 +496,6 @@ function AccountContent() {
                         <p className="text-[9px] font-semibold text-indigo-700/70">Show recent purchase popups to visitors.</p>
                       </div>
                     </div>
-                    {/* DISABLED AND READONLY */}
                     <label className="relative inline-flex items-center cursor-not-allowed">
                       <input type="checkbox" className="sr-only peer" disabled readOnly checked={false} />
                       <div className="w-9 h-5 bg-slate-300 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4"></div>
@@ -492,12 +514,8 @@ function AccountContent() {
               
               {/* Banners Input */}
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mb-1">
                   <label className="block text-sm font-bold text-slate-800">Auto-Sliding Banners</label>
-                  {/* NAYA: Video tutorial button for Banners */}
-                  <button type="button" onClick={() => setIsVideoModalOpen(true)} className="text-[10px] font-extrabold text-blue-600 bg-white border border-blue-100 px-2 py-1 rounded shadow-sm flex items-center gap-1 hover:bg-blue-50 transition-colors">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> How to set?
-                  </button>
                 </div>
                 {formData.banners.map((item, idx) => {
                   const imgUrl = typeof item === 'string' ? item : item.image;
@@ -514,14 +532,32 @@ function AccountContent() {
                     </button>
                   </div>
                 )})}
-                <div className="flex flex-col gap-2 pt-2 border-t border-slate-200">
-                  <input type="text" value={newBannerImage} onChange={(e) => setNewBannerImage(e.target.value)} placeholder="1. Paste Banner Image URL (4:1 Ratio)..." className="w-full border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input type="text" value={newBannerLink} onChange={(e) => setNewBannerLink(e.target.value)} placeholder="2. Banner Redirect Link (Optional)..." className="flex-1 w-full border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none" />
-                    <button onClick={handleAddBanner} className="w-full sm:w-auto px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-xs hover:bg-slate-700 shadow-sm">Add Banner</button>
+                
+               {/* 👇 NAYA: Banner Limit Logic Wrapper */}
+                {formData.banners.length < 3 ? (
+                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-200 mt-2">
+                    <div className="flex gap-2 items-center w-full relative">
+                      <input type="text" value={newBannerImage} onChange={(e) => setNewBannerImage(e.target.value)} placeholder="1. Paste Banner URL or Upload 🖼️" className="flex-1 w-full border-2 border-slate-200 rounded-lg p-2 pr-10 text-xs focus:border-blue-500 outline-none transition-colors" />
+                      
+                      <input type="file" accept="image/jpeg, image/png, image/webp" className="hidden" ref={fileInputRefBanner} onChange={(e) => handleImageUpload(e, 'banner')} />
+                      <button type="button" onClick={() => fileInputRefBanner.current.click()} disabled={isUploadingBanner} className="absolute right-2 top-1.5 p-1.5 bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-md transition-colors active:scale-95">
+                        {isUploadingBanner ? (
+                          <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                        ) : (
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        )}
+                      </button>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input type="text" value={newBannerLink} onChange={(e) => setNewBannerLink(e.target.value)} placeholder="2. Banner Redirect Link (Optional)..." className="flex-1 w-full border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none transition-colors" />
+                      <button onClick={handleAddBanner} className="w-full sm:w-auto px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-xs hover:bg-slate-700 shadow-sm active:scale-95 transition-all">Add Banner</button>
+                    </div>
                   </div>
+                ) : (
+                  <p className="text-xs font-bold text-red-500 text-center pt-2 pb-1 border-t border-slate-200 mt-2">Max 3 auto-sliding banners allowed.</p>
+                )}
                 </div>
-              </div>
 
               {/* Socials Input */}
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
@@ -545,7 +581,6 @@ function AccountContent() {
                   </div>
                 )})}
 
-                {/* NAYA: Limit to 5 social handles */}
                 {formData.socialHandles.length < 5 ? (
                   <div className="flex flex-col gap-2 pt-2 border-t border-slate-200">
                     <div className="flex flex-col sm:flex-row gap-2">
@@ -564,7 +599,6 @@ function AccountContent() {
           </div>
         </div>
         
-        {/* ... Bottom action bar remains same ... */}
         <div className="bg-white border-t border-slate-200 p-4 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.02)] fixed bottom-0 w-full z-20">
           <div className="max-w-3xl mx-auto flex gap-3">
              <button onClick={closeDrawer} className="px-6 py-3.5 bg-slate-100 text-slate-700 font-extrabold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
@@ -575,13 +609,11 @@ function AccountContent() {
         </div>
       </div>
 
-
       {/* ========================================== */}
       {/* 🚀 FULL PAGE DRAWER 2: AMAZON AFFILIATE  */}
       {/* ========================================== */}
       <div className={`fixed inset-0 z-[150] bg-slate-50 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col ${activeDrawer === 'amazon' ? 'translate-x-0' : 'translate-x-full'}`}>
         
-        {/* NAYA: Non-sticky header with <-- Arrow */}
         <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={closeDrawer} className="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center transition-colors pr-0.5">
@@ -591,7 +623,6 @@ function AccountContent() {
           </div>
         </div>
 
-        {/* Drawer Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-32">
           <div className="max-w-xl mx-auto space-y-6">
             
@@ -607,7 +638,6 @@ function AccountContent() {
                     placeholder="e.g. yourtag-21" 
                     className="w-full border-2 border-slate-200 rounded-2xl p-4 font-bold text-slate-800 text-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all placeholder:text-slate-300" 
                   />
-                  {/* NAYA: Bullet Points Guide */}
                   <ul className="text-xs font-semibold text-slate-500 mt-4 leading-relaxed px-2 list-disc space-y-1.5 marker:text-slate-300">
                     <li>Your Amazon affiliate earnings will be directly tracked in your official Amazon Associate account.</li>
                     <li>Please enter your <strong>exact Amazon tag</strong> carefully to ensure your tracking and earnings are not missed!</li>
@@ -620,25 +650,21 @@ function AccountContent() {
                </button>
             </div>
 
-            {/* Link Shortening Box */}
             <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                  <div>
                     <h3 className="text-lg font-black text-slate-800 mb-2">Enable Link Shortening</h3>
-                    {/* 🚀 THE FIX: Professional text explaining the App Bypass feature */}
                     <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-[280px]">
                       Enable to route clicks through our secure engine. This allows Amazon links to seamlessly escape in-app browsers (like Instagram) and open directly in the native Amazon App, significantly boosting your conversion rates.
                     </p>
                  </div>
                  
-                 {/* 🚀 THE FIX: Updated Toast Message for Disabled Toggle */}
                  <div onClick={() => showToast("🛠️ Feature temporarily unavailable. We are upgrading our shortlink engine for faster routing. Stay tuned!")} className="relative inline-flex items-center cursor-pointer shrink-0 mt-1 opacity-60">
                     <input type="checkbox" className="sr-only peer" disabled readOnly checked={false} />
                     <div className="w-14 h-8 bg-slate-200 rounded-full peer after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6.5 after:w-6.5"></div>
                  </div>
               </div>
 
-              {/* Warning/Info Box */}
               <div className="mt-6 bg-[#FFF9E6] border border-[#F5D77D] rounded-2xl p-5 flex gap-3">
                  <span className="text-[#B97A00] text-lg">⚠️</span>
                  <div>
@@ -654,7 +680,7 @@ function AccountContent() {
         </div>
       </div>
 
-      {/* QR & THEME MODALS (Unchanged, hidden inside Z-index) */}
+      {/* QR MODAL */}
       {showQRModal && (
         <div className="fixed inset-0 flex items-center justify-center p-4 animate-in fade-in duration-300" style={{ zIndex: 2147483647 }}>
           <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" onClick={() => setShowQRModal(false)}></div>
@@ -674,7 +700,12 @@ function AccountContent() {
                 <div className="relative flex items-center justify-center w-full bg-white mb-1">
                   <QRCodeSVG value={`https://favylink.com/${username}`} size={210} bgColor={"#ffffff"} fgColor={"#0f172a"} level={"H"} />
                   <div className="absolute flex items-center justify-center bg-white rounded-full shadow-sm" style={{ width: "56px", height: "56px" }}>
-                    <img src={formData.image || session?.user?.image || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} alt="Creator" crossOrigin="anonymous" className="w-12 h-12 rounded-full border-[2.5px] border-slate-200 bg-slate-100 object-cover" />
+                    <img 
+                  src={formData.image ? `${formData.image}?qr=1` : (session?.user?.image || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png")} 
+                  alt="Creator" 
+                  crossOrigin="anonymous" 
+                  className="w-12 h-12 rounded-full border-[2.5px] border-slate-200 bg-slate-100 object-cover" 
+                   />
                   </div>
                 </div>
                 <div className="flex flex-col items-center w-full mt-1">
@@ -701,7 +732,6 @@ function AccountContent() {
               <button onClick={() => setIsThemeModalOpen(false)} className="w-7 h-7 bg-slate-200 rounded-full text-slate-600 hover:bg-slate-800 hover:text-white font-extrabold flex items-center justify-center transition-colors">✕</button>
             </div>
             
-            {/* 🚀 THE FIX: Premium Colored Theme Buttons */}
             <div className="p-4 overflow-y-auto max-h-[65vh] grid gap-3">
                {Object.entries(THEMES).map(([key, theme]) => {
                  const isActiveTheme = formData.bioTheme === key;
@@ -711,10 +741,7 @@ function AccountContent() {
                    onClick={() => { setFormData({ ...formData, bioTheme: key }); setIsThemeModalOpen(false); }} 
                    className={`relative w-full h-16 rounded-xl transition-all overflow-hidden flex items-center justify-center group ${isActiveTheme ? 'ring-4 ring-indigo-500 ring-offset-2 scale-[0.98]' : 'hover:scale-[1.02] shadow-sm'}`}
                  >
-                   {/* Background Color/Gradient filling the whole button */}
                    <div className={`absolute inset-0 ${theme.bg}`}></div>
-                   
-                   {/* Overlay Badge for Text readability */}
                    <div className="relative z-10 bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-lg border border-white/20 flex items-center gap-2">
                       <span className="font-black text-sm text-white tracking-wide">{theme.name}</span>
                       {isActiveTheme && <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
@@ -722,6 +749,54 @@ function AccountContent() {
                  </button>
                )})}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================== */}
+      {/* 🚀 NAYA: PROFILE IMAGE EDIT MODAL */}
+      {/* ========================================== */}
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 z-[300] bg-slate-900/50 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 animate-in fade-in" onClick={() => setIsProfileModalOpen(false)}>
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 p-6 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="font-black text-slate-800 text-lg">Update Photo</h3>
+              <button onClick={() => setIsProfileModalOpen(false)} className="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-500 transition-colors">✕</button>
+            </div>
+            
+            {/* OPTION 1: Direct Upload */}
+            <input type="file" accept="image/jpeg, image/png, image/webp" className="hidden" ref={fileInputRefProfile} onChange={(e) => handleImageUpload(e, 'profile')} />
+            <button onClick={() => fileInputRefProfile.current.click()} className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-3.5 px-4 rounded-xl flex items-center gap-3 transition-colors active:scale-95 shadow-sm">
+              <span className="text-blue-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg></span>
+              Upload from Device
+            </button>
+
+            <div className="flex items-center gap-3 w-full">
+               <div className="h-px bg-slate-200 flex-1"></div>
+               <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">OR</span>
+               <div className="h-px bg-slate-200 flex-1"></div>
+            </div>
+
+            {/* OPTION 2: Paste External URL */}
+            <div className="w-full relative">
+              <input type="text" placeholder="Paste image URL here..." defaultValue={formData.image} onBlur={(e) => { 
+                if(e.target.value !== formData.image) { 
+                  setFormData({...formData, image: e.target.value}); 
+                  setIsProfileModalOpen(false); 
+                } 
+              }} className="w-full bg-slate-50 border-2 border-slate-200 font-medium text-xs py-3 pl-10 pr-4 rounded-xl focus:outline-none focus:border-blue-500 transition-colors" />
+              <span className="absolute left-3.5 top-3.5 text-slate-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+              </span>
+            </div>
+
+            {/* OPTION 3: Remove Image (Only shows if image exists) */}
+            {formData.image && (
+              <button onClick={() => { setFormData({...formData, image: ""}); setIsProfileModalOpen(false); }} className="w-full mt-2 text-red-500 hover:bg-red-50 font-bold py-3.5 px-4 rounded-xl flex items-center gap-3 transition-colors active:scale-95 border border-transparent hover:border-red-100">
+                <span className="text-red-500"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></span>
+                Remove Photo
+              </button>
+            )}
           </div>
         </div>
       )}
