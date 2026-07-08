@@ -6,6 +6,36 @@ import useSWR from "swr";
 import { QRCodeSVG } from 'qrcode.react';
 import { toPng } from 'html-to-image';
 
+import Cropper from 'react-easy-crop'; 
+
+// 👇 NAYA: Helper functions (Component start hone se THEEK PEHLE paste karein)
+const createImage = (url) =>
+  new Promise((resolve, reject) => {
+    const image = new globalThis.Image();
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (error) => reject(error));
+    image.setAttribute('crossOrigin', 'anonymous'); 
+    image.src = url;
+  });
+
+async function getCroppedImg(imageSrc, pixelCrop) {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
+  ctx.drawImage(
+    image,
+    pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height,
+    0, 0, pixelCrop.width, pixelCrop.height
+  );
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      resolve(blob);
+    }, 'image/webp', 0.9);
+  });
+}
+
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
 // 🎨 THEMES (Premium Ordered & Optimized)
@@ -61,6 +91,12 @@ function AccountContent() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isUploadingProfile, setIsUploadingProfile] = useState(false);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  // 👇 NAYA: Crop Modal ke 4 naye states
+  const [cropModal, setCropModal] = useState({ isOpen: false, imageSrc: null, type: 'profile' });
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
   const fileInputRefProfile = useRef(null);
   const fileInputRefBanner = useRef(null);
 
@@ -136,20 +172,34 @@ function AccountContent() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 🚀 NAYA: Master Upload Handler (FavyLink -> Hostinger API)
-  const handleImageUpload = async (e, type) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // 👇 NAYA: Step A - File Select karke Crop Modal kholna
+  const onFileSelect = (e, type) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setCropModal({ isOpen: true, imageSrc: reader.result, type });
+        setCrop({ x: 0, y: 0 }); 
+        setZoom(1); 
+      });
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
 
-    if (type === 'profile') setIsUploadingProfile(true);
-    if (type === 'banner') setIsUploadingBanner(true);
-
-    const uploadData = new FormData();
-    uploadData.append("image", file);
-    uploadData.append("type", type); 
-
+  // 👇 NAYA: Step B - Crop karke Hostinger bhejna
+  const handleCroppedUpload = async () => {
     try {
-      // Future API Call: FavyLink Backend -> Hostinger
+      const { type } = cropModal;
+      if (type === 'profile') setIsUploadingProfile(true);
+      if (type === 'banner') setIsUploadingBanner(true);
+      setCropModal({ ...cropModal, isOpen: false }); 
+
+      const croppedBlob = await getCroppedImg(cropModal.imageSrc, croppedAreaPixels);
+      const file = new File([croppedBlob], `cropped_${Date.now()}.webp`, { type: 'image/webp' });
+
+      const uploadData = new FormData();
+      uploadData.append("image", file);
+      uploadData.append("type", type); 
+
       const res = await fetch('/api/upload-image', { method: 'POST', body: uploadData });
       const data = await res.json();
 
@@ -157,20 +207,17 @@ function AccountContent() {
         if (type === 'profile') {
           setFormData(prev => ({ ...prev, image: data.url }));
           setIsProfileModalOpen(false);
-          showToast("✅ Profile Image Uploaded!");
+          // showToast("Profile Photo Updated!"); (Agar aapne toast lagaya hai)
         } else if (type === 'banner') {
           setNewBannerImage(data.url);
-          showToast("✅ Banner Image Uploaded!");
         }
-      } else {
-        showToast("⚠️ Upload failed. Try again.");
       }
     } catch (error) {
-      showToast("⚠️ Backend API not connected yet, but UI is working perfectly!");
+      console.error("Crop error:", error);
+    } finally {
+      setIsUploadingProfile(false);
+      setIsUploadingBanner(false);
     }
-
-    if (type === 'profile') setIsUploadingProfile(false);
-    if (type === 'banner') setIsUploadingBanner(false);
   };
 
   const handleAddBanner = () => {
@@ -308,7 +355,7 @@ function AccountContent() {
                <span className="text-[11px] font-bold text-slate-600">@{username}</span>
             </div>
             <div className="flex justify-between items-center bg-slate-50 p-1.5 px-3 rounded-lg border border-slate-100">
-               <span className="text-[9px] font-extrabold text-slate-400">Email</span>
+               <span className="text-[9px] font-extrabold text-slate-400">Email ID</span>
                <span className="text-[11px] font-bold text-slate-600 truncate max-w-[100px] sm:max-w-[150px]">{email}</span>
             </div>
             
@@ -517,45 +564,65 @@ function AccountContent() {
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-sm font-bold text-slate-800">Auto-Sliding Banners</label>
                 </div>
-                {formData.banners.map((item, idx) => {
-                  const imgUrl = typeof item === 'string' ? item : item.image;
-                  const linkUrl = typeof item === 'string' ? "" : item.link;
-                  return (
-                  <div key={idx} className="flex items-center gap-2 bg-white p-2 border rounded-lg shadow-sm">
-                    <img src={imgUrl} alt="banner" className="w-10 h-10 object-cover rounded bg-slate-100" />
-                    <div className="flex-1 overflow-hidden">
-                      <p className="text-xs truncate text-slate-700 font-bold">{imgUrl}</p>
-                      {linkUrl && <p className="text-[10px] truncate text-slate-400 mt-0.5">🔗 {linkUrl}</p>}
+                <div className="space-y-3">
+                {formData.banners.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <img src={item.image} alt="Banner" className="w-16 h-8 object-cover rounded-md border border-slate-200 shrink-0" />
+                      <div className="flex flex-col truncate">
+                        {/* URL ki jagah ek clean text */}
+                        <span className="text-xs font-bold text-slate-800">Banner #{idx + 1}</span>
+                        <span className="text-[10px] text-slate-400 truncate">
+                          {item.link ? item.link : "No redirect link added"}
+                        </span>
+                      </div>
                     </div>
-                    <button onClick={() => removeArrayItem('banners', idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <button onClick={() => removeArrayItem('banners', idx)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                   </div>
-                )})}
+                ))}
+              </div>
                 
-               {/* 👇 NAYA: Banner Limit Logic Wrapper */}
+               {/* 👇 NAYA: Premium Banner Upload UI (URL Input Removed) */}
                 {formData.banners.length < 3 ? (
-                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-200 mt-2">
-                    <div className="flex gap-2 items-center w-full relative">
-                      <input type="text" value={newBannerImage} onChange={(e) => setNewBannerImage(e.target.value)} placeholder="1. Paste Banner URL or Upload 🖼️" className="flex-1 w-full border-2 border-slate-200 rounded-lg p-2 pr-10 text-xs focus:border-blue-500 outline-none transition-colors" />
+                  <div className="flex flex-col gap-3 pt-4 border-t border-slate-200 mt-4">
+                    
+                    {/* Step 1: Magic Upload Button (Updated to prevent Orphan Files) */}
+                    <div className="flex items-center gap-3">
+                      <input type="file" accept="image/jpeg, image/png, image/webp" className="hidden" ref={fileInputRefBanner} onChange={(e) => onFileSelect(e, 'banner')} />
                       
-                      <input type="file" accept="image/jpeg, image/png, image/webp" className="hidden" ref={fileInputRefBanner} onChange={(e) => handleImageUpload(e, 'banner')} />
-                      <button type="button" onClick={() => fileInputRefBanner.current.click()} disabled={isUploadingBanner} className="absolute right-2 top-1.5 p-1.5 bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-md transition-colors active:scale-95">
-                        {isUploadingBanner ? (
-                          <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                        ) : (
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                        )}
-                      </button>
+                      {newBannerImage ? (
+                        // 👇 NAYA: Preview Mode (Disabled to prevent re-upload orphaned files)
+                        <div className="flex-1 border-2 border-green-400 bg-green-50 p-2 rounded-xl flex items-center gap-3 transition-all cursor-not-allowed">
+                          <img src={newBannerImage} alt="Preview" className="w-16 h-8 object-cover rounded-md border border-green-200 shrink-0 shadow-sm" />
+                          <span className="text-sm font-bold text-green-700 truncate">
+                            ✅ Image Ready! Add link below.
+                          </span>
+                        </div>
+                      ) : (
+                        // 👇 Upload Mode
+                        <button type="button" onClick={() => fileInputRefBanner.current.click()} disabled={isUploadingBanner} className="flex-1 border-2 border-dashed border-slate-300 hover:border-blue-400 bg-slate-50 hover:bg-blue-50 text-slate-600 p-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm font-bold">
+                          {isUploadingBanner ? (
+                            <><svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Uploading...</>
+                          ) : (
+                            <>📸 1. Click to Upload Banner (4:1)</>
+                          )}
+                        </button>
+                      )}
                     </div>
                     
+                    {/* Step 2: Redirect Link & Submit */}
                     <div className="flex flex-col sm:flex-row gap-2">
-                      <input type="text" value={newBannerLink} onChange={(e) => setNewBannerLink(e.target.value)} placeholder="2. Banner Redirect Link (Optional)..." className="flex-1 w-full border-2 border-slate-200 rounded-lg p-2 text-xs focus:border-blue-500 outline-none transition-colors" />
-                      <button onClick={handleAddBanner} className="w-full sm:w-auto px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-xs hover:bg-slate-700 shadow-sm active:scale-95 transition-all">Add Banner</button>
+                      <input type="text" value={newBannerLink} onChange={(e) => setNewBannerLink(e.target.value)} placeholder="2. Destination Link (e.g. Amazon URL)..." className="flex-1 w-full border-2 border-slate-200 rounded-xl p-2.5 text-sm font-medium focus:border-blue-500 outline-none transition-colors" />
+                      
+                      <button onClick={handleAddBanner} disabled={!newBannerImage} className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-black text-sm transition-all shadow-sm active:scale-95 ${newBannerImage ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
+                        Add
+                      </button>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs font-bold text-red-500 text-center pt-2 pb-1 border-t border-slate-200 mt-2">Max 3 auto-sliding banners allowed.</p>
+                  <p className="text-xs font-bold text-red-500 text-center pt-3 pb-1 border-t border-slate-200 mt-2">Max 3 auto-sliding banners allowed.</p>
                 )}
                 </div>
 
@@ -765,30 +832,12 @@ function AccountContent() {
             </div>
             
             {/* OPTION 1: Direct Upload */}
-            <input type="file" accept="image/jpeg, image/png, image/webp" className="hidden" ref={fileInputRefProfile} onChange={(e) => handleImageUpload(e, 'profile')} />
+            <input type="file" accept="image/jpeg, image/png, image/webp" className="hidden" ref={fileInputRefProfile} onChange={(e) => onFileSelect(e, 'profile')} />
             <button onClick={() => fileInputRefProfile.current.click()} className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-3.5 px-4 rounded-xl flex items-center gap-3 transition-colors active:scale-95 shadow-sm">
               <span className="text-blue-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg></span>
               Upload from Device
             </button>
 
-            <div className="flex items-center gap-3 w-full">
-               <div className="h-px bg-slate-200 flex-1"></div>
-               <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">OR</span>
-               <div className="h-px bg-slate-200 flex-1"></div>
-            </div>
-
-            {/* OPTION 2: Paste External URL */}
-            <div className="w-full relative">
-              <input type="text" placeholder="Paste image URL here..." defaultValue={formData.image} onBlur={(e) => { 
-                if(e.target.value !== formData.image) { 
-                  setFormData({...formData, image: e.target.value}); 
-                  setIsProfileModalOpen(false); 
-                } 
-              }} className="w-full bg-slate-50 border-2 border-slate-200 font-medium text-xs py-3 pl-10 pr-4 rounded-xl focus:outline-none focus:border-blue-500 transition-colors" />
-              <span className="absolute left-3.5 top-3.5 text-slate-400">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-              </span>
-            </div>
 
             {/* OPTION 3: Remove Image (Only shows if image exists) */}
             {formData.image && (
@@ -797,6 +846,39 @@ function AccountContent() {
                 Remove Photo
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+{/* ... (Aapka baaki code) ... */}
+      
+      {/* 👇 NAYA: Crop Modal UI (Main </div> se theek pehle) */}
+      {cropModal.isOpen && (
+        <div className="fixed inset-0 z-[1000] bg-black flex flex-col">
+          <div className="flex justify-between items-center p-4 bg-slate-900 text-white shrink-0 z-10 border-b border-slate-700">
+            <h3 className="font-bold">{cropModal.type === 'profile' ? "Adjust Profile (1:1)" : "Adjust Banner (4:1)"}</h3>
+            <button onClick={() => setCropModal({ ...cropModal, isOpen: false })} className="text-red-400 font-bold px-3 py-1">Cancel</button>
+          </div>
+          <div className="relative flex-1 bg-black w-full">
+            <Cropper
+              image={cropModal.imageSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={cropModal.type === 'profile' ? 1 / 1 : 4 / 1} 
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={(croppedArea, croppedAreaPixels) => setCroppedAreaPixels(croppedAreaPixels)}
+            />
+          </div>
+          <div className="bg-slate-900 p-6 shrink-0 z-10 flex flex-col gap-4">
+            <input 
+              type="range" value={zoom} min={1} max={3} step={0.1} 
+              onChange={(e) => setZoom(e.target.value)} 
+              className="w-full accent-blue-500 h-2 bg-slate-700 rounded-lg"
+            />
+            <button onClick={handleCroppedUpload} className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl">
+              Crop & Upload
+            </button>
           </div>
         </div>
       )}

@@ -8,8 +8,11 @@ import useSWR from "swr"; // 👈 NAYA: SWR Magic
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
 const ALL_CATEGORIES = [
-  "Men's Fashion", "Women's Fashion", "Electronics & Mobiles", 
-  "Beauty & Grooming", "Home & Kitchen", "Footwear", "Accessories", "Grocery", "Kids Product", "Special Deals"
+  "Men's Fashion", "Women's Fashion", "Mobiles & Electronics", 
+  "Beauty & Personal Care", "Home & Kitchen", "Footwear & Bags", 
+  "Watches & Accessories", "Baby & Kids", "Health & Fitness", 
+  "Grocery & Essentials", "Sports & Outdoors", "Books & Stationery", 
+  "Special Deals"
 ];
 
 function AutoPostContent() {
@@ -596,8 +599,8 @@ function AutoPostContent() {
         {/* 👇 NAYA: Compact (Patla) Tabs */}
         <div className="bg-slate-200/70 p-1 rounded-xl flex gap-1 overflow-x-auto hide-scrollbar mb-4 shadow-sm">
           <button onClick={() => setActiveTab("auto_deals")} className={`flex-1 py-1.5 px-3 rounded-lg text-[10px] font-black whitespace-nowrap transition-all ${activeTab === "auto_deals" ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Auto Post</button>
-          <button onClick={() => setActiveTab("platform_links")} className={`flex-1 py-1.5 px-3 rounded-lg text-[10px] font-black whitespace-nowrap transition-all ${activeTab === "platform_links" ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Platform Links</button>
-          <button onClick={() => setActiveTab("own_links")} className={`flex-1 py-1.5 px-3 rounded-lg text-[10px] font-black whitespace-nowrap transition-all ${activeTab === "own_links" ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Own Links</button>
+          <button onClick={() => setActiveTab("platform_links")} className={`flex-1 py-1.5 px-3 rounded-lg text-[10px] font-black whitespace-nowrap transition-all ${activeTab === "platform_links" ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Monetized Links</button>
+          <button onClick={() => setActiveTab("own_links")} className={`flex-1 py-1.5 px-3 rounded-lg text-[10px] font-black whitespace-nowrap transition-all ${activeTab === "own_links" ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Direct Links</button>
         </div>
 
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">

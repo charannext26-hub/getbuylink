@@ -8,9 +8,11 @@ export const maxDuration = 60;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const BROAD_CATEGORIES = [
-  "Men's Fashion", "Women's Fashion", "Electronics & Mobiles", 
-  "Beauty & Grooming", "Home & Kitchen", "Footwear", 
-  "Accessories", "Grocery", "Kids Product", "Special Deals"
+  "Men's Fashion", "Women's Fashion", "Mobiles & Electronics", 
+  "Beauty & Personal Care", "Home & Kitchen", "Footwear & Bags", 
+  "Watches & Accessories", "Baby & Kids", "Health & Fitness", 
+  "Grocery & Essentials", "Sports & Outdoors", "Books & Stationery", 
+  "Special Deals"
 ];
 
 function formatPrice(rawPrice) {

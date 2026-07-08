@@ -1547,8 +1547,8 @@ function LiveTimer({ targetDate }) {
             const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
             const m = Math.floor((diff / 1000 / 60) % 60);
             
-            if (d > 0) return `Offer Ends in ${d}d ${h}h ${m}m`;
-            return `Offer Ends in ${h}h ${m}m`;
+            if (d > 0) return `sale ends in ${d}d ${h}h ${m}m`;
+            return `sale ends in ${h}h ${m}m`;
         };
 
         const initialTime = calculateTime();
