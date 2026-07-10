@@ -16,34 +16,40 @@ export async function POST(req) {
     } = data;
 
     // ==========================================
-    // 🚀 1. AUTO-DELETE ENGINE (The Cleanup)
+    // 🚀 1. SMART AUTO-DELETE ENGINE
     // ==========================================
     const oldUser = await User.findOne({ email });
 
     if (oldUser) {
-      // Step A: Collect all OLD image links from Profile & Banners
+      // Step A: Collect all OLD image links (Safely Trimmed & Filtered)
       const oldImages = [];
-      if (oldUser.image) oldImages.push(oldUser.image);
+      if (oldUser.image && typeof oldUser.image === 'string') oldImages.push(oldUser.image.trim());
       if (oldUser.banners && oldUser.banners.length > 0) {
-        oldUser.banners.forEach(b => { if(b.image) oldImages.push(b.image) });
+        oldUser.banners.forEach(b => { 
+          if(b.image && typeof b.image === 'string') oldImages.push(b.image.trim());
+        });
       }
 
       // Step B: Collect all NEW image links coming from frontend
       const newImages = [];
-      if (image) newImages.push(image);
+      if (image && typeof image === 'string') newImages.push(image.trim());
       if (banners && banners.length > 0) {
-        banners.forEach(b => { if(b.image) newImages.push(b.image) });
+        banners.forEach(b => { 
+          if(b.image && typeof b.image === 'string') newImages.push(b.image.trim());
+        });
       }
 
-      // Step C: Find Orphaned Images (Jo purani me hain par nayi me nahi)
-      const imagesToDelete = oldImages.filter(oldImg => !newImages.includes(oldImg));
+      // Step C: Find TRUE Orphaned Images (Strict Space-Free Matching)
+      const imagesToDelete = oldImages.filter(oldImg => {
+        // Agar naye array me ye exact URL nahi hai, tabhi delete hoga
+        return !newImages.includes(oldImg);
+      });
 
-      // Step D: Filter only Hostinger links (cb.metrovatech.com)
+      // Step D: Filter only Hostinger links
       const hostingerImagesToDelete = imagesToDelete.filter(img => img.includes("cb.metrovatech.com"));
 
-      // Step E: Trigger Hostinger Deletion (Vercel Serverless Fix - WAIT for it)
+      // Step E: Trigger Hostinger Deletion
       if (hostingerImagesToDelete.length > 0) {
-        // Promise.all aur await lagana zaroori hai taaki Vercel function ko kill na kare
         await Promise.all(
           hostingerImagesToDelete.map(async (imageUrl) => {
             try {
@@ -75,7 +81,7 @@ export async function POST(req) {
           amazonTag, salesBoosterActive, isAmazonShortlinkEnabled
         } 
       },
-      { returnDocument: 'after' } // 👈 BAAHUBALI FIX: Mongoose ki Red warning hamesha ke liye gayab! (Pehle yahan 'new: true' tha)
+      { returnDocument: 'after' } 
     );
 
     return NextResponse.json({ success: true, user: updatedUser });
