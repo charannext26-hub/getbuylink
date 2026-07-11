@@ -51,8 +51,8 @@ export async function POST(req) {
           });
       }
 
-      // Step C: Find TRUE Orphaned Images
-      const imagesToDelete = oldImages.filter(oldImg => !newImages.includes(oldImg));
+      // Step C: Find TRUE Orphaned Images (Strict Space-Free Matching)
+      const imagesToDelete = oldImages.filter(oldImg => {
         // Agar naye array me ye exact URL nahi hai, tabhi delete hoga
         return !newImages.includes(oldImg);
       });
