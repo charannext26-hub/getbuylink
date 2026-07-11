@@ -32,15 +32,27 @@ export async function POST(req) {
 
       // Step B: Collect all NEW image links coming from frontend
       const newImages = [];
-      if (image && typeof image === 'string') newImages.push(image.trim());
-      if (banners && banners.length > 0) {
-        banners.forEach(b => { 
-          if(b.image && typeof b.image === 'string') newImages.push(b.image.trim());
-        });
+      
+      // 🛑 SAFETY GUARD 1: Agar frontend ne image field bheja hi nahi (undefined), toh purana hi manlo
+      if (image !== undefined && image !== null && typeof image === 'string') {
+          newImages.push(image.trim());
+      } else if (oldUser.image) {
+          newImages.push(oldUser.image.trim()); // Purana save rakho, delete mat hone do!
       }
 
-      // Step C: Find TRUE Orphaned Images (Strict Space-Free Matching)
-      const imagesToDelete = oldImages.filter(oldImg => {
+      // 🛑 SAFETY GUARD 2: Banners ke sath bhi wahi safety
+      if (banners !== undefined && Array.isArray(banners)) {
+          banners.forEach(b => { 
+            if(b.image && typeof b.image === 'string') newImages.push(b.image.trim());
+          });
+      } else if (oldUser.banners && oldUser.banners.length > 0) {
+          oldUser.banners.forEach(b => { 
+            if(b.image && typeof b.image === 'string') newImages.push(b.image.trim());
+          });
+      }
+
+      // Step C: Find TRUE Orphaned Images
+      const imagesToDelete = oldImages.filter(oldImg => !newImages.includes(oldImg));
         // Agar naye array me ye exact URL nahi hai, tabhi delete hoga
         return !newImages.includes(oldImg);
       });
