@@ -433,8 +433,8 @@ function DashboardContent() {
 
               {/* YOUTUBE/TUTORIAL & MARKETING BANNER SLIDER */}
 {platformConfig?.youtubeBanners?.isActive && platformConfig?.youtubeBanners?.videos?.length > 0 && (
-  <div className="my-4">
-    <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 px-1">favylink exclusive</h3>
+  <div className="mb-3 mt-1">
+    <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 px-1">favylink SMART CORE</h3>
     <div className="flex overflow-x-auto gap-4 pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
       {platformConfig.youtubeBanners.videos.map((vid, idx) => {
         const isYoutube = vid.videoUrl && (vid.videoUrl.includes('youtube.com') || vid.videoUrl.includes('youtu.be'));
@@ -453,7 +453,7 @@ function DashboardContent() {
             rel="noreferrer" 
             onClick={(e) => handleBannerClick(e, vid.videoUrl)} 
             /* 👇 NOTE: w-[85%] mobile ke liye bada aur mast view dega, md:w-[45%] desktop par 2 banners dikhayega */
-            className="snap-start flex-shrink-0 w-[85%] sm:w-[70%] md:w-[45%] lg:w-[38%] aspect-video rounded-2xl overflow-hidden relative group shadow-md block bg-slate-100 border border-slate-200/80 transition-all hover:shadow-xl"
+            className="snap-start flex-shrink-0 w-[75%] sm:w-[70%] md:w-[45%] lg:w-[38%] aspect-video rounded-2xl overflow-hidden relative group shadow-md block bg-slate-100 border border-slate-200/80 transition-all hover:shadow-xl"
           >
             <img src={vid.thumbnailUrl} alt={vid.title || "FavyLink Banner"} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
             
@@ -542,7 +542,7 @@ function DashboardContent() {
 
              {/* POPULAR STORE CAMPAIGNS (VIP SLEEK VERTICAL CARDS) */}
 {platformConfig?.vipStoreRates?.isActive && topCampaigns.length > 0 && (
-  <div className="bg-white border border-slate-200/80 rounded-2xl p-4 md:p-5 shadow-sm overflow-hidden my-4">
+  <div className="bg-white border border-slate-200/80 rounded-2xl p-4 md:p-5 shadow-sm overflow-hidden mb-6">
     <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
       <h3 className="text-sm font-black text-slate-800 flex items-center gap-2.5 truncate pr-2">
         <span className="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white w-7 h-7 rounded-lg flex items-center justify-center shadow-sm shrink-0">
