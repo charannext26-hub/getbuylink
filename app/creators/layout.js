@@ -9,7 +9,10 @@ function LayoutContent({ children }) {
 
   // Simple Check: Username set hai ya nahi
   const hasUsername = session?.user?.username && session?.user?.username !== "creator";
-  const showNav = hasUsername && pathname !== "/creators"; 
+  
+  // 🧠 SMART NAVIGATION LOGIC (The Hub & Spoke Engine)
+  // Agar user Home par NAHI hai, toh isNotHome = true hoga
+  const isNotHome = pathname !== "/creators";
 
   const isActive = (path) => pathname === path;
 
@@ -25,7 +28,7 @@ function LayoutContent({ children }) {
             
             <div className="flex justify-around items-end h-[65px] px-2 pb-1.5 sm:pb-2">
 
-              {/* Home */}
+              {/* Home (The Hub - Hamesha replace=true rakho taki duplicate home na bane) */}
               <Link 
                 href="/creators" 
                 prefetch={true} 
@@ -36,11 +39,11 @@ function LayoutContent({ children }) {
                 <span className={`text-[10px] font-bold ${isActive('/creators') ? 'text-blue-600' : 'text-slate-400'}`}>Home</span>
               </Link>
 
-              {/* All Posts */}
+              {/* All Posts (Spoke - replace={isNotHome}) */}
               <Link 
                 href="/creators/auto-post" 
                 prefetch={true} 
-                replace={true} 
+                replace={isNotHome} 
                 className="flex flex-col items-center justify-end flex-1 h-full gap-1 pb-1"
               >
                 <svg className={`w-6 h-6 transition-colors ${isActive('/creators/auto-post') ? 'text-blue-600 drop-shadow-sm' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
@@ -52,12 +55,12 @@ function LayoutContent({ children }) {
                 <span className={`text-[10px] font-bold ${isActive('/creators/auto-post') ? 'text-blue-600' : 'text-slate-400'}`}>All Post</span>
               </Link>
 
-              {/* Center Floating Button: Add Link */}
+              {/* Center Floating Button: Add Link (Spoke - replace={isNotHome}) */}
               <div className="flex flex-col items-center justify-end flex-1 h-full pb-1">
                 <Link 
                   href="/creators/addlink" 
                   prefetch={true} 
-                  replace={true} 
+                  replace={isNotHome} 
                   className={`flex items-center justify-center w-[54px] h-[54px] shrink-0 rounded-[18px] border-[4px] border-white shadow-md active:scale-95 transition-all -mt-6 mb-1 ${isActive('/creators/addlink') ? 'bg-slate-900' : 'bg-blue-600'}`}
                 >
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path></svg>
@@ -65,22 +68,22 @@ function LayoutContent({ children }) {
                 <span className={`text-[10px] font-extrabold tracking-wide leading-none ${isActive('/creators/addlink') ? 'text-slate-900' : 'text-blue-600'}`}>Add Link</span>
               </div>
 
-              {/* Analytics */}
+              {/* Analytics (Spoke - replace={isNotHome}) */}
               <Link 
                 href="/creators/analytics" 
                 prefetch={true} 
-                replace={true} 
+                replace={isNotHome} 
                 className="flex flex-col items-center justify-end flex-1 h-full gap-1 pb-1"
               >
                 <svg className={`w-6 h-6 ${isActive('/creators/analytics') ? 'text-blue-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
                 <span className={`text-[10px] font-bold ${isActive('/creators/analytics') ? 'text-blue-600' : 'text-slate-400'}`}>Analytics</span>
               </Link>
 
-              {/* Account */}
+              {/* Account (Spoke - replace={isNotHome}) */}
               <Link 
                 href="/creators/account" 
                 prefetch={true} 
-                replace={true} 
+                replace={isNotHome} 
                 className="flex flex-col items-center justify-end flex-1 h-full gap-1 pb-1"
               >
                 <svg className={`w-6 h-6 ${isActive('/creators/account') ? 'text-blue-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>

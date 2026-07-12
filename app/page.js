@@ -234,12 +234,12 @@ function LandingContent() {
 
           <div className="grid md:grid-cols-2 gap-4">
             {[
-              { title: "Rich Product Cards", desc: "Turn your favourites into scroll-stopping visual cards with live prices, discounts, coupons, and urgency timers. so your visitors can buy faster.", img: "https://cdn.corenexis.com/files/c/6443468720.png" },
+              { title: "Rich Product Cards", desc: "Turn your favourites into scroll-stopping visual cards with live prices, discounts, coupons, and urgency timers. so your visitors can buy faster.", img: "https://cb.metrovatech.com//uploads/rich-product-card-ic.webp" },
         
-              { title: "Immersive Shoppable Reels", desc: "Embed YouTube Shorts & Instagram Reels directly on your page so visitors can watch and shop instantly.", img: "https://cdn.corenexis.com/files/c/3359638720.png" },
-              { title: "Smart Category Collections", desc: "Organize links into smart collections like Tech Gadgets, Summer Outfits, and Home Decor for instant discovery.", img: "https://cdn.corenexis.com/files/c/7898679720.png" },
-              { title: "Dynamic Promotional Banners", desc: "Auto-sliding multi-image carousels to spotlight your best deals and drive instant sales.", img: "https://cdn.corenexis.com/files/c/4344623720.png" },
-              { title: "One-Click Premium Themes", desc: "Match your brand instantly with sleek dark mode, light mode, or custom colors in one click.", img: "https://cdn.corenexis.com/files/c/5256529720.png" }
+              { title: "Immersive Shoppable Reels", desc: "Embed YouTube Shorts & Instagram Reels directly on your page so visitors can watch and shop instantly.", img: "https://cb.metrovatech.com//uploads/theater-mode-ic.webp" },
+              { title: "Smart Category Collections", desc: "Organize links into smart collections like Tech Gadgets, Summer Outfits, and Home Decor for instant discovery.", img: "https://cb.metrovatech.com//uploads/category-colletcions.webp" },
+              { title: "Dynamic Promotional Banners", desc: "Auto-sliding multi-image carousels to spotlight your best deals and drive instant sales.", img: "https://cb.metrovatech.com//uploads/sliding-banner.webp" },
+              { title: "One-Click Premium Themes", desc: "Match your brand instantly with sleek dark mode, light mode, or custom colors in one click.", img: "https://cb.metrovatech.com//uploads/premium-themes.webp" }
             ].map((f, i) => (
               <RevealOnScroll key={i} delay={i * 50}>
                 <div className="bg-[#f8fafc] border border-slate-100 p-4 rounded-2xl flex items-center gap-4 hover:shadow-md transition-all">
@@ -270,10 +270,10 @@ function LandingContent() {
      className="flex-1 bg-transparent outline-none font-bold text-xs sm:text-base text-slate-900 px-1 min-w-0 z-10"
    />
    <button 
-     onClick={() => router.push(`/register?username=${username}`)}
+     onClick={() => router.push('/creators')}
      className="bg-blue-600 text-white px-4 sm:px-8 py-2.5 sm:py-3 rounded-xl font-black text-[10px] sm:text-xs whitespace-nowrap z-10 hover:bg-blue-700 flex-shrink-0 ml-1"
    >
-     Claim Link
+     Get Link
    </button>
 </div>
            </RevealOnScroll>
@@ -293,7 +293,7 @@ function LandingContent() {
                {/* Premium Glowing Blob Image Area */}
                <div className="w-full flex justify-center relative my-8 sm:my-12 px-2">
                  <img 
-                   src="https://i.postimg.cc/wxS41X87/file-00000000daa871fab8f89cfdeab9d692-(1).png" 
+                   src="https://cb.metrovatech.com//uploads/autopost-landingp.webp" 
                    className="w-full max-w-3xl h-auto object-cover animate-ai-glow transition-all duration-700 hover:scale-[1.02] border border-slate-700/50" 
                    alt="Auto Post Workflow"
                  />
@@ -348,14 +348,14 @@ function LandingContent() {
             <div className="animate-marquee-left gap-4 sm:gap-6 px-3">
               {/* FIX: Array ko [...array, ...array] karke double kiya taaki seamless flow bane */}
               {[
-                "https://cdn.corenexis.com/files/c/7196464720.png",
+                "https://cdn0.cuelinks.com/campaigns/891/thumb/open-uri20260422-2537676-1o7bz54.?1776836644",
                 "https://www.dotandkey.com/cdn/shop/files/Vector_5.svg?v=1720438003&width=450",
                 "https://www.freepnglogos.com/uploads/logo-myntra-png/myntra-com-brand-logo-transparent-png-6.png",
                 "https://pluspng.com/img-png/logo-flipkart-png-flipkart-logo-5000.png",
                 "https://www.milton.in/cdn/shop/files/Milton_Logo.png?v=1699503904",
                 "https://startuparticle.com/wp-content/uploads/2024/11/Wow-Skin-Science-logo.png",
                 // Duplicating the exact same list below for seamless looping
-                "https://cdn.corenexis.com/files/c/7196464720.png",
+                "https://cdn0.cuelinks.com/campaigns/891/thumb/open-uri20260422-2537676-1o7bz54.?1776836644",
                 "https://www.dotandkey.com/cdn/shop/files/Vector_5.svg?v=1720438003&width=450",
                 "https://www.freepnglogos.com/uploads/logo-myntra-png/myntra-com-brand-logo-transparent-png-6.png",
                 "https://pluspng.com/img-png/logo-flipkart-png-flipkart-logo-5000.png",
@@ -431,7 +431,7 @@ function LandingContent() {
                   <div className="flex flex-col items-center text-center group">
                     {/* FIX: overflow-hidden & object-cover removes gap */}
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative">
-                      <img src="https://cdn.corenexis.com/files/c/8775713720.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Explore Deals" />
+                      <img src="https://cb.metrovatech.com//uploads/explore-deals-ic.webp" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Explore Deals" />
                     </div>
                     <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">1. Explore Top Deals</h3>
                     <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Find Favourite product from top retailers like Aamazon, Ajio, Flipkart, Myntra.</p>
@@ -442,7 +442,7 @@ function LandingContent() {
                 <RevealOnScroll delay={300}>
                   <div className="flex flex-col items-center text-center group">
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative" style={{ animationDelay: '200ms' }}>
-                      <img src="https://cdn.corenexis.com/files/c/8676211720.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Fetch Details" />
+                      <img src="https://cb.metrovatech.com//uploads/link-make-ic.webp" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Fetch Details" />
                     </div>
                     <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">2. Fetch Details & Make Link</h3>
                     <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Fatch product details & Convert normal links into earning links instantly.</p>
@@ -453,7 +453,7 @@ function LandingContent() {
                 <RevealOnScroll delay={500}>
                   <div className="flex flex-col items-center text-center group">
                     <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white rounded-full border-4 sm:border-[6px] border-slate-50 shadow-xl flex items-center justify-center mb-3 sm:mb-6 animate-pop-zoom shadow-blue-500/10 overflow-hidden relative" style={{ animationDelay: '400ms' }}>
-                      <img src="https://cdn.corenexis.com/files/c/2332815720.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Publish" />
+                      <img src="https://cb.metrovatech.com//uploads/publishlink-ic.webp" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Publish" />
                     </div>
                     <h3 className="font-black text-slate-900 text-[11px] sm:text-lg mb-1 sm:mb-2 leading-tight">3. Publish Link & Earn</h3>
                     <p className="text-slate-500 text-[9px] sm:text-sm font-medium px-1 sm:px-4 leading-tight">Post link to your storefront or share with your audience and earn</p>
@@ -478,10 +478,10 @@ function LandingContent() {
              </RevealOnScroll>
              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
-                  { t: "Bulk Link Generator & Auto-Fetch", d: "Paste multiple product URLs at once. Our smart system instantly fetche details, then generates fully monetized affiliate links in seconds — saving hours of manual work.", img: "https://cdn.corenexis.com/files/c/8637518720.png" },
-                  { t: "Real-Time Click & Sale Tracking", d: "Track every click and sale in real time. Get precise insights into which products are performing best and see conversions the moment they happen.", img: "https://cdn.corenexis.com/files/c/2598867720.png" },
-                  { t: "Deep, Transparent Analytics", d: "Access comprehensive performance data with full transparency. Monitor individual link metrics, day-by-day sales trends, and detailed reports filtered by stores or traffic sources.", img: "https://cdn.corenexis.com/files/c/3884247720.png" },
-                  { t: "Commission Validation & Fast Payouts", d: "We handle commission validation and approvals with partner brands. Get your earnings paid out quickly and seamlessly via UPI or bank transfer.", img: "https://cdn.corenexis.com/files/c/9492639720.png" }
+                  { t: "Bulk Link Generator & Auto-Fetch", d: "Paste multiple product URLs at once. Our smart system instantly fetche details, then generates fully monetized affiliate links in seconds — saving hours of manual work.", img: "https://cb.metrovatech.com//uploads/linkgen-ic.webp" },
+                  { t: "Real-Time Click & Sale Tracking", d: "Track every click and sale in real time. Get precise insights into which products are performing best and see conversions the moment they happen.", img: "https://cb.metrovatech.com//uploads/trakinglink-ic.webp" },
+                  { t: "Deep, Transparent Analytics", d: "Access comprehensive performance data with full transparency. Monitor individual link metrics, day-by-day sales trends, and detailed reports filtered by stores or traffic sources.", img: "https://cb.metrovatech.com//uploads/analytics-ic.webp" },
+                  { t: "Commission Validation & Fast Payouts", d: "We handle commission validation and approvals with partner brands. Get your earnings paid out quickly and seamlessly via UPI or bank transfer.", img: "https://cb.metrovatech.com//uploads/bank-ic-lp.webp" }
                 ].map((f, i) => (
                   <RevealOnScroll key={i} delay={i * 50}>
                     <div className="bg-white p-4 rounded-2xl flex items-center gap-4 border border-slate-100 shadow-sm hover:shadow-md transition-all h-full">
@@ -528,7 +528,7 @@ function LandingContent() {
                 {/* FIX: Removed margins, let the flexbox handle spacing naturally */}
                 <div className="w-full flex items-center justify-center">
                    <img 
-                     src="https://cdn.corenexis.com/files/c/9382297720.png" 
+                     src="https://cb.metrovatech.com//uploads/app-escape-bnr.webp" 
                      /* FIX: Removed drop-shadow-2xl so it blends perfectly. Made it slightly larger to fit space */
                      className="w-full max-w-lg h-auto object-contain scale-105" 
                      alt="App Redirection" 
@@ -595,7 +595,7 @@ function LandingContent() {
                 <p className="text-blue-50 font-medium text-sm sm:text-lg max-w-2xl mx-auto mb-10">No hidden fees, no monthly subscriptions. Get unlimited access to premium link-in-bio storefronts, smart breakout technology, and advanced tracking analytics completely free. You bring the audience, we bring the tools.</p>
                 <button 
   suppressHydrationWarning
-  onClick={() => router.push('/register')}
+  onClick={() => router.push('/signup')}
   className="inline-block bg-white text-blue-600 px-10 py-4 rounded-2xl font-black text-sm sm:text-base shadow-xl hover:scale-105 transition-transform"
 >
   Start For Free

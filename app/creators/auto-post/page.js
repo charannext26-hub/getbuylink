@@ -614,7 +614,7 @@ function AutoPostContent() {
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-3 border-b border-slate-200 pb-4">
                   <div>
                     <h3 className="font-extrabold text-slate-800 text-sm">Auto-Post Preferences</h3>
-                    <p className="text-[10px] font-bold text-slate-400 mt-0.5">Control which products automatically post to your channel.</p>
+                    <p className="text-[10px] font-bold text-slate-400 mt-0.5">Control which products automatically post to your page.</p>
                   </div>
                   
                   <div className="flex items-center gap-3">

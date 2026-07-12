@@ -431,30 +431,46 @@ function DashboardContent() {
 
               </div>
 
-              {/* YOUTUBE/TUTORIAL SLIDER */}
-              {platformConfig?.youtubeBanners?.isActive && platformConfig?.youtubeBanners?.videos?.length > 0 && (
-                <div>
-                  <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 px-1">favylink exclusive</h3>
-                  <div className="flex overflow-x-auto gap-4 pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
-                    {platformConfig.youtubeBanners.videos.map((vid, idx) => {
-                      const isYoutube = vid.videoUrl && (vid.videoUrl.includes('youtube.com') || vid.videoUrl.includes('youtu.be'));
-                      
-                      return (
-                      <a key={idx} href={vid.videoUrl} target={isYoutube ? "_self" : "_blank"} rel="noreferrer" onClick={(e) => handleBannerClick(e, vid.videoUrl)} className="snap-start flex-shrink-0 w-[60%] sm:w-[70%] md:w-[40%] aspect-video rounded-xl overflow-hidden relative group shadow-sm block bg-slate-200 border border-slate-100">
-                        <img src={vid.thumbnailUrl} alt={vid.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        
-                        {isYoutube && (
-                          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                            <div className="w-12 h-12 bg-red-600/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                              <svg className="w-5 h-5 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                            </div>
-                          </div>
-                        )}
-                      </a>
-                    )})}
-                  </div>
+              {/* YOUTUBE/TUTORIAL & MARKETING BANNER SLIDER */}
+{platformConfig?.youtubeBanners?.isActive && platformConfig?.youtubeBanners?.videos?.length > 0 && (
+  <div className="my-4">
+    <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 px-1">favylink exclusive</h3>
+    <div className="flex overflow-x-auto gap-4 pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
+      {platformConfig.youtubeBanners.videos.map((vid, idx) => {
+        const isYoutube = vid.videoUrl && (vid.videoUrl.includes('youtube.com') || vid.videoUrl.includes('youtu.be'));
+        
+        // 🧠 SMART LINK CHECK: Kya ye hamare hi dashboard ka internal link hai?
+        const isInternal = vid.videoUrl && (vid.videoUrl.startsWith('/') || vid.videoUrl.includes('favylink.com'));
+        
+        // Agar Internal link ya YouTube modal hai toh usi tab (_self) me kholo, warna external (_blank)
+        const targetType = (isInternal || isYoutube) ? "_self" : "_blank";
+
+        return (
+          <a 
+            key={idx} 
+            href={vid.videoUrl} 
+            target={targetType} 
+            rel="noreferrer" 
+            onClick={(e) => handleBannerClick(e, vid.videoUrl)} 
+            /* 👇 NOTE: w-[85%] mobile ke liye bada aur mast view dega, md:w-[45%] desktop par 2 banners dikhayega */
+            className="snap-start flex-shrink-0 w-[85%] sm:w-[70%] md:w-[45%] lg:w-[38%] aspect-video rounded-2xl overflow-hidden relative group shadow-md block bg-slate-100 border border-slate-200/80 transition-all hover:shadow-xl"
+          >
+            <img src={vid.thumbnailUrl} alt={vid.title || "FavyLink Banner"} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            
+            {/* YouTube ka Play Icon sirf tabhi dikhega jab link me youtube hoga */}
+            {isYoutube && (
+              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/25 transition-colors flex items-center justify-center">
+                <div className="w-12 h-12 bg-red-600/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <svg className="w-5 h-5 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                 </div>
-              )}
+              </div>
+            )}
+          </a>
+        )
+      })}
+    </div>
+  </div>
+)}
 
               {/* DYNAMIC BANNERS */}
               {platformConfig?.banners?.length > 0 && (
@@ -524,48 +540,74 @@ function DashboardContent() {
                 </div>
               )}
 
-              {/* POPULAR STORE LIST */}
-      {platformConfig?.vipStoreRates?.isActive && topCampaigns.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-50 pb-2">
-            <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 truncate pr-2">
-              <span className="bg-blue-100 text-blue-600 w-6 h-6 rounded-md flex items-center justify-center">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V10l-1.5-1.5M5 21V10L3.5 8.5M22 6l-2-2H4L2 6v2h20V6zM8 21v-4a2 2 0 014 0v4"></path></svg>
-              </span>
-              Popular Campaigns
-            </h3>
-            <Link href="/campaign-rates" className="text-[11px] font-extrabold text-blue-600 hover:text-blue-800 flex items-center shrink-0 bg-blue-50 px-2.5 py-1 rounded-md transition-colors">
-              See All <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-            </Link>
-          </div>
-          
-          <div className="flex overflow-x-auto gap-3 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
-            {topCampaigns.map((camp, idx) => {
-              
-              // 🧠 DB-BASED FORMATTER (For Popular List)
-              const payoutStr = String(camp.payout || "").trim();
-              const lowerStr = payoutStr.toLowerCase();
-              
-              const hasSymbol = lowerStr.includes('%') || lowerStr.includes('₹') || lowerStr.includes('rs');
-              const type = String(camp.payout_type || "").toLowerCase();
-              const isPercent = type.includes('(%)') || type.includes('%');
-              
-              const displayPayout = hasSymbol ? payoutStr : (isPercent ? `${payoutStr}%` : `₹${payoutStr}`);
+             {/* POPULAR STORE CAMPAIGNS (VIP SLEEK VERTICAL CARDS) */}
+{platformConfig?.vipStoreRates?.isActive && topCampaigns.length > 0 && (
+  <div className="bg-white border border-slate-200/80 rounded-2xl p-4 md:p-5 shadow-sm overflow-hidden my-4">
+    <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+      <h3 className="text-sm font-black text-slate-800 flex items-center gap-2.5 truncate pr-2">
+        <span className="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white w-7 h-7 rounded-lg flex items-center justify-center shadow-sm shrink-0">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V10l-1.5-1.5M5 21V10L3.5 8.5M22 6l-2-2H4L2 6v2h20V6zM8 21v-4a2 2 0 014 0v4"></path></svg>
+        </span>
+        Popular Campaigns
+      </h3>
+      <Link href="/campaign-rates" className="text-[11px] font-black text-blue-600 hover:text-white hover:bg-blue-600 flex items-center shrink-0 bg-blue-50/80 border border-blue-100/80 px-3 py-1.5 rounded-lg transition-all duration-300 shadow-2xs">
+        See All <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg>
+      </Link>
+    </div>
+    
+    <div className="flex overflow-x-auto gap-3.5 pb-2 pt-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
+      {topCampaigns.map((camp, idx) => {
+        
+        // 🧠 SMART MATH FORMATTER (Bypasses the JavaScript 1.1999999% Bug)
+        let payoutStr = String(camp.payout || "").trim();
+        const lowerStr = payoutStr.toLowerCase();
+        
+        // Number nikal kar precision fix karo
+        const cleanNum = parseFloat(payoutStr.replace(/[^0-9.]/g, ''));
+        if (!isNaN(cleanNum)) {
+          // Agar decimal hai toh max 2 digit rakho, agar normal int hai toh waisa hi chhod do
+          const formattedNum = Number.isInteger(cleanNum) ? cleanNum : parseFloat(cleanNum.toFixed(2));
+          payoutStr = String(formattedNum);
+        }
 
-              return (
-              <Link href="/campaign-rates" key={idx} className="snap-start flex-shrink-0 w-[110px] md:w-[120px] border border-slate-100 rounded-xl p-3 flex flex-col items-center hover:border-blue-300 transition-colors group bg-slate-50 hover:bg-white shadow-sm relative overflow-hidden">
-                
-                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-200 shadow-sm shrink-0 overflow-hidden mb-2">
-                   <img src={camp.image || "https://via.placeholder.com/150?text=Store"} alt="logo" className="w-full h-full object-contain p-1 group-hover:scale-110 transition-transform" />
-                </div>
-                <p className="font-extrabold text-slate-800 text-[10px] truncate w-full text-center">{camp.name}</p>
-                <p className="text-blue-600 font-black text-[11px] mt-1">Upto {displayPayout}</p>
-                
-              </Link>
-            )})}
-          </div>
-        </div>
-      )}
+        const hasSymbol = lowerStr.includes('%') || lowerStr.includes('₹') || lowerStr.includes('rs');
+        const type = String(camp.payout_type || "").toLowerCase();
+        const isPercent = type.includes('(%)') || type.includes('%');
+        
+        const displayPayout = hasSymbol ? payoutStr : (isPercent ? `${payoutStr}%` : `₹${payoutStr}`);
+
+        return (
+          <Link 
+            href="/campaign-rates" 
+            key={idx} 
+            className="snap-start flex-shrink-0 w-[105px] sm:w-[115px] bg-gradient-to-b from-slate-50/80 to-white border border-slate-200/80 hover:border-blue-400 rounded-2xl p-3.5 flex flex-col items-center justify-between hover:-translate-y-1 transition-all duration-300 group shadow-2xs hover:shadow-md relative overflow-hidden"
+          >
+            {/* Top Subtle Accent Glow on Hover */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+            {/* BRAND LOGO BOX (Enlarged & Professional) */}
+            <div className="w-13 h-13 sm:w-14 sm:h-14 bg-white rounded-xl flex items-center justify-center border border-slate-100 shadow-sm shrink-0 overflow-hidden mb-2.5 p-1.5 group-hover:scale-105 transition-transform duration-300">
+               <img src={camp.image || "https://via.placeholder.com/150?text=Store"} alt={camp.name || "brand"} className="w-full h-full object-contain" />
+            </div>
+
+            {/* STORE NAME */}
+            <p className="font-extrabold text-slate-700 group-hover:text-slate-900 text-[11px] truncate w-full text-center tracking-tight mb-1.5">
+              {camp.name}
+            </p>
+
+            {/* COMMISSION PILL BADGE (High Conversion Trigger) */}
+            <div className="w-full bg-emerald-50/90 border border-emerald-100 group-hover:bg-emerald-500 group-hover:border-emerald-500 rounded-lg py-1 px-1.5 text-center transition-colors duration-300">
+              <p className="text-emerald-700 group-hover:text-white font-black text-[10px] sm:text-[10.5px] leading-none truncate">
+                Up to {displayPayout}
+              </p>
+            </div>
+            
+          </Link>
+        )
+      })}
+    </div>
+  </div>
+)}
 
               {/* DYNAMIC HIGH COMMISSION SECTIONS */}
               {platformConfig?.topDealSections?.map((section, secIdx) => {
