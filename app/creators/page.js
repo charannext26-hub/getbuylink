@@ -542,30 +542,29 @@ function DashboardContent() {
 
              {/* POPULAR STORE CAMPAIGNS (VIP SLEEK VERTICAL CARDS) */}
 {platformConfig?.vipStoreRates?.isActive && topCampaigns.length > 0 && (
-  <div className="bg-white border border-slate-200/80 rounded-2xl p-4 md:p-5 shadow-sm overflow-hidden mb-6">
-    <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-      <h3 className="text-sm font-black text-slate-800 flex items-center gap-2.5 truncate pr-2">
-        <span className="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white w-7 h-7 rounded-lg flex items-center justify-center shadow-sm shrink-0">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V10l-1.5-1.5M5 21V10L3.5 8.5M22 6l-2-2H4L2 6v2h20V6zM8 21v-4a2 2 0 014 0v4"></path></svg>
+  <div className="bg-white border border-slate-200/80 rounded-2xl p-4 md:p-5 shadow-sm overflow-hidden mb-7">
+    
+    <div className="flex items-center justify-between mb-3.5 border-b border-slate-100 pb-2.5">
+      <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 truncate pr-2">
+        <span className="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white w-6 h-6 rounded-lg flex items-center justify-center shadow-sm shrink-0">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V10l-1.5-1.5M5 21V10L3.5 8.5M22 6l-2-2H4L2 6v2h20V6zM8 21v-4a2 2 0 014 0v4"></path></svg>
         </span>
         Popular Campaigns
       </h3>
-      <Link href="/campaign-rates" className="text-[11px] font-black text-blue-600 hover:text-white hover:bg-blue-600 flex items-center shrink-0 bg-blue-50/80 border border-blue-100/80 px-3 py-1.5 rounded-lg transition-all duration-300 shadow-2xs">
+      <Link href="/campaign-rates" className="text-[11px] font-black text-blue-600 hover:text-white hover:bg-blue-600 flex items-center shrink-0 bg-blue-50/80 border border-blue-100/80 px-2.5 py-1 rounded-md transition-all duration-300 shadow-2xs">
         See All <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg>
       </Link>
     </div>
     
-    <div className="flex overflow-x-auto gap-3.5 pb-2 pt-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
+    <div className="flex overflow-x-auto gap-3 pb-2 pt-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
       {topCampaigns.map((camp, idx) => {
         
         // 🧠 SMART MATH FORMATTER (Bypasses the JavaScript 1.1999999% Bug)
         let payoutStr = String(camp.payout || "").trim();
         const lowerStr = payoutStr.toLowerCase();
         
-        // Number nikal kar precision fix karo
         const cleanNum = parseFloat(payoutStr.replace(/[^0-9.]/g, ''));
         if (!isNaN(cleanNum)) {
-          // Agar decimal hai toh max 2 digit rakho, agar normal int hai toh waisa hi chhod do
           const formattedNum = Number.isInteger(cleanNum) ? cleanNum : parseFloat(cleanNum.toFixed(2));
           payoutStr = String(formattedNum);
         }
@@ -580,13 +579,13 @@ function DashboardContent() {
           <Link 
             href="/campaign-rates" 
             key={idx} 
-            className="snap-start flex-shrink-0 w-[105px] sm:w-[115px] bg-gradient-to-b from-slate-50/80 to-white border border-slate-200/80 hover:border-blue-400 rounded-2xl p-3.5 flex flex-col items-center justify-between hover:-translate-y-1 transition-all duration-300 group shadow-2xs hover:shadow-md relative overflow-hidden"
+            /* 👇 NOTE: Width ko 105px se badha kar 115px (sm:w-[125px]) kar diya hai taaki lamba text fit aye */
+            className="snap-start flex-shrink-0 w-[115px] sm:w-[125px] bg-gradient-to-b from-slate-50/80 to-white border border-slate-200/80 hover:border-blue-400 rounded-2xl p-3 flex flex-col items-center justify-between hover:-translate-y-1 transition-all duration-300 group shadow-2xs hover:shadow-md relative overflow-hidden"
           >
-            {/* Top Subtle Accent Glow on Hover */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-            {/* BRAND LOGO BOX (Enlarged & Professional) */}
-            <div className="w-13 h-13 sm:w-14 sm:h-14 bg-white rounded-xl flex items-center justify-center border border-slate-100 shadow-sm shrink-0 overflow-hidden mb-2.5 p-1.5 group-hover:scale-105 transition-transform duration-300">
+            {/* BRAND LOGO BOX */}
+            <div className="w-13 h-13 sm:w-14 sm:h-14 bg-white rounded-xl flex items-center justify-center border border-slate-100 shadow-sm shrink-0 overflow-hidden mb-2 p-1.5 group-hover:scale-105 transition-transform duration-300">
                <img src={camp.image || "https://via.placeholder.com/150?text=Store"} alt={camp.name || "brand"} className="w-full h-full object-contain" />
             </div>
 
@@ -595,10 +594,10 @@ function DashboardContent() {
               {camp.name}
             </p>
 
-            {/* COMMISSION PILL BADGE (High Conversion Trigger) */}
-            <div className="w-full bg-emerald-50/90 border border-emerald-100 group-hover:bg-emerald-500 group-hover:border-emerald-500 rounded-lg py-1 px-1.5 text-center transition-colors duration-300">
-              <p className="text-emerald-700 group-hover:text-white font-black text-[10px] sm:text-[10.5px] leading-none truncate">
-                Up to {displayPayout}
+            {/* 👇 COMMISSION PILL BADGE (SMART EARN UPTO TEXT WITH NO TRUNCATION) */}
+            <div className="w-full bg-emerald-50/95 border border-emerald-200/80 group-hover:bg-emerald-600 group-hover:border-emerald-600 rounded-lg py-1 px-1 text-center transition-colors duration-300 shadow-3xs">
+              <p className="text-emerald-800 group-hover:text-white font-black text-[9.5px] sm:text-[10px] leading-tight tracking-tight whitespace-nowrap overflow-hidden">
+                Earn Upto {displayPayout}
               </p>
             </div>
             
