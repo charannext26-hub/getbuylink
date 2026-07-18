@@ -75,63 +75,6 @@ export default function LoginPage() {
   };
 
   // ==========================================
-  // 🚀 STEP 2: BOUNCER UI (Android Loading Spinner)
-  // ==========================================
-  if (isEscapingApp) {
-    return (
-      <div className="min-h-[100dvh] w-full bg-[#0f0f11] flex flex-col justify-center items-center text-white font-sans p-6 text-center z-50">
-        <div className="w-14 h-14 border-4 border-white/10 border-t-blue-500 rounded-full animate-spin mb-6"></div>
-        <h2 className="text-2xl font-black mb-2 tracking-tight">Securing Connection...</h2>
-        <p className="text-slate-400 text-sm font-medium max-w-xs leading-relaxed">
-          Redirecting to your system Chrome browser for seamless Google Sign-In.
-        </p>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // 🚀 STEP 3: BOUNCER UI (iOS Visual Guide Popup)
-  // ==========================================
-  if (showIosGuide) {
-    return (
-      <div className="min-h-[100dvh] w-full bg-[#0f0f11] flex flex-col justify-center items-center text-white font-sans p-6 text-center relative z-50 overflow-hidden">
-        {/* Bouncing Arrow Pointing Top-Right to Instagram/App Menu */}
-        <div className="absolute top-6 right-6 animate-bounce text-blue-400 text-4xl drop-shadow-lg">
-          ↗
-        </div>
-        
-        <div className="bg-white/10 backdrop-blur-xl p-8 rounded-[2rem] max-w-sm w-full text-center border border-white/15 shadow-2xl">
-          <div className="w-16 h-16 bg-blue-500/20 border border-blue-500/40 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">
-            🧭
-          </div>
-          <h2 className="text-2xl font-black mb-3 tracking-tight">Action Required!</h2>
-          <p className="text-slate-300 text-sm leading-relaxed font-medium mb-6">
-            Instagram blocks Google Sign-In sessions. To log in to your account seamlessly:
-          </p>
-          
-          <div className="bg-black/40 rounded-xl p-4 text-left space-y-2.5 text-xs font-bold text-slate-200 border border-white/5 mb-6">
-            <div className="flex items-center gap-2.5">
-              <span className="bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0">1</span>
-              <span>Tap the <strong className="text-white">...</strong> (Three Dots) at the top right.</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <span className="bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0">2</span>
-              <span>Select <strong className="text-blue-400">Open in Safari</strong> or <strong className="text-blue-400">System Browser</strong>.</span>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => setShowIosGuide(false)}
-            className="w-full bg-white/10 hover:bg-white/20 text-slate-300 font-bold text-xs py-3 rounded-xl transition-all uppercase tracking-wider cursor-pointer"
-          >
-            Stay here anyway (Email Log in)
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ==========================================
   // 🚀 STEP 4: MAIN LOGIN PAGE UI (Pura Purana Code Safe Hai)
   // ==========================================
   return (

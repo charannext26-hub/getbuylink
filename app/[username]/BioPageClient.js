@@ -333,21 +333,21 @@ useEffect(() => {
       if (typeof window === 'undefined') return;
 
       const ua = navigator.userAgent || navigator.vendor || window.opera;
-      const isInstagram = ua.includes('Instagram');
-      const isFacebook = ua.includes('FBAN') || ua.includes('FBAV');
-      const isAndroid = /android/i.test(ua);
-      const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+      // ✅ UPGRADED UNIVERSAL BIO PAGE CODE
+      const isInAppBrowser = /Instagram|FBAN|FBAV|FB_IAB|FB4A|FBIOS|FBSS|LinkedInApp|Twitter|Snapchat|Pinterest|YouTube|Telegram|MicroMessenger|Line|wv/i.test(ua);
 
-      if (isInstagram || isFacebook) {
-        if (isAndroid) {
-            // Sirf Android par Chrome Bypass
-            setIsEscapingApp(true);
-            const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-            const intentUrl = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-            setTimeout(() => { window.location.replace(intentUrl); }, 0);
-        }
+      const isAndroid = /android/i.test(ua);
+      const isIOS = /iPad|iPhone|iPod/i.test(ua) && !window.MSStream;
+
+      if (isInAppBrowser) {
+       if (isAndroid) {
+    // Android par automatic Chrome redirect chalne do
+        const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+        const intentUrl = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+        setTimeout(() => { window.location.replace(intentUrl); }, 10);
+         }
         // iOS ke liye yahan koi rok-tok nahi
-    }
+       }
   }, []);
 
   useEffect(() => {
