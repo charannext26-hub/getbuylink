@@ -328,26 +328,30 @@ useEffect(() => {
     return () => window.removeEventListener("scroll", handleScroll);
     }, []);
       
-  // 👇 YAHAN NAYA CODE ADD HUA HAI (STEP 2: App Escaper Logic)
+  // ⚡ STEP 2: App Escaper Logic (With STRICT UI BLOCKING for Bio Page)
   useEffect(() => {
-      if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return;
 
-      const ua = navigator.userAgent || navigator.vendor || window.opera;
-      // ✅ UPGRADED UNIVERSAL BIO PAGE CODE
-      const isInAppBrowser = /Instagram|FBAN|FBAV|FB_IAB|FB4A|FBIOS|FBSS|LinkedInApp|Twitter|Snapchat|Pinterest|YouTube|Telegram|MicroMessenger|Line|wv/i.test(ua);
+    const ua = navigator.userAgent || navigator.vendor || window.opera || "";
+    
+    // 🌐 UNIVERSAL REGEX: Pakdega IG, FB, YouTube, Telegram, LinkedIn, Twitter, WhatsApp (wv), etc.
+    const isInAppBrowser = /Instagram|FBAN|FBAV|FB_IAB|FB4A|FBIOS|FBSS|LinkedInApp|Twitter|Snapchat|Pinterest|YouTube|Telegram|MicroMessenger|Line|wv/i.test(ua);
+    
+    const isAndroid = /android/i.test(ua);
+    const isIOS = /iPad|iPhone|iPod/i.test(ua) && !window.MSStream;
 
-      const isAndroid = /android/i.test(ua);
-      const isIOS = /iPad|iPhone|iPod/i.test(ua) && !window.MSStream;
-
-      if (isInAppBrowser) {
-       if (isAndroid) {
-    // Android par automatic Chrome redirect chalne do
-        const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+    if (isInAppBrowser) {
+      if (isAndroid) {
+        // 🤖 STRICT ANDROID BOUNCER: Pehle spinner ON karo, fir Chrome me phenko
+        setIsEscapingApp(true); // 👈 YE LINE MISSING THI! Isse spinner turant aayega
+        const currentUrl = window.location.href.replace(/^https?:\/\//, "");
         const intentUrl = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
         setTimeout(() => { window.location.replace(intentUrl); }, 10);
-         }
-        // iOS ke liye yahan koi rok-tok nahi
-       }
+      // } else if (isIOS) {
+        // 🍏 STRICT iOS BOUNCER: iPhone par bhi normal page mat dikhao, Visual Guide Popup chalao
+        //setShowIosGuide(true);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -797,12 +801,22 @@ useEffect(() => {
 
   if (!creator) return <div className="text-center mt-20 text-xl text-red-500 font-bold">Creator not found!</div>;
   
-  // 🔥 YAHAN DEFINE HOTA HAI THEME (Jis se error aa raha tha)
+  // 🔥 YAHAN DEFINE HOTA HAI THEME
   const currentTheme = THEMES[creator.bioTheme?.toLowerCase()] || THEMES.minimal;
 
   const renderFeedItem = (item, uniqueKey) => {
       if (item.type === 'single') {
-          return <div key={uniqueKey} className="break-inside-avoid"><GridProductCard deal={item.deal} onClick={() => handleDealClick(item.deal)} themeCardClass={currentTheme.card} onToast={triggerToast} showTimeAgo={activeTab === 'telegram'} /></div>;
+          return (
+              <div key={uniqueKey} className="break-inside-avoid">
+                  <GridProductCard 
+                      deal={item.deal} 
+                      onClick={() => handleDealClick(item.deal)} 
+                      themeCardClass={currentTheme.card} 
+                      onToast={triggerToast} 
+                      showTimeAgo={activeTab === 'telegram'} 
+                  />
+              </div>
+          );
       } 
       else if (item.type === 'video') {
           const isInsta = (item.videoUrl || "").toLowerCase().includes('instagram.com');
@@ -811,7 +825,9 @@ useEffect(() => {
 
           return (
               <div key={uniqueKey} onClick={() => setTheatreMode({ isOpen: true, videoUrl: item.videoUrl, relatedDeals: item.deals })} className={`break-inside-avoid relative aspect-[4/5] rounded-2xl overflow-hidden cursor-pointer shadow-sm border group ${currentTheme.card}`}>
-                  <img src={thumbUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Video Thumbnail" />
+                  
+                  {/* 👇 YAHAN ZOOM HACK LAGAYA HAI: scale-[1.35] se black sides frame ke bahar chale jayenge */}
+                  <img src={thumbUrl} className="w-full h-full object-cover scale-[1.35] group-hover:scale-[1.45] transition-transform duration-500" alt="Video Thumbnail" />
 
                  {/* VIDEO SOCIAL LOGO (Top-Left) */}
                   <div className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-md rounded-lg shadow-sm z-10">
@@ -824,10 +840,12 @@ useEffect(() => {
                       )}
                   </div>
 
+                  {/* Shopping Bag SVG + Product Count */}
                   <div className="absolute top-2 right-2 bg-white/95 backdrop-blur text-slate-900 text-[10px] font-black px-2 py-1 rounded flex items-center gap-1.5 shadow-md">
-                      <svg className="w-3 h-3 text-rose-500" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                      {item.deals.length} Products
+                      <svg className="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M16 6V4a4 4 0 0 0-8 0v2H3v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6h-5zM10 4a2 2 0 0 1 4 0v2h-4V4z"/></svg>
+                      {item.deals?.length || 0} Products
                   </div>
+
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent flex flex-col justify-end p-3">
                       <p className="text-white font-bold text-xs leading-tight line-clamp-2 drop-shadow-md">{item.title}</p>
                   </div>
@@ -838,16 +856,23 @@ useEffect(() => {
           return (
               <div key={uniqueKey} onClick={() => setCollectionMode({ isOpen: true, title: item.title, relatedDeals: item.deals })} className={`break-inside-avoid rounded-2xl p-2.5 shadow-sm cursor-pointer group hover:border-emerald-300 transition-colors border ${currentTheme.card}`}>
                   <div className="grid grid-cols-2 gap-1.5 mb-2 relative">
-    {/* 👇 NAYA: bg-white/10 ko bg-white kiya aur mix-blend-multiply hata diya */}
-    {item.deals.slice(0, 4).map((d, i) => (
-        <div key={i} className="aspect-square bg-white rounded-lg overflow-hidden shadow-sm border border-black/10">
-            <img src={d.image} className="w-full h-full object-cover" alt="Collection Item" />
-        </div>
-    ))}
-</div>
-                  <span className="bg-blue-500/20 text-blue-300 text-[8px] font-black px-1.5 py-0.5 rounded flex w-fit items-center gap-1 border border-blue-500/30 uppercase">
-                      Collection
-                  </span>
+                      {item.deals.slice(0, 4).map((d, i) => (
+                          <div key={i} className="aspect-square bg-white rounded-lg overflow-hidden shadow-sm border border-black/10">
+                              <img src={d.image} className="w-full h-full object-cover" alt="Collection Item" />
+                          </div>
+                      ))}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-1 mt-1">
+                      <span className="bg-blue-500/20 text-blue-300 text-[8px] font-black px-1.5 py-0.5 rounded flex w-fit items-center gap-1 border border-blue-500/30 uppercase">
+                          Collection
+                      </span>
+                      <span className="text-[10px] font-black opacity-80 flex items-center gap-1">
+                          <svg className="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M16 6V4a4 4 0 0 0-8 0v2H3v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6h-5zM10 4a2 2 0 0 1 4 0v2h-4V4z"/></svg>
+                          {item.deals?.length || 0} Products
+                      </span>
+                  </div>
+
                   <h3 className="font-extrabold text-xs mt-1.5 line-clamp-1">{item.title}</h3>
               </div>
           );
