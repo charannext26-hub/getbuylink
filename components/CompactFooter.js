@@ -27,7 +27,7 @@ export default function CompactFooter() {
         {/* 3. Contact Button & Social Icons */}
         <div className="flex flex-col items-center md:items-end gap-4 md:w-1/3">
           <a href="mailto:support@favylink.com" className="bg-white/10 hover:bg-blue-600 text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-colors">
-            Contact Support
+            Follow Us
           </a>
           
           {/* Compact Social Icons */}

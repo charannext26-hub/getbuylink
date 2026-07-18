@@ -692,26 +692,26 @@ function DashboardContent() {
                   
                   {/* INSTAGRAM BOX */}
                   <div className="flex flex-col items-center gap-2 shrink-0">
-                    <a href="https://instagram.com/getbuylink" target="_blank" rel="noreferrer" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1 block bg-slate-200">
-                      <img src="https://images.unsplash.com/photo-1611262588024-d12430b98920?q=80&w=200&auto=format&fit=crop" alt="Instagram" className="w-full h-full object-cover" />
+                    <a href="#" target="_blank" rel="noreferrer" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1 block bg-slate-200">
+                      <img src="https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Instagram" className="w-full h-full object-cover" />
                     </a>
-                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">Follow Insta</span>
+                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">  </span>
                   </div>
                   
                   {/* TELEGRAM BOX */}
                   <div className="flex flex-col items-center gap-2 shrink-0">
-                    <a href="https://t.me/getbuylink" target="_blank" rel="noreferrer" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1 block bg-slate-200">
-                      <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=200&auto=format&fit=crop" alt="Telegram" className="w-full h-full object-cover" />
+                    <a href="#" target="_blank" rel="noreferrer" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1 block bg-slate-200">
+                      <img src="https://images.unsplash.com/photo-1661862649743-2799867c32b0?q=80&w=1154&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Telegram" className="w-full h-full object-cover" />
                     </a>
-                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">Join Channel</span>
+                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">  </span>
                   </div>
                   
                   {/* YOUTUBE BOX */}
                   <div className="flex flex-col items-center gap-2 shrink-0">
-                    <a href="https://youtube.com/@getbuylink" target="_blank" rel="noreferrer" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1 block bg-slate-200">
+                    <a href="#" target="_blank" rel="noreferrer" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1 block bg-slate-200">
                       <img src="https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?q=80&w=200&auto=format&fit=crop" alt="YouTube" className="w-full h-full object-cover" />
                     </a>
-                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">Subscribe</span>
+                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">  </span>
                   </div>
 
                 </div>

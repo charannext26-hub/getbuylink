@@ -178,10 +178,10 @@ function LandingContent() {
           <div className="max-w-5xl mx-auto text-center relative z-10">
             <RevealOnScroll>
               <h1 className="text-4xl sm:text-6xl font-black text-slate-900 leading-tight mb-5">
-                Make your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600">Favourite Link</span> Professional & Profitable.
+                Make your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600">Favourite Link</span> Professional & High-Performing.
               </h1>
               <p className="text-slate-700 text-base sm:text-lg font-bold mb-10 max-w-2xl mx-auto">
-                Turn your standard bio link into a beautiful, zero-coding storefront. <span className="font-black text-blue-600">Auto-Sync Deals</span> from 500+ brands and multiply your earnings while you sleep with smart, seamless conversions.
+                Upgrade your standard bio link into a beautiful, zero-coding interactive storefront. <span className="font-black text-blue-600">Auto-curate</span> trending products from 500+ top brands, integrate smart native app-redirects, and elevate your audience engagement without any manual daily effort.
               </p>
             </RevealOnScroll>
 
@@ -287,7 +287,7 @@ function LandingContent() {
              <RevealOnScroll>
                <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">Zero-Effort Income.<br/>Meet Auto-Post</h2>
                <p className="text-slate-400 font-medium text-sm sm:text-base mb-10">
-                 Our smart engine automatically fetches high-converting, trending products from top e-commerce store and publishes them directly to your storefront. Set it once, and earn while you sleep.
+                 Our smart engine automatically fetches high-converting, trending products from top e-commerce store and publishes them directly to your storefront.
                </p>
                
                {/* Premium Glowing Blob Image Area */}
@@ -543,42 +543,7 @@ function LandingContent() {
            </div>
         </section>
 
-        {/* ========================================== */}
-        {/* 9. TESTIMONIALS (Restored horizontal scroll) */}
-        {/* ========================================== */}
-        <section id="testimonials" className="py-13 bg-[#f8fafc] overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row gap-12 items-center">
-            
-            <RevealOnScroll>
-              <div className="w-full md:w-1/3 text-center md:text-left">
-                <div className="flex justify-center md:justify-start items-center gap-1 mb-4">
-                  {[1,2,3,4,5].map(star => <svg key={star} className="w-6 h-6 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>)}
-                </div>
-                <h2 className="text-3xl font-black text-slate-900 mb-4">Loved by Top Creators.</h2>
-                <p className="text-slate-500 font-medium">Join thousands of creators who switched to FavyLink for better conversions.</p>
-              </div>
-            </RevealOnScroll>
-
-            <div className="w-full md:w-2/3 flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-6 pb-8 pt-4 px-4 -mx-4 md:mx-0">
-              {[
-                { name: "Rahul Tech", role: "Tech Reviewer", img: "https://i.pravatar.cc/150?img=11", text: "The auto-post feature is magic. I just set my niche and my earnings went up by 40% without doing extra work." },
-                { name: "Neha Styles", role: "Fashion Blogger", img: "https://i.pravatar.cc/150?img=5", text: "Finally, a bio link that actually looks like a premium store. My followers love the sliding banners!" },
-                { name: "Fit with Amit", role: "Fitness Coach", img: "https://i.pravatar.cc/150?img=12", text: "The app redirection saved my conversions. People were getting stuck in Insta browser before, not anymore." }
-              ].map((review, i) => (
-                <div key={i} className="min-w-[280px] sm:min-w-[320px] bg-white p-6 rounded-3xl border border-slate-200 snap-center shadow-sm hover:-translate-y-2 transition-transform duration-300">
-                  <div className="flex items-center gap-3 mb-4">
-                    <img src={review.img} className="w-12 h-12 rounded-full object-cover" alt={review.name} />
-                    <div>
-                      <h4 className="font-bold text-slate-900">{review.name}</h4>
-                      <p className="text-xs text-slate-500 font-bold">{review.role}</p>
-                    </div>
-                  </div>
-                  <p className="text-slate-600 text-sm leading-relaxed">"{review.text}"</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        
 
         {/* ========================================== */}
         {/* 10. FREE PLAN SECTION (Restored Blue Box) */}
@@ -684,19 +649,19 @@ function LandingContent() {
                 {/* Social Icons (SVGs) */}
                 <div className="flex gap-4">
                   {/* 1. INSTAGRAM */}
-                  <a href="YAHAN_LINK_DAALEIN" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/5 hover:bg-pink-600 rounded-full flex items-center justify-center transition-colors">
+                  <a href="#" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/5 hover:bg-pink-600 rounded-full flex items-center justify-center transition-colors">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
                   </a>
                   {/* 2. YOUTUBE */}
-                  <a href="YAHAN_LINK_DAALEIN" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/5 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors">
+                  <a href="#" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/5 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                   </a>
                   {/* 3. FACEBOOK */}
-                  <a href="YAHAN_LINK_DAALEIN" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/5 hover:bg-blue-600 rounded-full flex items-center justify-center transition-colors">
+                  <a href="#" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/5 hover:bg-blue-600 rounded-full flex items-center justify-center transition-colors">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z"/></svg>
                   </a>
                   {/* 4. TELEGRAM */}
-                  <a href="YAHAN_LINK_DAALEIN" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/5 hover:bg-cyan-500 rounded-full flex items-center justify-center transition-colors">
+                  <a href="#" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/5 hover:bg-cyan-500 rounded-full flex items-center justify-center transition-colors">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
                   </a>
                 </div>
